@@ -67,6 +67,10 @@ trial tests
 
 To run the linters and `mypy` type checker, use `./scripts-dev/lint.sh`.
 
+## Starting
+
+Use this to start the test server:
+`FLASK_APP=trafficlight flask run --host 0.0.0.0`
 
 ## Releasing
 

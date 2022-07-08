@@ -2,6 +2,20 @@
 
 # Ask for info for two clients
 
+echo -n "foo # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/foo/register -d '{"type": "element-web", "version": "0.15.0"}'
+
+echo "Check UI" && read
+
+echo -n "bar # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/bar/register -d '{"type": "element-android", "version": "0.15.0"}'
+
+echo "Started test..." && read
+
+echo -n "baz # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/baz/register -d '{"type": "element-android", "version": "0.15.0"}'
+
+echo -n "baz < " && curl http://localhost:5000/client/baz/poll
+
+# walk through the steps...
+
 echo -n "foo < " && curl http://localhost:5000/client/foo/poll
 # register
 
