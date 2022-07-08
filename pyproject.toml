@@ -5,6 +5,6 @@ build-backend = "setuptools.build_meta"
 [tool.isort]
 profile = "black"
 known_first_party = [
-    "bluegreenpurple",
+    "trafficlight",
     "tests"
 ]

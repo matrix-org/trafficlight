@@ -8,7 +8,7 @@
 set -e
 
 files=(
-  "bluegreenpurple"
+  "trafficlight"
   "tests"
 )
 

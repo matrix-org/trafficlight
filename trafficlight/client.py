@@ -3,7 +3,8 @@ import functools
 import logging
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
-logging.getLogger('transitions').setLevel(logging.INFO)
+logging.getLogger('transitions').setLevel(logging.ERROR)
+logging.getLogger('wekzeug').setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +31,8 @@ class ColouringTestCase(object):
     def __init__(self, clients, state_list,  initial_state):
         self.clients = {}
         for client in clients:
-            print (client)
             self.clients.update({client: None})
-
+        logger.info("Clients required: %s", clients)
         states = []
         state_map = {}
         for state in state_list:
@@ -48,7 +48,8 @@ class ColouringTestCase(object):
 
     def action_for(self, uuid):
         colour = self.lookup(uuid)
-        action_map = self.state_map.get(self.state).action_map
+        state_obj = self.state_map.get(self.state)
+        action_map = state_obj.action_map
         specific_action = action_map.get(colour)
         if specific_action is None:
             return self.generic_action
@@ -76,7 +77,10 @@ class ColouringTestCase(object):
 
         colour = self.lookup(uuid)
         transition = colour + "_" + update['response']
+        old_state = self.state
         self.trigger(transition)
+        new_state = self.state
+        logger.info("State transition %s to %s ( via %s )", old_state, new_state, transition )
 
 
 @bp.route("/<string:uuid>/poll", methods=["GET"])
@@ -106,38 +110,57 @@ def respond(uuid):
 ## I think, actually, that we can just import from json all the below as little test cases.
 ## But for now: this.
 
+import uuid as guid
+random_user = "user_"+str(guid.uuid4())
+logging.info("User for test "+random_user)
 model = ColouringTestCase(
     ["red", "green"],  # clients
     [
-        ColouringState("init_rg", {"red": {"action": "ready"}, "green": {"action": "ready"}}),
-        ColouringState("init_r", {"red": {"action": "ready"}}),
-        ColouringState("init_g", {"green": {"action": "ready"}}),
+        ColouringState("init_r", 
+            {
+                "red": {"action": "register", "data": { "username": random_user, "password": "bubblebobblebabble" }, "responses": ["registered"]},
+            }
+        ),
+        ColouringState("init_g", 
+            {
+                "green": {"action": "login", "data": { "username": random_user, "password": "bubblebobblebabble" }, "responses": ["registered"]}
+            }
+        ),
         ColouringState(
             "start_crosssign",
-            {"red": {"action": "start_crosssign", "responses": ["started_crosssign"]}},
+            {
+                 "green": {"action": "start_crosssign", "responses": ["started_crosssign"]}
+            },
         ),
-        ColouringState("accept_crosssign", {"green": {"action": "accept_crosssign", "responses": ["accepted_crosssign"]}}),
+        ColouringState(
+            "accept_crosssign",
+            {
+                "red": {"action": "accept_crosssign", "responses": ["accepted_crosssign"]}
+            }
+        ),
         ColouringState(
             "verify_crosssign_rg",
             {
-                "red": {"action": "verify_crosssign"},
-                "green": {"action": "verify_crosssign"},
+                "red": {"action": "verify_crosssign_emoji"},
+                "green": {"action": "verify_crosssign_emoji"},
             },
         ),
-        ColouringState("verify_crosssign_r", {"red": {"action": "verify_crosssign"}}),
-        ColouringState("verify_crosssign_g", {"green": {"action": "verify_crosssign"}}),
+        ColouringState("verify_crosssign_r", {"red": {"action": "verify_crosssign_emoji"}, "responses": ["verified_crossign"]}),
+        ColouringState("verify_crosssign_g", {"green": {"action": "verify_crosssign_emoji"}, "responses": ["verified_crosssign"]}),
         ColouringState(
             "complete", {"red": {"action": "exit"}, "green": {"action": "exit"}}
         )
     ],
-    "init_rg"
+    "init_r"
 )
 
-model.add_transition("red_ready", "init_rg", "init_g")
-model.add_transition("red_ready", "init_r", "start_crosssign")
-model.add_transition("green_ready", "init_rg", "init_r")
-model.add_transition("green_ready", "init_g", "start_crosssign")
+model.add_transition("red_registered", "init_r", "init_g")
+model.add_transition("green_loggedin", "init_g", "start_crosssign")
 
+model.add_transition("green_started_crosssign", "start_crosssign", "accept_crosssign")
+model.add_transition(
+    "red_accepted_crosssign", "accept_crosssign", "verify_crosssign_rg"
+)
 model.add_transition("red_started_crosssign", "start_crosssign", "accept_crosssign")
 model.add_transition(
     "green_accepted_crosssign", "accept_crosssign", "verify_crosssign_rg"

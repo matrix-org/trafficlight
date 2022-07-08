@@ -1,24 +1,52 @@
-# Blue Green Purple
+# Traffic Light
 
-Controller for multiple clients
+Traffic controller for multiple matrix clients under test
 
+## Concept
+
+The trafficlight server controls various matrix clients in an effort to coordinate them testing in a live system.
+
+Each client identifies itself externally via a UUID; which is mapped to a internal client (normally a colour) when 
+they first connect and are allocated to a test.
+
+Clients should sit and poll constantly until they receive an action - and then continue to poll until they're told to 'exit'
+
+There's a bunch of client management not yet provided by the server; for example handling tidy up of clients with explicit 'exit's if a test fails, or handling routing of clients to test by features (eg, android or iOS, web or whatever)
+
+
+
+There are two APIs provided for interaction by the server:
+
+`/client/<uuid>/poll`
+
+Poll is used by clients to retrieve the next action. It's just some JSON.
+
+TODO: A dictionary of all actions that clients should support and how they should respond.
+
+`/client/<uuid>/report`
+
+Report is used by clients to advance the state machine when they've finished their current action.
+
+Inside the server is a state machine that handles actions by different clients; typically they're referred
+to by colour. When a real client 
+
+
+## Client controller loop
+
+The client controllers should basically poll the server and have a switch block for each action being returned: For each action they should perform it and only respond when complete.
+
+This loop should be simple enough to include in any language.
+
+## State machine
+
+The state machine should aim to have states that are the equivalent of steps in a business use case, and at the highest level, eg: "Send message X in room Y" not "Join room Y" and "Send message in current room". This may need some creative thought and bending of the rules for things that are modal in clients.
+
+
+## See Also
+
+Polyjuice has a very similar poll method for getting data to clients but uses matrix as a transport rather than HTTP; we should ensure that the two could be compatible; it would be nice to be able to use the same automatable clients to power other testing tools. Polyjuice is all about testing weird situations with a custom server rather than testing the common cases across as many clients as possible; but it does have similar flows.
 
 ## Installation
-
-From the virtual environment that you use for Synapse, install this module with:
-```shell
-pip install path/to/bluegreenpurple
-```
-(If you run into issues, you may need to upgrade `pip` first, e.g. by running
-`pip install --upgrade pip`)
-
-Then alter your homeserver configuration, adding to your `modules` configuration:
-```yaml
-modules:
-  - module: bluegreenpurple.BlueGreenPurple
-    config:
-      # TODO: Complete this section with an example for your module
-```
 
 
 ## Development
@@ -42,45 +70,3 @@ To run the linters and `mypy` type checker, use `./scripts-dev/lint.sh`.
 
 ## Releasing
 
-The exact steps for releasing will vary; but this is an approach taken by the
-Synapse developers (assuming a Unix-like shell):
-
- 1. Set a shell variable to the version you are releasing (this just makes
-    subsequent steps easier):
-    ```shell
-    version=X.Y.Z
-    ```
-
- 2. Update `setup.cfg` so that the `version` is correct.
-
- 3. Stage the changed files and commit.
-    ```shell
-    git add -u
-    git commit -m v$version -n
-    ```
-
- 4. Push your changes.
-    ```shell
-    git push
-    ```
-
- 5. When ready, create a signed tag for the release:
-    ```shell
-    git tag -s v$version
-    ```
-    Base the tag message on the changelog.
-
- 6. Push the tag.
-    ```shell
-    git push origin tag v$version
-    ```
-
- 7. If applicable:
-    Create a *release*, based on the tag you just pushed, on GitHub or GitLab.
-
- 8. If applicable:
-    Create a source distribution and upload it to PyPI:
-    ```shell
-    python -m build
-    twine upload dist/bluegreenpurple-$version*
-    ```
