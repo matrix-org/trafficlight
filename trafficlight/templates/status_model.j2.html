@@ -1,0 +1,25 @@
+{% extends("base.j2.html") %}
+
+{% block header %}
+  <h1>{% block title %}Status{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <h2>Clients</h2>
+  <table>
+    <tr><th>UUID</th><th>Action</th><th>Registered</th><th>Last Polled</th><th>Last responded</th></tr>
+    {% for client in test.clients %}
+    <tr>
+       <td>{{ client.uuid }}</td>
+       <td>{{ client.poll(update_last_polled=False)['action'] }}</td>
+       <td>{{ client.registered | delaytime }}</td>
+       <td>{{ client.last_polled | delaytime }}</td>
+       <td>{{ client.last_responded | delaytime }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h2>Current context:</h2>
+    <a href="{{ url_for("status.test_image", uuid = test.uuid) }}"><img src="{{ url_for("status.test_context_image", uuid = test.uuid) }}" id="test_context_image"></a>
+  </table>
+{% endblock %}

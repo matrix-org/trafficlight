@@ -1,7 +1,7 @@
 # vim: expandtab ts=4:
 import functools
 import logging
-from trafficlight.model import Client, generate_model
+from trafficlight.store import Client, generate_model, get_tests, get_clients, add_client
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
@@ -25,9 +25,6 @@ from flask import (
 bp = Blueprint("client", __name__, url_prefix="/client")
 
 
-clients = []
-models = []
-
 @bp.route("/<string:uuid>/register", methods=["POST"])
 def register(uuid):
     registration = request.json
@@ -38,17 +35,24 @@ def register(uuid):
         raise Error("Client already exists")
     
     client = Client(uuid, registration)
-    clients.append(client)
+    add_client(client)
 
-    if len(clients) == 2:
-       red = clients[0]
-       green = clients[1]
-       model = generate_model(red, green)
-       models.append(model)
+    tests = get_tests()
+    available_clients = list(filter(lambda x: x.model is None, get_clients()))
+    for test in tests:
+        if not test.running:
+           clients = test.runnable(available_clients)
+           if clients is not None:
+               logger.info("Running test %s", test)
+               test.run(clients)
+               return {}
+           else:
+               logger.info("Not enough clients to run test %s (have %s)", test, [str(item) for item in available_clients])
     return {}
    
+## todo move to the store?
 def get_client(uuid):
-    for client in clients:
+    for client in get_clients():
        if client.uuid == uuid:
           return client
     return None
@@ -75,6 +79,3 @@ def respond(uuid):
     client.respond(update)
 
     return {}
-
-
-

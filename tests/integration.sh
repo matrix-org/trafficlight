@@ -1,58 +1,68 @@
 #!/bin/bash
 
 # Ask for info for two clients
-
-echo -n "foo # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/foo/register -d '{"type": "element-web", "version": "0.15.0"}'
+DEBUG=DEBUG
+RUN=`date +%s`
+FOO=foo_$RUN
+BAR=bar_$RUN
+echo -n "$FOO # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/$FOO/register -d '{"type": "element-web", "version": "0.15.0"}'
 
 echo "Check UI" && read
 
-echo -n "bar # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/bar/register -d '{"type": "element-android", "version": "0.15.0"}'
+echo -n "$BAR # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/$BAR/register -d '{"type": "element-android", "version": "0.15.0"}'
 
 echo "Started test..." && read
 
-echo -n "baz # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/baz/register -d '{"type": "element-android", "version": "0.15.0"}'
-
-echo -n "baz < " && curl http://localhost:5000/client/baz/poll
+if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
 
 # walk through the steps...
 
-echo -n "foo < " && curl http://localhost:5000/client/foo/poll
-# register
 
+(echo -n "$FOO < " && curl -s http://localhost:5000/client/$FOO/poll | grep 'register' ) && echo "FOO is RED" && RED=$FOO && GREEN=$BAR
 
-echo -n "foo > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "registered"}' http://localhost:5000/client/foo/respond
+(echo -n "$BAR < " && curl -s http://localhost:5000/client/$BAR/poll | grep 'register' ) && echo "BAR is RED" && RED=$BAR && GREEN=$FOO
 
-echo -n "bar < " && curl http://localhost:5000/client/bar/poll
+echo -n "$RED < " && curl http://localhost:5000/client/$RED/poll
+echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll
+
+echo -n "$RED > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "registered"}' http://localhost:5000/client/$RED/respond
+if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
+
+echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll
 # login
 
-echo -n "bar > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "loggedin"}' http://localhost:5000/client/bar/respond
+echo -n "$GREEN > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "loggedin"}' http://localhost:5000/client/$GREEN/respond
+if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
 
-echo -n "foo < " && curl http://localhost:5000/client/foo/poll
-# foo should idle
-echo -n "bar < " && curl http://localhost:5000/client/bar/poll
-# bar should request cross signing
+echo -n "$RED < " && curl http://localhost:5000/client/$RED/poll
+# $RED should idle
+echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll
+# $GREEN should request cross signing
 
-echo -n "bar > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "started_crosssign"}' http://localhost:5000/client/bar/respond
-
-echo -n "foo < " && curl http://localhost:5000/client/foo/poll
-echo -n "bar < " && curl http://localhost:5000/client/bar/poll
+echo -n "$GREEN > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "started_crosssign"}' http://localhost:5000/client/$GREEN/respond
+if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
+echo -n "$RED < " && curl http://localhost:5000/client/$RED/poll
+echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll
 
 
 # Foo accepts the cross signing request
-echo -n "foo > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "accepted_crosssign"}' http://localhost:5000/client/foo/respond
+echo -n "$RED > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "accepted_crosssign"}' http://localhost:5000/client/$RED/respond
+if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
 
-echo -n "foo < " && curl http://localhost:5000/client/foo/poll
-echo -n "bar < " && curl http://localhost:5000/client/bar/poll
+echo -n "$RED < " && curl http://localhost:5000/client/$RED/poll
+echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll
 
 # Both verify emoji
-echo -n "bar > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "verified_crosssign"}' http://localhost:5000/client/bar/respond
+echo -n "$GREEN > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "verified_crosssign"}' http://localhost:5000/client/$GREEN/respond
+if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
 
-echo -n "foo < " && curl http://localhost:5000/client/foo/poll
-echo -n "bar < " && curl http://localhost:5000/client/bar/poll
-
-
-echo -n "foo > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "verified_crosssign"}' http://localhost:5000/client/foo/respond
+echo -n "$RED < " && curl http://localhost:5000/client/$RED/poll
+echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll
 
 
-echo -n "foo < " && curl http://localhost:5000/client/foo/poll
-echo -n "bar < " && curl http://localhost:5000/client/bar/poll
+echo -n "$RED > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "verified_crosssign"}' http://localhost:5000/client/$RED/respond
+if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
+
+
+echo -n "$RED < " && curl http://localhost:5000/client/$RED/poll
+echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll

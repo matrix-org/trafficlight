@@ -1,6 +1,7 @@
 # vim: expandtab ts=4:
 import functools
 import logging
+from datetime import datetime
 logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
@@ -14,11 +15,22 @@ class Client(object):
        self.uuid = uuid
        self.registration = registration
        self.model = None
+       self.last_polled = None
+       self.last_responded = None
+       self.registered = datetime.now()
+       self.completed = False
+ 
+    def __str__(self):
+       return f"Client {self.uuid} Model {self.model} Registration {self.registration}"
 
-    def poll(self):
+    def poll(self, update_last_polled=True):
        if self.model is None:
            # No model has been allocated yet; idle.
            return {"action": "idle", "responses": []}
+       
+       if self.completed:
+           # Client has finished work, exit
+           return {"action": "exit", "responses": []}
       
        action = self.model.action_for(self.uuid)
        # action is some json
@@ -26,30 +38,39 @@ class Client(object):
            action = {"action": "unexpected", "responses": []}
        colour = self.model.lookup(self.uuid)
        logger.info("%s (%s) polled: %s", self.uuid, colour, action)
-    
+       if (update_last_polled):
+           self.last_polled = datetime.now()
        return action
 
-    def respond(self, update):
+    def respond(self, update, update_last_responded=True):
        if self.model is None:
-           raise Error("Client has not been assigned a model yet")
+           raise Error("Client %s has not been assigned a model yet", self.uuid)
        
        colour = self.model.lookup(self.uuid)
        logger.info("%s (%s) responded: %s", self.uuid, colour, update)
        self.model.transition(self.uuid, update)
+       if (update_last_responded):
+           self.last_responded = datetime.now()
 
     def set_model(self, model):
+       logger.info("Set model %s on %s", model.uuid, self.uuid)
        self.model = model
 
     def set_colour(self, colour):
+       logger.info("Set colour %s on %s", colour, self.uuid)
        self.colour = colour
+
+    def completed(self):
+       self.completed = True
 
 class ColouringState(object):
     def __init__(self, name, action_map):
        self.name = name
        self.action_map = action_map
  
-class ColouringTestCase(object):
-    def __init__(self, state_list,  initial_state):
+class Model(object):
+    def __init__(self, uuid, state_list,  initial_state):
+        self.uuid = uuid
         states = []
         state_map = {}
         for state in state_list:
@@ -64,6 +85,10 @@ class ColouringTestCase(object):
         self.generic_action = {"action": "idle", "responses": []}
         # list of clients
         self.clients = []
+        self.completed = False
+
+    def __str__(self):
+       return f"Model {self.uuid} Clients {self.clients}"
 
     def action_for(self, uuid):
         client = self.lookup(uuid)
@@ -99,37 +124,62 @@ class ColouringTestCase(object):
         new_state = self.state
         logger.info("State transition %s to %s ( via %s )", old_state, new_state, transition )
 
-    def render_whole_graph(self, output_file):
-        self.get_graph().draw(output_file, prog='dot')
+    def render_whole_graph(self, bytesio):
+        self.get_graph().draw(bytesio, format="png", prog='dot')
 
-    def render_local_region(self, output_file):
-        self.get_graph(show_roi=True).draw(output_file, prog='dot')
+    def render_local_region(self, bytesio):
+        self.get_graph(show_roi=True).draw(bytesio, format="png", prog='dot')
 
     def add_client(self, colour, client):
         client.set_model(self)
         client.set_colour(colour)
         self.clients.append(client)
 
+    def on_enter_completed(self):
+        for client in self.clients:
+            client.completed()
+        self.completed = True
 
+clients = []
+tests = []
 
+def get_tests():
+   return tests
 
+def get_test(uuid):
+   for test in tests:
+      if str(test.uuid) == str(uuid):
+         return test
+      else: 
+         logger.info("%s did not match %s", test.uuid, uuid)
+   return None
 
+def get_clients():
+   return clients
 
-# TODO this should be some sort of externally provided test case, but for now:
+def add_client(client):
+   clients.append(client)
 
+def add_test(test):
+   tests.append(test)
+
+# Probably move me elsewhere soon...
 
 ## I think, actually, that we can just import from json all the below as little test cases.
 ## But for now: this.
 
-def generate_model(red, green):
+def generate_model(clients):
+    red_client = clients[0]
+    green_client = clients[1]
     import uuid as guid
     random_user = "user_"+str(guid.uuid4())
     logging.info("User for test "+random_user)
     RED = "red"
     GREEN = "green" 
     login_data = { "username": random_user, "password": "bubblebobblebabble", "homeserver_url": { "local_docker": "http://10.0.2.2:8080/", "local": "http://localhost:8080/"} }
-    
-    model = ColouringTestCase(
+    model_uuid = "model_"+str(guid.uuid4())
+    model = Model(
+        model_uuid,
         [
             ColouringState("init_r", 
                 {
@@ -180,8 +230,6 @@ def generate_model(red, green):
     )
     model.calculate_transitions()
 
-    model.add_client(RED, red)
-    model.add_client(GREEN, green)
+    model.add_client(RED, red_client)
+    model.add_client(GREEN, green_client)
     return model
-
-#model.render_whole_graph('/tmp/model.png')
