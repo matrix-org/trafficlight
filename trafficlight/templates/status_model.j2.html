@@ -5,10 +5,17 @@
 {% endblock %}
 
 {% block content %}
+{% if refresh > 0 %}
+<script>
+setTimeout(function(){
+   window.location.reload(1);
+}, {{ refresh }});
+</script>
+{% endif %}
   <h2>Clients</h2>
   <table>
     <tr><th>UUID</th><th>Action</th><th>Registered</th><th>Last Polled</th><th>Last responded</th></tr>
-    {% for client in test.clients %}
+    {% for client in test.model.clients %}
     <tr>
        <td>{{ client.uuid }}</td>
        <td>{{ client.poll(update_last_polled=False)['action'] }}</td>
