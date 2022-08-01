@@ -12,28 +12,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import functools
 import logging
-from trafficlight.store import Client, generate_model, get_tests, get_clients, add_client
+
+from flask import Blueprint, request
+
+from trafficlight.store import Client, add_client, get_clients, get_tests
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
 
-#logging.getLogger('transitions').setLevel(logging.ERROR)
-#logging.getLogger('wekzeug').setLevel(logging.ERROR)
+# logging.getLogger('transitions').setLevel(logging.ERROR)
+# logging.getLogger('wekzeug').setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
-from flask import (
-    Blueprint,
-    flash,
-    g,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
 
 bp = Blueprint("client", __name__, url_prefix="/client")
 
@@ -42,14 +34,16 @@ bp = Blueprint("client", __name__, url_prefix="/client")
 def register(uuid):
     registration = request.json
     logger.info("%s (    ) registered: %s", uuid, registration)
-    
+
     existing = get_client(uuid)
     if existing is not None:
         if existing.model is not None:
-           raise Error("Client already in use")
+            raise Exception("Client already in use")
         else:
-           logger.info("Client re-registered, returning OK again if registration matches")
-           return {}
+            logger.info(
+                "Client re-registered, returning OK again if registration matches"
+            )
+            return {}
     client = Client(uuid, registration)
     add_client(client)
 
@@ -57,21 +51,27 @@ def register(uuid):
     available_clients = list(filter(lambda x: x.model is None, get_clients()))
     for test in tests:
         if not test.running:
-           clients = test.runnable(available_clients)
-           if clients is not None:
-               logger.info("Running test %s", test)
-               test.run(clients)
-               return {}
-           else:
-               logger.info("Not enough clients to run test %s (have %s)", test, [str(item) for item in available_clients])
+            clients = test.runnable(available_clients)
+            if clients is not None:
+                logger.info("Running test %s", test)
+                test.run(clients)
+                return {}
+            else:
+                logger.info(
+                    "Not enough clients to run test %s (have %s)",
+                    test,
+                    [str(item) for item in available_clients],
+                )
     return {}
-   
-## todo move to the store?
+
+
+# todo move to the store?
 def get_client(uuid):
     for client in get_clients():
-       if client.uuid == uuid:
-          return client
+        if client.uuid == uuid:
+            return client
     return None
+
 
 @bp.route("/<string:uuid>/poll", methods=["GET"])
 def poll(uuid):
@@ -84,13 +84,12 @@ def poll(uuid):
     return client.poll()
 
 
-
 @bp.route("/<string:uuid>/respond", methods=["POST"])
 def respond(uuid):
     client = get_client(uuid)
     if client is None:
         # Again, bad situation; client is doing something and no-one knows why
-        raise Error("Unknown client performing update")
+        raise Exception("Unknown client performing update")
     update = request.json
     client.respond(update)
 
