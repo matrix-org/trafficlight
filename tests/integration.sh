@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# Ask for info for two clients
+# This bash script has been used to create and register clients, and force them through a simple flow.
+
+# It doesn't do anything like validate the steps make sense, etc, and will generally not work if other clients are registered.
+
+# It's probably a not unreasonable place to hack around with clients to get the server into a specific condition; but fairly soon tests will need to be more complicated.
+
 DEBUG=DEBUG
 RUN=`date +%s`
 FOO=foo_$RUN
