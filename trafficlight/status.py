@@ -45,7 +45,7 @@ def test_context_image(uuid: str) -> typing.ResponseValue:
         b = io.BytesIO()
         test.model.render_local_region(b)
         b.seek(0)
-        return send_file(b, mimetype="image/png")  # type: ignore
+        return send_file(b, mimetype="image/png")
     else:
         abort(404)
 
@@ -57,7 +57,7 @@ def test_image(uuid: str) -> typing.ResponseValue:
         b = io.BytesIO()
         test.model.render_whole_graph(b)
         b.seek(0)
-        return send_file(b, mimetype="image/png")  # type: ignore
+        return send_file(b, mimetype="image/png")
     else:
         abort(404)
 
