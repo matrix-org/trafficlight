@@ -13,17 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import uuid
+from typing import Any, Dict, cast
 
 from flask import Blueprint, request, typing
 
-from trafficlight.store import Client, add_client, get_clients, get_tests, get_client
-from typing import cast, Any, Dict
+from trafficlight.store import Client, add_client, get_client, get_clients, get_tests
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
 
-logging.getLogger('transitions').setLevel(logging.ERROR)
+logging.getLogger("transitions").setLevel(logging.ERROR)
 # logging.getLogger('wekzeug').setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
@@ -65,6 +64,7 @@ def register(client_uuid: str) -> typing.ResponseValue:
                     [str(item) for item in available_clients],
                 )
     return {}
+
 
 @bp.route("/<string:uuid>/poll", methods=["GET"])
 def poll(uuid: str) -> typing.ResponseValue:

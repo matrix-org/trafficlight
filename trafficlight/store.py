@@ -15,7 +15,7 @@
 import logging
 from datetime import datetime
 from io import BytesIO
-from typing import Any, Callable, List, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 from uuid import UUID
 
 from transitions.extensions import GraphMachine  # type: ignore
@@ -33,7 +33,9 @@ class ModelState(object):
 
 
 class Model(object):
-    def __init__(self, uuid: UUID, state_list: List[ModelState], initial_state: str) -> None:
+    def __init__(
+        self, uuid: UUID, state_list: List[ModelState], initial_state: str
+    ) -> None:
         self.uuid = uuid
         self.state = initial_state
         states = []
@@ -65,25 +67,31 @@ class Model(object):
             for colour, action in state.action_map.items():
                 for action_name, destination in action["responses"].items():
                     logger.info(
-                        "Adding %s - %s_%s -> %s", name, colour, action_name, destination
+                        "Adding %s - %s_%s -> %s",
+                        name,
+                        colour,
+                        action_name,
+                        destination,
                     )
-                    self.machine.add_transition(colour + "_" + action_name, name, destination)
+                    self.machine.add_transition(
+                        colour + "_" + action_name, name, destination
+                    )
 
     def transition(self, colour: str, update: Dict[str, Any]) -> None:
 
         transition = colour + "_" + update["response"]
         old_state = self.state
-        self.trigger(transition) # type: ignore
+        self.trigger(transition)  # type: ignore
         new_state = self.state
         logger.info(
             "State transition %s to %s ( via %s )", old_state, new_state, transition
         )
 
     def render_whole_graph(self, bytesio: BytesIO) -> None:
-        self.get_graph().draw(bytesio, format="png", prog="dot") # type: ignore
+        self.get_graph().draw(bytesio, format="png", prog="dot")  # type: ignore
 
     def render_local_region(self, bytesio: BytesIO) -> None:
-        self.get_graph(show_roi=True).draw(bytesio, format="png", prog="dot") # type: ignore
+        self.get_graph(show_roi=True).draw(bytesio, format="png", prog="dot")  # type: ignore
 
     def on_enter_completed(self) -> None:
         # for client in self.clients:
@@ -128,7 +136,9 @@ class Client(object):
             self.last_polled = datetime.now()
         return action
 
-    def respond(self, update: Dict[str, Any], update_last_responded: bool = True) -> None:
+    def respond(
+        self, update: Dict[str, Any], update_last_responded: bool = True
+    ) -> None:
         if self.model is None:
             raise Exception("Client %s has not been assigned a model yet", self.uuid)
 
@@ -152,8 +162,13 @@ class Client(object):
 
 
 class TestCase(object):
-    def __init__(self, uuid: UUID, description: str, client_matchers: List[Callable[[Client], bool]],
-                 model_generator: Callable[[List[Client]], Model]) -> None:
+    def __init__(
+        self,
+        uuid: UUID,
+        description: str,
+        client_matchers: List[Callable[[Client], bool]],
+        model_generator: Callable[[List[Client]], Model],
+    ) -> None:
         self.uuid = uuid
         self.description = description
         self.client_matchers = client_matchers
@@ -169,8 +184,12 @@ class TestCase(object):
     def runnable(self, client_list: List[Client]) -> Optional[List[Client]]:
         if len(self.client_matchers) == 2:
             # there's a better way to do this for N clients.
-            red_clients: List[Client] = list(filter(self.client_matchers[0], client_list))
-            green_clients: List[Client] = list(filter(self.client_matchers[1], client_list))
+            red_clients: List[Client] = list(
+                filter(self.client_matchers[0], client_list)
+            )
+            green_clients: List[Client] = list(
+                filter(self.client_matchers[1], client_list)
+            )
 
             if len(red_clients) > 0:
                 for red_client in red_clients:

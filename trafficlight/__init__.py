@@ -15,11 +15,11 @@
 import os
 import uuid
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 
 from flask import Flask
 
-from trafficlight.store import add_test, Client, TestCase, generate_model
-from typing import Any, Dict, Optional
+from trafficlight.store import Client, TestCase, add_test, generate_model
 
 
 # Format in "2 hours" / "2 minutes" etc.
