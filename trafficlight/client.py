@@ -13,15 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import uuid
 
-from flask import Blueprint, request
+from flask import Blueprint, request, typing
 
-from trafficlight.store import Client, add_client, get_clients, get_tests
+from trafficlight.store import Client, add_client, get_clients, get_tests, get_client
+from typing import cast, Any, Dict
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
 
-# logging.getLogger('transitions').setLevel(logging.ERROR)
+logging.getLogger('transitions').setLevel(logging.ERROR)
 # logging.getLogger('wekzeug').setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
@@ -30,12 +32,12 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("client", __name__, url_prefix="/client")
 
 
-@bp.route("/<string:uuid>/register", methods=["POST"])
-def register(uuid):
-    registration = request.json
-    logger.info("%s (    ) registered: %s", uuid, registration)
+@bp.route("/<string:client_uuid>/register", methods=["POST"])
+def register(client_uuid: str) -> typing.ResponseValue:
+    registration = cast(Dict[str, Any], request.json)
+    logger.info("%s (    ) registered: %s", client_uuid, registration)
 
-    existing = get_client(uuid)
+    existing = get_client(client_uuid)
     if existing is not None:
         if existing.model is not None:
             raise Exception("Client already in use")
@@ -44,7 +46,7 @@ def register(uuid):
                 "Client re-registered, returning OK again if registration matches"
             )
             return {}
-    client = Client(uuid, registration)
+    client = Client(client_uuid, registration)
     add_client(client)
 
     tests = get_tests()
@@ -64,17 +66,8 @@ def register(uuid):
                 )
     return {}
 
-
-# todo move to the store?
-def get_client(uuid):
-    for client in get_clients():
-        if client.uuid == uuid:
-            return client
-    return None
-
-
 @bp.route("/<string:uuid>/poll", methods=["GET"])
-def poll(uuid):
+def poll(uuid: str) -> typing.ResponseValue:
     client = get_client(uuid)
     if client is None:
         # Very bad situation; client belives it's registered; server has no record
@@ -85,12 +78,12 @@ def poll(uuid):
 
 
 @bp.route("/<string:uuid>/respond", methods=["POST"])
-def respond(uuid):
+def respond(uuid: str) -> typing.ResponseValue:
     client = get_client(uuid)
     if client is None:
         # Again, bad situation; client is doing something and no-one knows why
         raise Exception("Unknown client performing update")
-    update = request.json
+    update = cast(Dict[str, Any], request.json)
     client.respond(update)
 
     return {}

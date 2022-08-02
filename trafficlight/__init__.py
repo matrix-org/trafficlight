@@ -13,16 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import uuid
 from datetime import datetime, timedelta
 
 from flask import Flask
 
-from trafficlight.store import add_test
-from trafficlight.test_builder import TestCase
+from trafficlight.store import add_test, Client, TestCase, generate_model
+from typing import Any, Dict, Optional
 
 
 # Format in "2 hours" / "2 minutes" etc.
-def format_delaytime(value):
+def format_delaytime(value: datetime) -> str:
     if value is None:
         return "N/A"
     now = datetime.now()
@@ -33,7 +34,7 @@ def format_delaytime(value):
     )
 
 
-def create_app(test_config=None):
+def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY="dev",
@@ -59,25 +60,43 @@ def create_app(test_config=None):
     app.register_blueprint(status.bp)
     app.jinja_env.filters["delaytime"] = format_delaytime
 
-    def android_matcher(x):
-        return x.registration["type"] == "element-android"
+    def android_matcher(x: Client) -> bool:
+        return str(x.registration["type"]) == "element-android"
 
-    def web_matcher(x):
-        return x.registration["type"] == "element-web"
+    def web_matcher(x: Client) -> bool:
+        return str(x.registration["type"]) == "element-web"
 
     # Expand out the four test cases so far:
     add_test(
-        TestCase("android, web", [android_matcher, web_matcher], client.generate_model)
+        TestCase(
+            uuid.uuid4(),
+            "android, web",
+            [android_matcher, web_matcher],
+            generate_model,
+        )
     )
-    add_test(
-        TestCase("web, android", [web_matcher, android_matcher], client.generate_model)
-    )
-    add_test(TestCase("web, web", [web_matcher, web_matcher], client.generate_model))
     add_test(
         TestCase(
+            uuid.uuid4(),
+            "web, android",
+            [web_matcher, android_matcher],
+            generate_model,
+        )
+    )
+    add_test(
+        TestCase(
+            uuid.uuid4(),
+            "web, web",
+            [web_matcher, web_matcher],
+            generate_model,
+        )
+    )
+    add_test(
+        TestCase(
+            uuid.uuid4(),
             "android, android",
             [android_matcher, android_matcher],
-            client.generate_model,
+            generate_model,
         )
     )
 

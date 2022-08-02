@@ -15,7 +15,7 @@
 import io
 import logging
 
-from flask import Blueprint, abort, render_template, request, send_file
+from flask import Blueprint, abort, render_template, request, send_file, typing
 
 from trafficlight.store import get_clients, get_test, get_tests
 
@@ -32,38 +32,38 @@ bp = Blueprint("status", __name__, url_prefix="/status")
 
 
 @bp.route("/", methods=["GET"])
-def index():
+def index() -> typing.ResponseValue:
     return render_template(
         "status_index.j2.html", clients=get_clients(), tests=get_tests()
     )
 
 
 @bp.route("/<string:uuid>/context.png", methods=["GET"])
-def test_context_image(uuid):
+def test_context_image(uuid: str) -> typing.ResponseValue:
     test = get_test(uuid)
-    if test is not None:
+    if test is not None and test.model is not None:
         b = io.BytesIO()
         test.model.render_local_region(b)
         b.seek(0)
-        return send_file(b, mimetype="image/png")
+        return send_file(b, mimetype="image/png")  # type: ignore
     else:
         abort(404)
 
 
 @bp.route("/<string:uuid>/statemachine.png", methods=["GET"])
-def test_image(uuid):
+def test_image(uuid: str) -> typing.ResponseValue:
     test = get_test(uuid)
-    if test is not None:
+    if test is not None and test.model is not None:
         b = io.BytesIO()
         test.model.render_whole_graph(b)
         b.seek(0)
-        return send_file(b, mimetype="image/png")
+        return send_file(b, mimetype="image/png")  # type: ignore
     else:
         abort(404)
 
 
 @bp.route("/<string:uuid>/status", methods=["GET"])
-def test_status(uuid):
+def test_status(uuid: str) -> typing.ResponseValue:
     refresh = request.args.get("refresh", default=0, type=int)
     logger.info("Finding test %s", uuid)
     test = get_test(uuid)

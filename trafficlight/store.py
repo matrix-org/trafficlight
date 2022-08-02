@@ -14,85 +14,30 @@
 # limitations under the License.
 import logging
 from datetime import datetime
+from io import BytesIO
+from typing import Any, Callable, List, Dict, Optional
+from uuid import UUID
 
-from transitions.extensions import GraphMachine
-from transitions.extensions.states import Timeout, add_state_features
+from transitions.extensions import GraphMachine  # type: ignore
+from transitions.extensions.states import Timeout, add_state_features  # type: ignore
 
 logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
 
-class Client(object):
-    def __init__(self, uuid, registration):
-        self.uuid = uuid
-        self.registration = registration
-        self.model = None
-        self.last_polled = None
-        self.last_responded = None
-        self.registered = datetime.now()
-        self.completed = False
-
-    def __str__(self):
-        return f"Client {self.uuid} Model {self.model} Registration {self.registration}"
-
-    def poll(self, update_last_polled=True):
-        if self.model is None:
-            # No model has been allocated yet; idle.
-            return {"action": "idle", "responses": []}
-
-        if self.completed:
-            # Client has finished work, exit
-            return {"action": "exit", "responses": []}
-
-        action = self.model.action_for(self.uuid)
-        # action is some json
-        if action is None:
-            action = {"action": "unexpected", "responses": []}
-        colour = self.model.lookup(self.uuid)
-        logger.info("%s (%s) polled: %s", self.uuid, colour, action)
-        if update_last_polled:
-            self.last_polled = datetime.now()
-        return action
-
-    def respond(self, update, update_last_responded=True):
-        if self.model is None:
-            raise Exception("Client %s has not been assigned a model yet", self.uuid)
-
-        colour = self.model.lookup(self.uuid)
-        logger.info("%s (%s) responded: %s", self.uuid, colour, update)
-        self.model.transition(self.uuid, update)
-        if update_last_responded:
-            self.last_responded = datetime.now()
-
-    def set_model(self, model):
-        logger.info("Set model %s on %s", model.uuid, self.uuid)
-        self.model = model
-
-    def set_colour(self, colour):
-        logger.info("Set colour %s on %s", colour, self.uuid)
-        self.colour = colour
-
-    def completed(self):
-        self.completed = True
-
-
-class ColouringState(object):
-    def __init__(self, name, action_map):
+class ModelState(object):
+    def __init__(self, name: str, action_map: Dict[str, Dict[str, Any]]) -> None:
         self.name = name
         self.action_map = action_map
 
 
-@add_state_features(Timeout)
-class TimeoutGraphMachine(GraphMachine):
-    pass
-
-
 class Model(object):
-    def __init__(self, uuid, state_list, initial_state):
+    def __init__(self, uuid: UUID, state_list: List[ModelState], initial_state: str) -> None:
         self.uuid = uuid
+        self.state = initial_state
         states = []
-        state_map = {}
+        state_map: Dict[str, ModelState] = {}
         for state in state_list:
             states.append(state.name)
             state_map[state.name] = state
@@ -101,77 +46,163 @@ class Model(object):
 
         self.state_map = state_map
         self.generic_action = {"action": "idle", "responses": []}
-        # list of clients
-        self.clients = []
         self.completed = False
 
-    def __str__(self):
-        return f"Model {self.uuid} Clients {self.clients}"
+    def __str__(self) -> str:
+        return f"Model {self.uuid}"
 
-    def action_for(self, uuid):
-        client = self.lookup(uuid)
+    def action_for_colour(self, colour: str) -> Dict[str, Any]:
         state_obj = self.state_map.get(self.state)
-        action_map = state_obj.action_map
-        specific_action = action_map.get(client.colour)
-        if specific_action is None:
-            return self.generic_action
-        return specific_action
+        if state_obj is not None:
+            action_map = state_obj.action_map
+            specific_action = action_map.get(colour)
+            if specific_action is not None:
+                return specific_action
+        return self.generic_action
 
-    def calculate_transitions(self):
+    def calculate_transitions(self) -> None:
         for name, state in self.state_map.items():
             for colour, action in state.action_map.items():
-                for action, destination in action["responses"].items():
+                for action_name, destination in action["responses"].items():
                     logger.info(
-                        "Adding %s - %s_%s -> %s", name, colour, action, destination
+                        "Adding %s - %s_%s -> %s", name, colour, action_name, destination
                     )
-                    self.add_transition(colour + "_" + action, name, destination)
+                    self.machine.add_transition(colour + "_" + action_name, name, destination)
 
-    def add_transition(self, trigger, source, destination):
-        self.machine.add_transition(trigger, source, destination)
+    def transition(self, colour: str, update: Dict[str, Any]) -> None:
 
-    def lookup(self, uuid):
-        for client in self.clients:
-            if client.uuid == uuid:
-                return client
-        return None
-
-    def transition(self, uuid, update):
-
-        client = self.lookup(uuid)
-        transition = client.colour + "_" + update["response"]
+        transition = colour + "_" + update["response"]
         old_state = self.state
-        self.trigger(transition)
+        self.trigger(transition) # type: ignore
         new_state = self.state
         logger.info(
             "State transition %s to %s ( via %s )", old_state, new_state, transition
         )
 
-    def render_whole_graph(self, bytesio):
-        self.get_graph().draw(bytesio, format="png", prog="dot")
+    def render_whole_graph(self, bytesio: BytesIO) -> None:
+        self.get_graph().draw(bytesio, format="png", prog="dot") # type: ignore
 
-    def render_local_region(self, bytesio):
-        self.get_graph(show_roi=True).draw(bytesio, format="png", prog="dot")
+    def render_local_region(self, bytesio: BytesIO) -> None:
+        self.get_graph(show_roi=True).draw(bytesio, format="png", prog="dot") # type: ignore
 
-    def add_client(self, colour, client):
-        client.set_model(self)
-        client.set_colour(colour)
-        self.clients.append(client)
-
-    def on_enter_completed(self):
-        for client in self.clients:
-            client.completed()
+    def on_enter_completed(self) -> None:
+        # for client in self.clients:
+        #     client.complete()
+        # TODO: perhaps tell the test case it's completed instead of the clients
+        # and let that percolate down?
         self.completed = True
 
 
-clients = []
-tests = []
+class Client(object):
+    def __init__(self, uuid: str, registration: Dict[str, Any]) -> None:
+        self.colour: Optional[str] = None
+        self.uuid = uuid
+        self.registration = registration
+        self.model: Optional[Model] = None
+        self.last_polled: Optional[datetime] = None
+        self.last_responded: Optional[datetime] = None
+        self.registered = datetime.now()
+        self.completed = False
+
+    def __str__(self) -> str:
+        return f"Client {self.uuid} Model {self.model} Registration {self.registration}"
+
+    def poll(self, update_last_polled: bool = True) -> Dict[str, Any]:
+        if self.model is None:
+            # No model has been allocated yet; idle.
+            return {"action": "idle", "responses": []}
+
+        if self.completed:
+            # Client has finished work, exit
+            return {"action": "exit", "responses": []}
+
+        if self.colour is None:
+            raise Exception("Client not allocated a colour yet")
+        action = self.model.action_for_colour(self.colour)
+        # action is some json
+        if action is None:
+            action = {"action": "unexpected", "responses": []}
+        colour = self.colour
+        logger.info("%s (%s) polled: %s", self.uuid, colour, action)
+        if update_last_polled:
+            self.last_polled = datetime.now()
+        return action
+
+    def respond(self, update: Dict[str, Any], update_last_responded: bool = True) -> None:
+        if self.model is None:
+            raise Exception("Client %s has not been assigned a model yet", self.uuid)
+
+        if self.colour is None:
+            raise Exception("Client not matched into a model yet")
+        logger.info("%s (%s) responded: %s", self.uuid, self.colour, update)
+        self.model.transition(self.colour, update)
+        if update_last_responded:
+            self.last_responded = datetime.now()
+
+    def set_model(self, model: Model) -> None:
+        logger.info("Set model %s on %s", model.uuid, self.uuid)
+        self.model = model
+
+    def set_colour(self, colour: str) -> None:
+        logger.info("Set colour %s on %s", colour, self.uuid)
+        self.colour = colour
+
+    def complete(self) -> None:
+        self.completed = True
 
 
-def get_tests():
+class TestCase(object):
+    def __init__(self, uuid: UUID, description: str, client_matchers: List[Callable[[Client], bool]],
+                 model_generator: Callable[[List[Client]], Model]) -> None:
+        self.uuid = uuid
+        self.description = description
+        self.client_matchers = client_matchers
+        self.model_generator = model_generator
+        self.registered = datetime.now()
+        self.running = False
+        self.model: Optional[Model] = None
+
+    def __str__(self) -> str:
+        return f"TestCase {self.description} {self.uuid} Model {self.model} Running {self.running}"
+
+    # takes a client list and returns clients required to run the test
+    def runnable(self, client_list: List[Client]) -> Optional[List[Client]]:
+        if len(self.client_matchers) == 2:
+            # there's a better way to do this for N clients.
+            red_clients: List[Client] = list(filter(self.client_matchers[0], client_list))
+            green_clients: List[Client] = list(filter(self.client_matchers[1], client_list))
+
+            if len(red_clients) > 0:
+                for red_client in red_clients:
+                    for green_client in green_clients:
+                        if red_client != green_client:
+                            return [red_client, green_client]
+
+        return None
+
+    def run(self, client_list: List[Client]) -> None:
+        if self.running:
+            raise Exception("Logic error: already running this test")
+        else:
+            self.running = True
+        # tidy this up somewhat
+        self.model = self.model_generator(client_list)
+
+
+@add_state_features(Timeout)
+class TimeoutGraphMachine(GraphMachine):  # type: ignore
+    pass
+
+
+clients: List[Client] = []
+tests: List[TestCase] = []
+
+
+def get_tests() -> List[TestCase]:
     return tests
 
 
-def get_test(uuid):
+def get_test(uuid: str) -> Optional[TestCase]:
     for test in tests:
         if str(test.uuid) == str(uuid):
             return test
@@ -180,16 +211,23 @@ def get_test(uuid):
     return None
 
 
-def get_clients():
+def add_test(test: TestCase) -> None:
+    tests.append(test)
+
+
+def get_clients() -> List[Client]:
     return clients
 
 
-def add_client(client):
+def get_client(uuid: str) -> Optional[Client]:
+    for client in get_clients():
+        if client.uuid == uuid:
+            return client
+    return None
+
+
+def add_client(client: Client) -> None:
     clients.append(client)
-
-
-def add_test(test):
-    tests.append(test)
 
 
 # Probably move me elsewhere soon...
@@ -198,15 +236,17 @@ def add_test(test):
 # But for now: this.
 
 
-def generate_model(clients):
-    red_client = clients[0]
-    green_client = clients[1]
+RED = "red"
+GREEN = "green"
+
+
+def generate_model(used_clients: List[Client]) -> Model:
+    red_client = used_clients[0]
+    green_client = used_clients[1]
     import uuid as guid
 
     random_user = "user_" + str(guid.uuid4())
     logging.info("User for test " + random_user)
-    RED = "red"
-    GREEN = "green"
     login_data = {
         "username": random_user,
         "password": "bubblebobblebabble",
@@ -215,11 +255,10 @@ def generate_model(clients):
             "local": "http://localhost:8080/",
         },
     }
-    model_uuid = "model_" + str(guid.uuid4())
     model = Model(
-        model_uuid,
+        guid.uuid4(),
         [
-            ColouringState(
+            ModelState(
                 "init_r",
                 {
                     RED: {
@@ -229,7 +268,7 @@ def generate_model(clients):
                     },
                 },
             ),
-            ColouringState(
+            ModelState(
                 "init_g",
                 {
                     GREEN: {
@@ -239,7 +278,7 @@ def generate_model(clients):
                     }
                 },
             ),
-            ColouringState(
+            ModelState(
                 "start_crosssign",
                 {
                     GREEN: {
@@ -248,7 +287,7 @@ def generate_model(clients):
                     }
                 },
             ),
-            ColouringState(
+            ModelState(
                 "accept_crosssign",
                 {
                     RED: {
@@ -257,7 +296,7 @@ def generate_model(clients):
                     }
                 },
             ),
-            ColouringState(
+            ModelState(
                 "verify_crosssign_rg",
                 {
                     RED: {
@@ -270,7 +309,7 @@ def generate_model(clients):
                     },
                 },
             ),
-            ColouringState(
+            ModelState(
                 "verify_crosssign_r",
                 {
                     RED: {
@@ -279,7 +318,7 @@ def generate_model(clients):
                     }
                 },
             ),
-            ColouringState(
+            ModelState(
                 "verify_crosssign_g",
                 {
                     GREEN: {
@@ -288,11 +327,11 @@ def generate_model(clients):
                     }
                 },
             ),
-            ColouringState(
+            ModelState(
                 "complete",
                 {
-                    RED: {"action": "exit", "responses": {}},
-                    GREEN: {"action": "exit", "responses": {}},
+                    RED: {"action": "exit", "responses": []},
+                    GREEN: {"action": "exit", "responses": []},
                 },
             ),
         ],
@@ -300,6 +339,8 @@ def generate_model(clients):
     )
     model.calculate_transitions()
 
-    model.add_client(RED, red_client)
-    model.add_client(GREEN, green_client)
+    red_client.set_colour(RED)
+    red_client.set_model(model)
+    green_client.set_colour(GREEN)
+    green_client.set_model(model)
     return model
