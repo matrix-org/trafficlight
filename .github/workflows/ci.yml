@@ -17,5 +17,4 @@ jobs:
       - run: python -m pip install .[dev]
       - run: tox -e check_types
       - run: tox -e check_codestyle
-      - run: tox -e py
 
