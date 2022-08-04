@@ -47,7 +47,11 @@ class Model(object):
         self.machine = GraphMachine(model=self, states=states, initial=initial_state)
 
         self.state_map = state_map
-        self.generic_action = {"action": "idle", "responses": []}
+        self.generic_action = {
+            "action": "idle",
+            "responses": [],
+            "data": {"delay": 5000},
+        }
         self.completed = False
 
     def __str__(self) -> str:
@@ -118,7 +122,7 @@ class Client(object):
     def poll(self, update_last_polled: bool = True) -> Dict[str, Any]:
         if self.model is None:
             # No model has been allocated yet; idle.
-            return {"action": "idle", "responses": []}
+            return {"action": "idle", "responses": [], "data": {"delay": 30000}}
 
         if self.completed:
             # Client has finished work, exit
