@@ -15,11 +15,13 @@
 import logging
 from datetime import datetime
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, List, Optional
 from uuid import UUID
 
 from transitions.extensions import GraphMachine  # type: ignore
 from transitions.extensions.states import Timeout, add_state_features  # type: ignore
+
+from trafficlight.actions import *
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -27,14 +29,14 @@ logger = logging.getLogger(__name__)
 
 
 class ModelState(object):
-    def __init__(self, name: str, action_map: Dict[str, Dict[str, Any]]) -> None:
+    def __init__(self, name: str, action_map: Dict[str, Action]) -> None:
         self.name = name
         self.action_map = action_map
 
 
 class Model(object):
     def __init__(
-        self, uuid: UUID, state_list: List[ModelState], initial_state: str
+            self, uuid: UUID, state_list: List[ModelState], initial_state: str
     ) -> None:
         self.uuid = uuid
         self.state = initial_state
@@ -47,13 +49,13 @@ class Model(object):
         self.machine = GraphMachine(model=self, states=states, initial=initial_state)
 
         self.state_map = state_map
-        self.generic_action = {"action": "idle", "responses": []}
+        self.generic_action = idle(5000)
         self.completed = False
 
     def __str__(self) -> str:
         return f"Model {self.uuid}"
 
-    def action_for_colour(self, colour: str) -> Dict[str, Any]:
+    def action_for_colour(self, colour: str) -> Action:
         state_obj = self.state_map.get(self.state)
         if state_obj is not None:
             action_map = state_obj.action_map
@@ -137,7 +139,7 @@ class Client(object):
         return action
 
     def respond(
-        self, update: Dict[str, Any], update_last_responded: bool = True
+            self, update: Dict[str, Any], update_last_responded: bool = True
     ) -> None:
         if self.model is None:
             raise Exception("Client %s has not been assigned a model yet", self.uuid)
@@ -163,11 +165,11 @@ class Client(object):
 
 class TestCase(object):
     def __init__(
-        self,
-        uuid: UUID,
-        description: str,
-        client_matchers: List[Callable[[Client], bool]],
-        model_generator: Callable[[List[Client]], Model],
+            self,
+            uuid: UUID,
+            description: str,
+            client_matchers: List[Callable[[Client], bool]],
+            model_generator: Callable[[List[Client]], Model],
     ) -> None:
         self.uuid = uuid
         self.description = description
@@ -255,8 +257,6 @@ def add_client(client: Client) -> None:
 # But for now: this.
 
 
-RED = "red"
-GREEN = "green"
 
 
 def generate_model(used_clients: List[Client]) -> Model:
@@ -266,91 +266,72 @@ def generate_model(used_clients: List[Client]) -> Model:
 
     random_user = "user_" + str(guid.uuid4())
     logging.info("User for test " + random_user)
-    login_data = {
-        "username": random_user,
-        "password": "bubblebobblebabble",
-        "homeserver_url": {
-            "local_docker": "http://10.0.2.2:8080/",
-            "local": "http://localhost:8080/",
-        },
+    password = "bubblebobblebabble",
+    homeserver_urls = {
+        "local_docker": "http://10.0.2.2:8080/",
+        "local": "http://localhost:8080/",
     }
+
+    RED = "red"
+    GREEN = "green"
+
     model = Model(
         guid.uuid4(),
         [
             ModelState(
                 "init_r",
                 {
-                    RED: {
-                        "action": "register",
-                        "data": login_data,
-                        "responses": {"registered": "init_g"},
-                    },
+                    RED: register(random_user, password, homeserver_urls, {REGISTERED: "init_g"}),
+                    GREEN: idle(5000),
                 },
             ),
             ModelState(
                 "init_g",
                 {
-                    GREEN: {
-                        "action": "login",
-                        "data": login_data,
-                        "responses": {"loggedin": "start_crosssign"},
-                    }
+                    RED: idle(5000),
+                    GREEN: login(random_user, password, homeserver_urls, {LOGGEDIN: "start_crosssign"}),
                 },
             ),
             ModelState(
                 "start_crosssign",
                 {
-                    GREEN: {
-                        "action": "start_crosssign",
-                        "responses": {"started_crosssign": "accept_crosssign"},
-                    }
+                    RED: idle(500),
+                    GREEN: start_crosssign({STARTED_CROSSSIGN: "accept_crosssign"}),
                 },
             ),
             ModelState(
                 "accept_crosssign",
                 {
-                    RED: {
-                        "action": "accept_crosssign",
-                        "responses": {"accepted_crosssign": "verify_crosssign_rg"},
-                    }
+                    RED: accept_crosssign({ACCEPTED_CROSSSIGN: "verify_crosssign_rg"}),
+                    GREEN: idle(500)
                 },
             ),
             ModelState(
                 "verify_crosssign_rg",
                 {
-                    RED: {
-                        "action": "verify_crosssign_emoji",
-                        "responses": {"verified_crosssign": "verify_crosssign_g"},
-                    },
-                    GREEN: {
-                        "action": "verify_crosssign_emoji",
-                        "responses": {"verified_crosssign": "verify_crosssign_r"},
-                    },
+                    RED: verify_crosssign_emoji({VERIFIED_CROSSSIGN: "verify_crosssign_g"}),
+                    GREEN: verify_crosssign_emoji({VERIFIED_CROSSSIGN: "verify_crosssign_r"}),
                 },
             ),
             ModelState(
                 "verify_crosssign_r",
                 {
-                    RED: {
-                        "action": "verify_crosssign_emoji",
-                        "responses": {"verified_crosssign": "complete"},
-                    }
+                    RED: verify_crosssign_emoji({VERIFIED_CROSSSIGN: "complete"}),
+                    GREEN: idle(500),
                 },
             ),
             ModelState(
                 "verify_crosssign_g",
                 {
-                    GREEN: {
-                        "action": "verify_crosssign_emoji",
-                        "responses": {"verified_crosssign": "complete"},
-                    }
+                    RED: idle(500),
+                    GREEN: verify_crosssign_emoji({VERIFIED_CROSSSIGN: "complete"}),
                 },
             ),
             ModelState(
                 "complete",
                 {
-                    RED: {"action": "exit", "responses": []},
-                    GREEN: {"action": "exit", "responses": []},
+                    RED: client_exit(),
+                    GREEN: client_exit(),
                 },
             ),
         ],
