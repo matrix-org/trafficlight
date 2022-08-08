@@ -20,6 +20,7 @@ from uuid import UUID
 
 from transitions.extensions import GraphMachine  # type: ignore
 from transitions.extensions.states import Timeout, add_state_features  # type: ignore
+from trafficlight.homerunner import HomerunnerClient
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -65,6 +66,7 @@ class Model(object):
     def calculate_transitions(self) -> None:
         for name, state in self.state_map.items():
             for colour, action in state.action_map.items():
+                logging.info(action["responses"])
                 for action_name, destination in action["responses"].items():
                     logger.info(
                         "Adding %s - %s_%s -> %s",
@@ -258,24 +260,29 @@ def add_client(client: Client) -> None:
 RED = "red"
 GREEN = "green"
 
+homerunner = HomerunnerClient("http://localhost:54321")
+
 
 def generate_model(used_clients: List[Client]) -> Model:
     red_client = used_clients[0]
     green_client = used_clients[1]
     import uuid as guid
-
+    model_id = str(guid.uuid4())
+    # Generating server
+    homeserver = homerunner.create(model_id, ["complement-synapse"])[0]
+    docker_api = homeserver.cs_api.replace("localhost", "10.0.2.2")
     random_user = "user_" + str(guid.uuid4())
     logging.info("User for test " + random_user)
     login_data = {
         "username": random_user,
         "password": "bubblebobblebabble",
         "homeserver_url": {
-            "local_docker": "http://10.0.2.2:8080/",
-            "local": "http://localhost:8080/",
+            "local_docker": docker_api,  # hmm...
+            "local": homeserver.cs_api,
         },
     }
     model = Model(
-        guid.uuid4(),
+        model_id,
         [
             ModelState(
                 "init_r",
@@ -349,8 +356,8 @@ def generate_model(used_clients: List[Client]) -> Model:
             ModelState(
                 "complete",
                 {
-                    RED: {"action": "exit", "responses": []},
-                    GREEN: {"action": "exit", "responses": []},
+                    RED: {"action": "exit", "responses": {}},
+                    GREEN: {"action": "exit", "responses": {}},
                 },
             ),
         ],
