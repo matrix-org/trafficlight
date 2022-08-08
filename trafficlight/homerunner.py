@@ -56,10 +56,7 @@ class HomerunnerClient(object):
             homeservers.append(self._generate_homeserver(image))
         data = {
             "base_image_uri": "INVALID_NAME",  # uppercase is not a valid docker repository name, so this will cause a complement error.
-            "blueprint": {
-                "Name": model_id,
-                "Homeservers": homeservers
-            },
+            "blueprint": {"Name": model_id, "Homeservers": homeservers},
         }
         logger.info(data)
         rsp = requests.post(create_url, json=data)

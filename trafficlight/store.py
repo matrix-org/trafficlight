@@ -35,7 +35,7 @@ class ModelState(object):
 
 class Model(object):
     def __init__(
-        self, uuid: UUID, state_list: List[ModelState], initial_state: str
+        self, uuid: str, state_list: List[ModelState], initial_state: str
     ) -> None:
         self.uuid = uuid
         self.state = initial_state
@@ -267,6 +267,7 @@ def generate_model(used_clients: List[Client]) -> Model:
     red_client = used_clients[0]
     green_client = used_clients[1]
     import uuid as guid
+
     model_id = str(guid.uuid4())
     # Generating server
     homeserver = homerunner.create(model_id, ["complement-synapse"])[0]
