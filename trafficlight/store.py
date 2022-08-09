@@ -20,6 +20,7 @@ from uuid import UUID
 
 from transitions.extensions import GraphMachine  # type: ignore
 from transitions.extensions.states import Timeout, add_state_features  # type: ignore
+
 from trafficlight.homerunner import HomerunnerClient
 
 logging.basicConfig(level=logging.DEBUG)
