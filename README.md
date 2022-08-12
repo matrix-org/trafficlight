@@ -20,6 +20,8 @@ There are three APIs provided for interaction by the server:
 
 Register a new client with the server. Provide data about the client so the server can allocate to tests efficiently.
 
+NB: at present this may block for an extended period as servers and the test model are created. This should be moved to a background/worker task, but has not yet been done.
+
 `/client/<uuid>/poll`
 
 Poll is used by clients to retrieve the next action. It's just some JSON.
@@ -32,6 +34,21 @@ Report is used by clients to advance the state machine when they've finished the
 
 Inside the server is a state machine that handles actions by different clients; typically they're referred to by colour. When a real client 
 
+
+Additionally:
+
+`/status`
+
+Provides html for human-readable information about which clients are registered and what state they're in. Useful for debugging why a certain test has not yet run.
+
+`/status/junit.xml`
+
+Provides compatible junit.xml test output for use in other services / formatting / etc.
+
+ * Tests that have not started (not found enough clients to run) are `skipped`
+ * Tests that have started and completed are successes
+ * Tests that have started and explicitly fail are `failures`
+ * Tests that have started but are in any other state are `errors`
 
 ## Client controller loop
 
