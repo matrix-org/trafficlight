@@ -14,6 +14,7 @@
 # limitations under the License.
 import io
 import logging
+from typing import List
 
 from flask import Blueprint, abort, render_template, request, send_file, typing
 
@@ -35,6 +36,57 @@ bp = Blueprint("status", __name__, url_prefix="/status")
 def index() -> typing.ResponseValue:
     return render_template(
         "status_index.j2.html", clients=get_clients(), tests=get_tests()
+    )
+
+
+class TestCase(object):
+    def __init__(self, name, state, time):
+        self.failure = True if state == "failure" else False
+        self.error = True if state == "error" else False
+        self.skipped = True if state == "skipped" else False
+        self.time = time
+        self.name = name
+
+
+class TestSuite(object):
+    def __init__(self, name, testcases: List[TestCase]):
+        self.name = name
+        self.failures = 0 + sum(1 for tc in testcases if tc.failure)
+        self.errors = 0 + sum(1 for tc in testcases if tc.error)
+        self.skipped = 0 + sum(1 for tc in testcases if tc.skipped)
+        self.tests = len(testcases)
+        self.testcases = testcases
+
+
+@bp.route("/junit.xml", methods=["GET"])
+def as_junit() -> typing.ResponseValue:
+
+    # for now we assume there's only one test; when we add the second we'll need to expand this logic a bit.
+    tests = get_tests()
+    testcases = []
+    for test in tests:
+        if test.model is not None:
+            if test.model.state == "complete":
+                testcases.append(TestCase(test.description, "success", 0))
+            elif test.model.state == "failure":
+                testcases.append(TestCase(test.description, "failure", 0))
+            else:
+                # tests that haven't completed are currently going to be 'failed' in my book.
+                # perhaps map to error ? idk.
+                testcases.append(TestCase(test.description, "error", 0))
+        else:
+            testcases.append(TestCase(test.description, "skipped", 0))
+
+    testsuite = TestSuite("check verification", testcases)
+    testsuites = [testsuite]
+
+    return render_template(
+        "junit.j2.xml",
+        testsuites=testsuites,
+        errors=testsuite.errors,
+        failures=testsuite.failures,
+        skipped=testsuite.skipped,
+        tests=testsuite.tests,
     )
 
 
