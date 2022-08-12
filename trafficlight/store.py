@@ -59,6 +59,12 @@ class Model(object):
     def __str__(self) -> str:
         return f"Model {self.uuid}"
 
+    def status(self) -> str:
+        if self.completed:
+            return "Ended ("+self.state+")"
+        else:
+            return "Running ("+self.state+")"
+
     def action_for_colour(self, colour: str) -> Dict[str, Any]:
         state_obj = self.state_map.get(self.state)
         if state_obj is not None:
@@ -69,6 +75,8 @@ class Model(object):
         return self.generic_action
 
     def calculate_transitions(self) -> None:
+
+        
         for name, state in self.state_map.items():
             for colour, action in state.action_map.items():
                 logging.info(action["responses"])
@@ -83,6 +91,9 @@ class Model(object):
                     self.machine.add_transition(
                         colour + "_" + action_name, name, destination
                     )
+                self.machine.add_transition(
+                    colour + "_failed", name, "failure"
+                )
 
     def transition(self, colour: str, update: Dict[str, Any]) -> None:
 
@@ -100,11 +111,11 @@ class Model(object):
     def render_local_region(self, bytesio: BytesIO) -> None:
         self.get_graph(show_roi=True).draw(bytesio, format="png", prog="dot")  # type: ignore
 
-    def on_enter_completed(self) -> None:
-        # for client in self.clients:
-        #     client.complete()
-        # TODO: perhaps tell the test case it's completed instead of the clients
-        # and let that percolate down?
+
+    def on_enter_failed(self) -> None:
+        self.completed = True
+
+    def on_enter_complete(self) -> None:
         self.completed = True
 
 
@@ -122,12 +133,20 @@ class Client(object):
     def __str__(self) -> str:
         return f"Client {self.uuid} Model {self.model} Registration {self.registration}"
 
+    def status(self) -> str:
+        """A status suitable for the status page"""
+        if self.model:
+            return self.model.status()
+
+        else:
+            return "Waiting"
+
     def poll(self, update_last_polled: bool = True) -> Dict[str, Any]:
         if self.model is None:
             # No model has been allocated yet; idle.
             return {"action": "idle", "responses": [], "data": {"delay": 30000}}
 
-        if self.completed:
+        if self.model.completed:
             # Client has finished work, exit
             return {"action": "exit", "responses": []}
 
@@ -186,6 +205,15 @@ class TestCase(object):
 
     def __str__(self) -> str:
         return f"TestCase {self.description} {self.uuid} Model {self.model} Running {self.running}"
+
+    def status(self) -> str:
+        if self.running:
+            if self.model:
+                return self.model.status()
+            else:
+                return "Building model"
+        else:
+            return "Waiting for clients"
 
     # takes a client list and returns clients required to run the test
     def runnable(self, client_list: List[Client]) -> Optional[List[Client]]:
@@ -357,6 +385,13 @@ def generate_model(used_clients: List[Client]) -> Model:
                         "action": "verify_crosssign_emoji",
                         "responses": {"verified_crosssign": "complete"},
                     }
+                },
+            ),
+            ModelState(
+                "failure",
+                {
+                    RED: {"action": "exit", "responses": {}},
+                    GREEN: {"action": "exit", "responses": {}},
                 },
             ),
             ModelState(

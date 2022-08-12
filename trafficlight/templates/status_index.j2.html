@@ -9,15 +9,15 @@
   <table>
     <tr><th>UUID</th><th>State</th><th>Last Polled</th><th>data</th></tr>
     {% for client in clients %}
-    <tr><td>{{ client.uuid }}</td><td>{% if client.completed %}Completed{% elif client.model %}Waiting{% else %}Busy{% endif %}<td>{{ client.last_polled }}</td><td>{{ client.registration }}</td></tr>
+    <tr><td>{{ client.uuid }}</td><td>{{ client.status() }}</td><td>{{ client.last_polled }}</td><td>{{ client.registration }}</td></tr>
     {% endfor %}
   </table>
 
   <h2>Tests</h2>
   <table>
-    <tr><th>Description</th><th>UUID</th><th>Running</th></tr>
+    <tr><th>Description</th><th>UUID</th><th>State</th></tr>
     {% for test in tests %}
-    <tr><td><a href="{{ url_for("status.test_status", uuid = test.uuid) }}">{{ test.description }}</a></td><td>{{ test.uuid }}</td><td>{{ test.running }}</td></tr>
+    <tr><td><a href="{{ url_for("status.test_status", uuid = test.uuid) }}">{{ test.description }}</a></td><td>{{ test.uuid }}</td><td>{{ test.status() }}</td></tr>
     {% endfor %}
   </table>
 {% endblock %}
