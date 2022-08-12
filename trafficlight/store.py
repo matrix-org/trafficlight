@@ -61,9 +61,9 @@ class Model(object):
 
     def status(self) -> str:
         if self.completed:
-            return "Ended ("+self.state+")"
+            return "Ended (" + self.state + ")"
         else:
-            return "Running ("+self.state+")"
+            return "Running (" + self.state + ")"
 
     def action_for_colour(self, colour: str) -> Dict[str, Any]:
         state_obj = self.state_map.get(self.state)
@@ -75,8 +75,6 @@ class Model(object):
         return self.generic_action
 
     def calculate_transitions(self) -> None:
-
-        
         for name, state in self.state_map.items():
             for colour, action in state.action_map.items():
                 logging.info(action["responses"])
@@ -110,7 +108,6 @@ class Model(object):
 
     def render_local_region(self, bytesio: BytesIO) -> None:
         self.get_graph(show_roi=True).draw(bytesio, format="png", prog="dot")  # type: ignore
-
 
     def on_enter_failed(self) -> None:
         self.completed = True
