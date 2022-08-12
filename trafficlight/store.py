@@ -89,9 +89,7 @@ class Model(object):
                     self.machine.add_transition(
                         colour + "_" + action_name, name, destination
                     )
-                self.machine.add_transition(
-                    colour + "_failed", name, "failure"
-                )
+                self.machine.add_transition(colour + "_failed", name, "failure")
 
     def transition(self, colour: str, update: Dict[str, Any]) -> None:
 
