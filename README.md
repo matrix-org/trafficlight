@@ -70,6 +70,8 @@ To run the linters and `mypy` type checker, use `./scripts-dev/lint.sh`.
 
 ## Starting
 
+This requires a homerunner instance running (ideally on :54321 for now) to start and stop server instances as required.
+
 Use this to start the test server:
 `FLASK_APP=trafficlight flask run --host 0.0.0.0`
 
