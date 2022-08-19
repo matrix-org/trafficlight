@@ -36,7 +36,7 @@ class ModelState(object):
 
 class Model(object):
     def __init__(
-        self, uuid: str, state_list: List[ModelState], initial_state: str
+            self, uuid: str, state_list: List[ModelState], initial_state: str
     ) -> None:
         self.uuid = uuid
         self.state = initial_state
@@ -144,7 +144,7 @@ class Client(object):
         return action
 
     def respond(
-        self, update: Dict[str, Any], update_last_responded: bool = True
+            self, update: Dict[str, Any], update_last_responded: bool = True
     ) -> None:
         if self.model is None:
             raise Exception("Client %s has not been assigned a model yet", self.uuid)
@@ -170,11 +170,12 @@ class Client(object):
 
 class TestCase(object):
     def __init__(
-        self,
-        uuid: UUID,
-        description: str,
-        client_matchers: List[Callable[[Client], bool]],
-        model_generator: Callable[[List[Client]], Model],
+            self,
+            uuid: UUID,
+            description: str,
+            client_matchers: List[Callable[[Client], bool]],
+            model_generator: Callable[[List[Client]], Model],
+            validator: Callable[[Model], str],
     ) -> None:
         self.uuid = uuid
         self.description = description
@@ -183,26 +184,21 @@ class TestCase(object):
         self.registered = datetime.now()
         self.running = False
         self.model: Optional[Model] = None
+        self.validator = validator
         self.time = 0
-        self.
-
-    class TestCase(object):
-        def __init__(self, name: str, state: str, time: Any) -> None:
-            self.failure = True if state == "failure" else False
-            self.error = True if state == "error" else False
-            self.skipped = True if state == "skipped" else False
-            self.time = time
-            self.name = name
 
     def __str__(self) -> str:
         return f"TestCase {self.description} {self.uuid} Model {self.model} Running {self.running}"
 
+    def status(self):
+        if self.model is None:
+            return "skipped"
+        else:
+            try:
+                return self.validator(self.model)
+            except Exception:
+                return "error"
 
-    def skipped(self):
-        return self.model is None
-
-    def failure(self):
-        
     # takes a client list and returns clients required to run the test
     def runnable(self, client_list: List[Client]) -> Optional[List[Client]]:
         if len(self.client_matchers) == 2:
@@ -292,103 +288,3 @@ def generate_model(used_clients: List[Client]) -> Model:
     model_id = str(guid.uuid4())
     # Generating server
     homeserver = homerunner.create(model_id, ["complement-synapse"])[0]
-    docker_api = homeserver.cs_api.replace("localhost", "10.0.2.2")
-    random_user = "user_" + str(guid.uuid4())
-    logging.info("User for test " + random_user)
-    login_data = {
-        "username": random_user,
-        "password": "bubblebobblebabble",
-        "homeserver_url": {
-            "local_docker": docker_api,  # hmm...
-            "local": homeserver.cs_api,
-        },
-    }
-    model = Model(
-        model_id,
-        [
-            ModelState(
-                "init_r",
-                {
-                    RED: {
-                        "action": "register",
-                        "data": login_data,
-                        "responses": {"registered": "init_g"},
-                    },
-                },
-            ),
-            ModelState(
-                "init_g",
-                {
-                    GREEN: {
-                        "action": "login",
-                        "data": login_data,
-                        "responses": {"loggedin": "start_crosssign"},
-                    }
-                },
-            ),
-            ModelState(
-                "start_crosssign",
-                {
-                    GREEN: {
-                        "action": "start_crosssign",
-                        "responses": {"started_crosssign": "accept_crosssign"},
-                    }
-                },
-            ),
-            ModelState(
-                "accept_crosssign",
-                {
-                    RED: {
-                        "action": "accept_crosssign",
-                        "responses": {"accepted_crosssign": "verify_crosssign_rg"},
-                    }
-                },
-            ),
-            ModelState(
-                "verify_crosssign_rg",
-                {
-                    RED: {
-                        "action": "verify_crosssign_emoji",
-                        "responses": {"verified_crosssign": "verify_crosssign_g"},
-                    },
-                    GREEN: {
-                        "action": "verify_crosssign_emoji",
-                        "responses": {"verified_crosssign": "verify_crosssign_r"},
-                    },
-                },
-            ),
-            ModelState(
-                "verify_crosssign_r",
-                {
-                    RED: {
-                        "action": "verify_crosssign_emoji",
-                        "responses": {"verified_crosssign": "complete"},
-                    }
-                },
-            ),
-            ModelState(
-                "verify_crosssign_g",
-                {
-                    GREEN: {
-                        "action": "verify_crosssign_emoji",
-                        "responses": {"verified_crosssign": "complete"},
-                    }
-                },
-            ),
-            ModelState(
-                "complete",
-                {
-                    RED: {"action": "exit", "responses": {}},
-                    GREEN: {"action": "exit", "responses": {}},
-                },
-            ),
-        ],
-        "init_r",
-    )
-    model.calculate_transitions()
-
-    red_client.set_colour(RED)
-    red_client.set_model(model)
-    green_client.set_colour(GREEN)
-    green_client.set_model(model)
-    return model

@@ -18,7 +18,7 @@ from typing import Any, List
 
 from flask import Blueprint, abort, render_template, request, send_file, typing
 
-from trafficlight.store import get_clients, get_test, get_tests
+from trafficlight.store import get_clients, get_test, get_tests, TestCase
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
@@ -45,9 +45,9 @@ def index() -> typing.ResponseValue:
 class TestSuite(object):
     def __init__(self, name: str, testcases: List[TestCase]) -> None:
         self.name = name
-        self.failures = 0 + sum(1 for tc in testcases if tc.failure)
-        self.errors = 0 + sum(1 for tc in testcases if tc.error)
-        self.skipped = 0 + sum(1 for tc in testcases if tc.skipped)
+        self.failures = 0 + sum(1 for tc in testcases if tc.status() == "failure")
+        self.errors = 0 + sum(1 for tc in testcases if tc.status() == "error")
+        self.skipped = 0 + sum(1 for tc in testcases if tc.status() == "skipped")
         self.tests = len(testcases)
         self.testcases = testcases
 
