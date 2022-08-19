@@ -66,6 +66,7 @@ Polyjuice has a very similar poll method for getting data to clients but uses ma
 
 ## Installation
 
+As well as python dependencies installed via `pip`, libgraphviz-dev (debian) or graphviz-devel (fedora) is required for the status page graph rendering.
 
 ## Development
 
