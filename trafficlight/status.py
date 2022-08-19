@@ -39,13 +39,7 @@ def index() -> typing.ResponseValue:
     )
 
 
-class TestCase(object):
-    def __init__(self, name: str, state: str, time: Any) -> None:
-        self.failure = True if state == "failure" else False
-        self.error = True if state == "error" else False
-        self.skipped = True if state == "skipped" else False
-        self.time = time
-        self.name = name
+
 
 
 class TestSuite(object):

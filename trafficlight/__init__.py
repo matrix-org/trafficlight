@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import typing
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from flask import Flask
 
+import trafficlight.tests
 from trafficlight.store import Client, TestCase, add_test, generate_model
 
 
@@ -66,39 +68,23 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
     def web_matcher(x: Client) -> bool:
         return str(x.registration["type"]) == "element-web"
 
-    # Expand out the four test cases so far:
-    add_test(
-        TestCase(
-            uuid.uuid4(),
-            "android, web",
-            [android_matcher, web_matcher],
-            generate_model,
-        )
-    )
-    add_test(
-        TestCase(
-            uuid.uuid4(),
-            "web, android",
-            [web_matcher, android_matcher],
-            generate_model,
-        )
-    )
-    add_test(
-        TestCase(
-            uuid.uuid4(),
-            "web, web",
-            [web_matcher, web_matcher],
-            generate_model,
-        )
-    )
-    add_test(
-        TestCase(
-            uuid.uuid4(),
-            "android, android",
-            [android_matcher, android_matcher],
-            generate_model,
-        )
-    )
+    clients = {
+        "android,web": [android_matcher, web_matcher],
+        "web,android": [web_matcher, android_matcher],
+        "web,web": [web_matcher, web_matcher],
+        "android, android": [android_matcher, android_matcher]
+    }
+    for suite_config in trafficlight.tests.tests:
+        cases: typing.List[TestCase] = []
+        for (key, value) in clients.items():
+            case = TestCase(uuid.uuid4(),
+                            key,
+                            value,
+                            suite_config.generate_model,
+                            )
+            add_test(case)
+            cases.append(case)
+        suite = trafficlight.status.TestSuite(suite_config.__name__, cases)
 
     # Maybe even write them to a report afterwards
     return app

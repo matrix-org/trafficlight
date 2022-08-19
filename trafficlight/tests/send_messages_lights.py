@@ -3,7 +3,7 @@ from trafficlight.store import Model, ModelState
 from trafficlight.tests._base import TwoClientsTwoServersFederationTestCase
 
 
-class VerifyClientLights(TwoClientsTwoServersFederationTestCase):
+class SendMessagesLights(TwoClientsTwoServersFederationTestCase):
 
     def validate_results(self, model):
         self.assertEqual(model.state, "completed")

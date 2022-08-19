@@ -14,6 +14,6 @@
 # limitations under the License.
 
 from verify_client_lights import VerifyClientLights
-from send_messages_lights import SendMessageLights
+from send_messages_lights import SendMessagesLights
 # TODO: file based discovery?
-tests = [VerifyClientLights]
+tests = [VerifyClientLights, SendMessagesLights]

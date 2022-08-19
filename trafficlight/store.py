@@ -183,10 +183,26 @@ class TestCase(object):
         self.registered = datetime.now()
         self.running = False
         self.model: Optional[Model] = None
+        self.time = 0
+        self.
+
+    class TestCase(object):
+        def __init__(self, name: str, state: str, time: Any) -> None:
+            self.failure = True if state == "failure" else False
+            self.error = True if state == "error" else False
+            self.skipped = True if state == "skipped" else False
+            self.time = time
+            self.name = name
 
     def __str__(self) -> str:
         return f"TestCase {self.description} {self.uuid} Model {self.model} Running {self.running}"
 
+
+    def skipped(self):
+        return self.model is None
+
+    def failure(self):
+        
     # takes a client list and returns clients required to run the test
     def runnable(self, client_list: List[Client]) -> Optional[List[Client]]:
         if len(self.client_matchers) == 2:
