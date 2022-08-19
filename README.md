@@ -69,28 +69,27 @@ Polyjuice has a very similar poll method for getting data to clients but uses ma
 
 ## Development
 
-In a virtual environment with pip ≥ 21.1, run
+Create a virtual environment with pip ≥ 21.1 and install
 ```shell
-pip install -e .[dev]
+> pwd
+/home/michaelk/work/trafficlight/
+> python -m venv venv/
+> venv/bin/pip install -e .[dev]
 ```
 
-To run the unit tests, you can either use:
-```shell
-tox -e py
-```
-or
-```shell
-trial tests
-```
 
 To run the linters and `mypy` type checker, use `./scripts-dev/lint.sh`.
 
 ## Starting
 
-This requires a homerunner instance running (ideally on :54321 for now) to start and stop server instances as required.
+This requires a homerunner instance running (ideally on localhost:54321 which is the default) to start and stop server instances as required.
 
 Use this to start the test server:
-`FLASK_APP=trafficlight flask run --host 0.0.0.0`
+```shell
+> . venv/bin/activate
+(venv) > FLASK_APP=trafficlight flask run --host 0.0.0.0
+... server starts
+```
 
 ## Releasing
 
