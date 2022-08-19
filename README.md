@@ -74,6 +74,7 @@ Create a virtual environment with pip ≥ 21.1 and install
 > pwd
 /home/michaelk/work/trafficlight/
 > python -m venv venv/
+> venv/bin/pip install --upgrade pip
 > venv/bin/pip install -e .[dev]
 ```
 
