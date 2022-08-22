@@ -81,7 +81,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
                             key,
                             value,
                             suite_config.generate_model,
-                            )
+                            suite_config.validate_results)
             add_test(case)
             cases.append(case)
         suite = trafficlight.status.TestSuite(suite_config.__name__, cases)

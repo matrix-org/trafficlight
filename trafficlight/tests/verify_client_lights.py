@@ -1,4 +1,4 @@
-from _base import TwoClientsOneServerTestCase
+from trafficlight.tests._base import TwoClientsOneServerTestCase
 from trafficlight.store import Model, ModelState
 
 
@@ -12,16 +12,14 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
         #                        model.data["bob_verified_crosssign"]["emoji"],
         #                        "Emoji were not matching")
 
-    def generate_model(self, homeserver, client_one, client_two) -> Model:
+    def generate_model(self, homeserver) -> Model:
         alice = "alice"
         bob = "bob"
 
         import uuid as guid
 
-        model_id = str(guid.uuid4())
         # Generating server
         random_user = "user_" + str(guid.uuid4())
-        logging.info("User for test " + random_user)
         docker_api = homeserver.cs_api.replace("localhost", "10.0.2.2")
 
         login_data = {
@@ -35,7 +33,7 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
 
         # maybe factor out the above, maybe not...
         model = Model(
-            model_id,
+            self.test_id,
             [
                 ModelState(
                     "init_r",
@@ -118,8 +116,8 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
         )
         model.calculate_transitions()
 
-        client_one.set_colour(alice)
-        client_one.set_model(model)
-        client_two.set_colour(bob)
-        client_two.set_model(model)
+        self.client_one.set_colour(alice)
+        self.client_one.set_model(model)
+        self.client_two.set_colour(bob)
+        self.client_two.set_model(model)
         return model

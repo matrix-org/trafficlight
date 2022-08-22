@@ -13,24 +13,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
+import uuid
 from enum import Enum
+from typing import List
 
+import trafficlight.homerunner
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.store import Model
 from trafficlight.store import Client
 
-class Style(Enum):
-    """
-    Style reflects the requirements for this server to be configured
-    """
-    TWO_CLIENTS_ONE_USER = 1
-    TWO_CLIENTS_TWO_USERS_FEDERATED = 2
+class ClientType(object):
+    def match(self, x: Client) -> bool:
+        pass
+
+class ElementWeb(ClientType):
+    def match(self, x: Client) -> bool:
+        return str(x.registration["type"]) == "element-web"
+
+
+class ElementAndroid(ClientType):
+    def match(self, x: Client) -> bool:
+        return str(x.registration["type"]) == "element-android"
 
 
 class BaseTestCase(unittest.TestCase):
 
-    def style(self) -> Style:
-        pass
+    def __init__(self):
+        self.test_id = str(uuid.uuid4())
 
     def validate_results(self, model: Model) -> None:
         """
@@ -40,11 +49,28 @@ class BaseTestCase(unittest.TestCase):
 
 
 class TwoClientsOneServerTestCase(BaseTestCase):
-    def generate_model(self, homeserver: HomeserverConfig, client_one: Client, client_two: Client) -> Model:
-        pass
 
+    def __init__(self, client_type_one: ClientType, client_type_two: ClientType):
+        super(TwoClientsOneServerTestCase, self).__init__()
+        self.client_type_one: ClientType = client_type_one
+        self.client_type_two = client_type_two
 
-class TwoClientsTwoServersFederationTestCase(BaseTestCase):
-    def generate_model(self, homeserver_one: HomeserverConfig, homeserver_two: HomeserverConfig, client_one: Client, client_two: Client) -> Model:
+    def crumble(self, available_clients: List[Client]) -> List[Client]:
 
+        # there's a better way to do this for N clients.
+        one_clients: List[Client] = list(
+            filter(self.client_type_one.match, available_clients)
+        )
+        two_clients: List[Client] = list(
+            filter(self.client_type_two.match, available_clients)
+        )
+        for red_client in one_clients:
+            for green_client in two_clients:
+                if red_client != green_client:
+                    # clients identified; store internally for use, return to indicate they were used.
+                    self.client_one = red_client
+                    self.client_two = green_client
+                    return [red_client, green_client]
+
+    def generate_model(self, homeserver: HomeserverConfig) -> Model:
         pass

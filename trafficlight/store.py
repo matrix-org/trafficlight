@@ -174,7 +174,7 @@ class TestCase(object):
             uuid: UUID,
             description: str,
             client_matchers: List[Callable[[Client], bool]],
-            model_generator: Callable[[List[Client]], Model],
+            model_generator: Callable,
             validator: Callable[[Model], str],
     ) -> None:
         self.uuid = uuid

@@ -1,4 +1,3 @@
-from _base import TwoClientsOneServerTestCase
 from trafficlight.store import Model, ModelState
 from trafficlight.tests._base import TwoClientsTwoServersFederationTestCase
 
@@ -13,7 +12,7 @@ class SendMessagesLights(TwoClientsTwoServersFederationTestCase):
         #                        model.data["bob_verified_crosssign"]["emoji"],
         #                        "Emoji were not matching")
 
-    def generate_model(self, homeserver_one, homeserver_two, client_one, client_two) -> Model:
+    def generate_model(self) -> Model:
         alice = "alice"
         bob = "bob"
 
@@ -22,8 +21,7 @@ class SendMessagesLights(TwoClientsTwoServersFederationTestCase):
         model_id = str(guid.uuid4())
         # Generating server
         random_user = "user_" + str(guid.uuid4())
-        logging.info("User for test " + random_user)
-        docker_api = homeserver.cs_api.replace("localhost", "10.0.2.2")
+        docker_api = homeserver_one.cs_api.replace("localhost", "10.0.2.2")
 
         login_data = {
             "username": random_user,
@@ -36,7 +34,7 @@ class SendMessagesLights(TwoClientsTwoServersFederationTestCase):
 
         # maybe factor out the above, maybe not...
         model = Model(
-            model_id,
+            self.test_id,
             [
                 ModelState(
                     "init_r",
