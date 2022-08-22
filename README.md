@@ -86,6 +86,10 @@ To run the linters and `mypy` type checker, use `./scripts-dev/lint.sh`.
 
 This requires a homerunner instance running (ideally on localhost:54321 which is the default) to start and stop server instances as required.
 
+You may need to create the complement-synapse image by checking out synapse and running:
+
+`scripts-dev/complement.sh --build-only`
+
 Use this to start the test server:
 ```shell
 > . venv/bin/activate
