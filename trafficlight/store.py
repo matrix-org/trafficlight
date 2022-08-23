@@ -21,12 +21,15 @@ from uuid import UUID
 from transitions.extensions import GraphMachine  # type: ignore
 from transitions.extensions.states import Timeout, add_state_features  # type: ignore
 
-from trafficlight.homerunner import HomerunnerClient
+from trafficlight.homerunner import HomerunnerClient, HomeserverConfig
+
+from trafficlight.client_types import ClientType
+from trafficlight.server_types import ServerType
+from trafficlight.tests import TestSuite
 
 logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
-
 
 class ModelState(object):
     def __init__(self, name: str, action_map: Dict[str, Dict[str, Any]]) -> None:
@@ -36,7 +39,7 @@ class ModelState(object):
 
 class Model(object):
     def __init__(
-            self, uuid: str, state_list: List[ModelState], initial_state: str
+            self, uuid: str, state_list: List[ModelState], initial_state: str, validator: Callable
     ) -> None:
         self.uuid = uuid
         self.state = initial_state
@@ -54,7 +57,7 @@ class Model(object):
             "responses": [],
             "data": {"delay": 5000},
         }
-        self.completed = False
+        self.validator = validator
 
     def __str__(self) -> str:
         return f"Model {self.uuid}"
@@ -101,11 +104,8 @@ class Model(object):
         self.get_graph(show_roi=True).draw(bytesio, format="png", prog="dot")  # type: ignore
 
     def on_enter_completed(self) -> None:
-        # for client in self.clients:
-        #     client.complete()
-        # TODO: perhaps tell the test case it's completed instead of the clients
-        # and let that percolate down?
-        self.completed = True
+        # Call the validator from the testcase.
+        self.validator(self)
 
 
 class Client(object):
@@ -173,58 +173,72 @@ class TestCase(object):
             self,
             uuid: UUID,
             description: str,
-            client_matchers: List[Callable[[Client], bool]],
+            client_types: List[ClientType],
+            server_type: ServerType,
             model_generator: Callable,
-            validator: Callable[[Model], str],
     ) -> None:
         self.uuid = uuid
         self.description = description
-        self.client_matchers = client_matchers
+        self.client_types = client_types
+        self.server_type = server_type
         self.model_generator = model_generator
         self.registered = datetime.now()
-        self.running = False
         self.model: Optional[Model] = None
-        self.validator = validator
         self.time = 0
+        self.status = "waiting"
 
     def __str__(self) -> str:
         return f"TestCase {self.description} {self.uuid} Model {self.model} Running {self.running}"
 
-    def status(self):
-        if self.model is None:
-            return "skipped"
-        else:
-            try:
-                return self.validator(self.model)
-            except Exception:
-                return "error"
+    def combine(self, available_clients: List[Client], used_clients: List[Client],
+                client_types: List[ClientType]) -> bool:
+        # Current target
+        client_type = client_types.pop(0)
+        # Find all possible matches
+        matching_clients = filter(lambda x: client_type.match(x), available_clients)
 
-    # takes a client list and returns clients required to run the test
+        # For each possible match, evaluate if the remaining client_types are a good match
+        for client in matching_clients:
+            # Move client under test into used client_types
+            available_clients.remove(client)
+            used_clients.append(client)
+
+            if len(client_types) == 0:
+                # If have a client in hand and we have zero remaining matches to test, return true
+                return True
+            else:
+                # We have further matches to attempt:
+                if self.combine(available_clients, used_clients, client_types):
+                    # We found a good match downstream (used_clients is now good)
+                    return True
+                else:
+                    # We found no match, restore state and continue...
+                    available_clients.append(client)
+                    used_clients.remove(client)
+                    # continue to check...
+        return False
+
+    # takes a client list and returns client_types required to run the test
     def runnable(self, client_list: List[Client]) -> Optional[List[Client]]:
-        if len(self.client_matchers) == 2:
-            # there's a better way to do this for N clients.
-            red_clients: List[Client] = list(
-                filter(self.client_matchers[0], client_list)
-            )
-            green_clients: List[Client] = list(
-                filter(self.client_matchers[1], client_list)
-            )
-
-            if len(red_clients) > 0:
-                for red_client in red_clients:
-                    for green_client in green_clients:
-                        if red_client != green_client:
-                            return [red_client, green_client]
-
-        return None
+        available_clients = client_list.copy()
+        client_types = self.client_types.copy()
+        used_clients = []
+        # combine modifies the lists, so we ensure copies are passed in
+        if self.combine(available_clients, used_clients, client_types):
+            return used_clients
+        else:
+            return None
 
     def run(self, client_list: List[Client]) -> None:
-        if self.running:
+        if self.status != "waiting":
             raise Exception("Logic error: already running this test")
         else:
-            self.running = True
-        # tidy this up somewhat
-        self.model = self.model_generator(client_list)
+            self.status = "running"
+
+        # create server_types according to the server_types
+        server_list = self.server_type.create(homerunner)
+        # generate model given server config and selected client_types
+        self.model = self.generate_model(client_list, server_list)
 
 
 @add_state_features(Timeout)
@@ -233,24 +247,26 @@ class TimeoutGraphMachine(GraphMachine):  # type: ignore
 
 
 clients: List[Client] = []
-tests: List[TestCase] = []
+testsuites: List[TestSuite] = []
 
 
-def get_tests() -> List[TestCase]:
-    return tests
-
-
-def get_test(uuid: str) -> Optional[TestCase]:
-    for test in tests:
-        if str(test.uuid) == str(uuid):
-            return test
-        else:
-            logger.info("%s did not match %s", test.uuid, uuid)
+def get_testsuite(uuid: str) -> Optional[TestSuite]:
+    for testsuite in testsuites:
+        if str(testsuite.uuid) == str(uuid):
+            return testsuite
     return None
 
 
-def add_test(test: TestCase) -> None:
-    tests.append(test)
+def get_test(testsuite_uuid: str, uuid: str) -> Optional[TestCase]:
+    get_testsuite(testsuite_uuid)
+    for test in tests:
+        if str(test.uuid) == str(uuid):
+            return test
+    return None
+
+
+def add_testsuite(testsuite: TestSuite) -> None:
+    testsuites.append(testsuite)
 
 
 def get_clients() -> List[Client]:
@@ -266,25 +282,3 @@ def get_client(uuid: str) -> Optional[Client]:
 
 def add_client(client: Client) -> None:
     clients.append(client)
-
-
-# Probably move me elsewhere soon...
-
-# I think, actually, that we can just import from json all the below as little test cases.
-# But for now: this.
-
-
-RED = "red"
-GREEN = "green"
-
-homerunner = HomerunnerClient("http://localhost:54321")
-
-
-def generate_model(used_clients: List[Client]) -> Model:
-    red_client = used_clients[0]
-    green_client = used_clients[1]
-    import uuid as guid
-
-    model_id = str(guid.uuid4())
-    # Generating server
-    homeserver = homerunner.create(model_id, ["complement-synapse"])[0]

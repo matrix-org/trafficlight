@@ -59,7 +59,7 @@ def register(client_uuid: str) -> typing.ResponseValue:
                 return {}
             else:
                 logger.info(
-                    "Not enough clients to run test %s (have %s)",
+                    "Not enough client_types to run test %s (have %s)",
                     test,
                     [str(item) for item in available_clients],
                 )

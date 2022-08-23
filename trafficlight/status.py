@@ -18,7 +18,8 @@ from typing import Any, List
 
 from flask import Blueprint, abort, render_template, request, send_file, typing
 
-from trafficlight.store import get_clients, get_test, get_tests, TestCase
+from trafficlight.store import get_clients, get_test, get_test_suites
+from trafficlight.tests import TestSuite
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
@@ -41,46 +42,24 @@ def index() -> typing.ResponseValue:
 
 
 
-
-class TestSuite(object):
-    def __init__(self, name: str, testcases: List[TestCase]) -> None:
-        self.name = name
-        self.failures = 0 + sum(1 for tc in testcases if tc.status() == "failure")
-        self.errors = 0 + sum(1 for tc in testcases if tc.status() == "error")
-        self.skipped = 0 + sum(1 for tc in testcases if tc.status() == "skipped")
-        self.tests = len(testcases)
-        self.testcases = testcases
-
-
 @bp.route("/junit.xml", methods=["GET"])
 def as_junit() -> typing.ResponseValue:
 
     # for now we assume there's only one test; when we add the second we'll need to expand this logic a bit.
-    tests = get_tests()
-    testcases = []
-    for test in tests:
-        if test.model is not None:
-            if test.model.state == "complete":
-                testcases.append(TestCase(test.description, "success", 0))
-            elif test.model.state == "failure":
-                testcases.append(TestCase(test.description, "failure", 0))
-            else:
-                # tests that haven't completed are currently going to be 'failed' in my book.
-                # perhaps map to error ? idk.
-                testcases.append(TestCase(test.description, "error", 0))
-        else:
-            testcases.append(TestCase(test.description, "skipped", 0))
+    testsuites: List[TestSuite] = get_test_suites()
 
-    testsuite = TestSuite("check verification", testcases)
-    testsuites = [testsuite]
+    errors = 0 + sum(suite.errors() for suite in testsuites)
+    failures = 0 + sum(suite.failures() for suite in testsuites)
+    skipped = 0 + sum(suite.skipped() for suite in testsuites)
+    test_count = 0 + sum(len(suite.test_cases) for suite in testsuites)
 
     return render_template(
         "junit.j2.xml",
         testsuites=testsuites,
-        errors=testsuite.errors,
-        failures=testsuite.failures,
-        skipped=testsuite.skipped,
-        tests=testsuite.tests,
+        errors=errors,
+        failures=failures,
+        skipped=skipped,
+        tests=test_count,
     )
 
 
@@ -108,8 +87,19 @@ def test_image(uuid: str) -> typing.ResponseValue:
         abort(404)
 
 
+
 @bp.route("/<string:uuid>/status", methods=["GET"])
-def test_status(uuid: str) -> typing.ResponseValue:
+def testsuite_status(uuid: str) -> typing.ResponseValue:
+    refresh = request.args.get("refresh", default=0, type=int)
+    logger.info("Finding test %s", uuid)
+    test = get_test(uuid)
+    if test is not None:
+        return render_template("status_model.j2.html", test=test, refresh=refresh)
+    else:
+        abort(404)
+
+@bp.route("/<string:suite_uuid>/<string:uuid>/status", methods=["GET"])
+def testcase_status(suite_uuid: str, uuid: str) -> typing.ResponseValue:
     refresh = request.args.get("refresh", default=0, type=int)
     logger.info("Finding test %s", uuid)
     test = get_test(uuid)

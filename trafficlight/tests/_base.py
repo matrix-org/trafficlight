@@ -12,65 +12,80 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import itertools
 import unittest
 import uuid
 from enum import Enum
 from typing import List
 
 import trafficlight.homerunner
+from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomeserverConfig
-from trafficlight.store import Model
+from trafficlight.store import Model, TestCase, ServerType
 from trafficlight.store import Client
 
-class ClientType(object):
-    def match(self, x: Client) -> bool:
+
+class TestSuite(object):
+    def __init__(self, name: str, testcases: List[TestCase]) -> None:
+        self.name = name
+
+
+class TestSuite(object):
+
+    def __init__(self, clients_needed, servers_needed):
+        self.test_cases = None
+        self.client_types = None
+        self.server_type = None
+        self.clients_needed = clients_needed
+        self.servers_needed = servers_needed
+
+    def server_type(self, server_type: ServerType):
+        self.server_type = server_type
+
+    def client_types(self, client_types: List[ClientType]):
+        self.client_types = client_types
+
+    def generate_model(self, clients: List[Client], homeservers: List[HomeserverConfig]) -> Model:
         pass
 
-class ElementWeb(ClientType):
-    def match(self, x: Client) -> bool:
-        return str(x.registration["type"]) == "element-web"
-
-
-class ElementAndroid(ClientType):
-    def match(self, x: Client) -> bool:
-        return str(x.registration["type"]) == "element-android"
-
-
-class BaseTestCase(unittest.TestCase):
-
-    def __init__(self):
-        self.test_id = str(uuid.uuid4())
-
-    def validate_results(self, model: Model) -> None:
-        """
-        Validate the results; use unittest asserts to return success/failure/skipped etc.
-        """
+    def validate_model(self, model: Model) -> None:
         pass
 
+    def generate_test_cases(self) -> List[TestCase]:
+        test_cases = []
 
-class TwoClientsOneServerTestCase(BaseTestCase):
+        client_types_expanded = itertools.combinations_with_replacement(self.client_types, self.clients_needed)
+        server_types_expanded = itertools.combinations_with_replacement(self.server_types, self.servers_needed)
 
-    def __init__(self, client_type_one: ClientType, client_type_two: ClientType):
-        super(TwoClientsOneServerTestCase, self).__init__()
-        self.client_type_one: ClientType = client_type_one
-        self.client_type_two = client_type_two
+        for client_type_list in client_types_expanded:
+            client_names = ",".join(map(lambda x: x.__name__, client_type_list))
+            for server_type_list in server_types_expanded:
+                server_names = ",".join(map(lambda x: x.__name__, server_type_list))
+                model = self.generate_model()
 
-    def crumble(self, available_clients: List[Client]) -> List[Client]:
+                ## ARGH hell
+                def validator() -> str:
+                    return self.validate_model(model)
 
-        # there's a better way to do this for N clients.
-        one_clients: List[Client] = list(
-            filter(self.client_type_one.match, available_clients)
-        )
-        two_clients: List[Client] = list(
-            filter(self.client_type_two.match, available_clients)
-        )
-        for red_client in one_clients:
-            for green_client in two_clients:
-                if red_client != green_client:
-                    # clients identified; store internally for use, return to indicate they were used.
-                    self.client_one = red_client
-                    self.client_two = green_client
-                    return [red_client, green_client]
+                test_cases.append(TestCase(uuid.uuid4(),
+                                           self.__name__ + client_names + server_names,
+                                           client_type_list,
+                                           server_type_list,
+                                           model,
+                                           validator),
+                                  )
+        self.test_cases = test_cases
 
-    def generate_model(self, homeserver: HomeserverConfig) -> Model:
-        pass
+        return test_cases
+
+    def successes(self):
+        return 0 + sum(1 for tc in self.test_cases if tc.status == "success")
+
+    def failures(self):
+        return 0 + sum(1 for tc in self.test_cases if tc.status == "failure")
+
+    def errors(self):
+        return 0 + sum(1 for tc in self.test_cases if tc.status == "error")
+
+    def errors(self):
+        return 0 + sum(1 for tc in self.test_cases if tc.status in ("waiting", "running", "skipped"))

@@ -58,33 +58,14 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
 
     from . import client, status
 
+    suites = trafficlight.tests.get_suites()
+    for suite in suites:
+        suite.generate_test_cases()
+
     app.register_blueprint(client.bp)
     app.register_blueprint(status.bp)
     app.jinja_env.filters["delaytime"] = format_delaytime
 
-    def android_matcher(x: Client) -> bool:
-        return str(x.registration["type"]) == "element-android"
 
-    def web_matcher(x: Client) -> bool:
-        return str(x.registration["type"]) == "element-web"
 
-    clients = {
-        "android,web": [android_matcher, web_matcher],
-        "web,android": [web_matcher, android_matcher],
-        "web,web": [web_matcher, web_matcher],
-        "android, android": [android_matcher, android_matcher]
-    }
-    for suite_config in trafficlight.tests.tests:
-        cases: typing.List[TestCase] = []
-        for (key, value) in clients.items():
-            case = TestCase(uuid.uuid4(),
-                            key,
-                            value,
-                            suite_config.generate_model,
-                            suite_config.validate_results)
-            add_test(case)
-            cases.append(case)
-        suite = trafficlight.status.TestSuite(suite_config.__name__, cases)
-
-    # Maybe even write them to a report afterwards
     return app
