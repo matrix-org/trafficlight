@@ -1,44 +1,53 @@
-from trafficlight.tests._base import TwoClientsOneServerTestCase
-from trafficlight.store import Model, ModelState
+from typing import List
 
+from trafficlight.homerunner import HomeserverConfig
+from trafficlight.objects import Client, ModelState, Model
+from trafficlight.tests import TestSuite
 
-class VerifyClientLights(TwoClientsOneServerTestCase):
+class SendMessagesTestSuite(TestSuite):
 
-    def validate_results(self, model):
-        self.assertEqual(model.state, "completed")
+    def __init__(self) -> None:
+        super(SendMessagesTestSuite, self).__init__()
+        self.clients_needed = 2
+        self.servers_needed = 1
+
+    def validate_model(self, model: Model) -> None:
+        pass
 
         # TODO verify the model after completion, eg:
         #        self.assertEqual(model.data["alice_verified_crosssign"]['emoji'],
         #                        model.data["bob_verified_crosssign"]["emoji"],
         #                        "Emoji were not matching")
 
-    def generate_model(self, homeserver) -> Model:
-        alice = "alice"
-        bob = "bob"
+    def generate_model(self, clients: List[Client], servers: List[HomeserverConfig]) -> Model:
+        client_one = clients[0].name
+        client_two = clients[1].name
+
+        # TODO instead of pulling names from clients, just use clients as keys directly in the below...
 
         import uuid as guid
 
+        model_id = str(guid.uuid4())
         # Generating server
         random_user = "user_" + str(guid.uuid4())
-        docker_api = homeserver.cs_api.replace("localhost", "10.0.2.2")
+        docker_api = servers[0].cs_api.replace("localhost", "10.0.2.2")
 
         login_data = {
             "username": random_user,
             "password": "bubblebobblebabble",
             "homeserver_url": {
                 "local_docker": docker_api,  # hmm... todo this...
-                "local": homeserver.cs_api,
+                "local": servers[0].cs_api,
             },
         }
 
         # maybe factor out the above, maybe not...
         model = Model(
-            self.test_id,
             [
                 ModelState(
                     "init_r",
                     {
-                        alice: {
+                        client_one: {
                             "action": "register",
                             "data": login_data,
                             "responses": {"registered": "init_g"},
@@ -48,7 +57,7 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
                 ModelState(
                     "init_g",
                     {
-                        bob: {
+                        client_two: {
                             "action": "login",
                             "data": login_data,
                             "responses": {"loggedin": "start_crosssign"},
@@ -58,7 +67,7 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
                 ModelState(
                     "start_crosssign",
                     {
-                        bob: {
+                        client_two: {
                             "action": "start_crosssign",
                             "responses": {"started_crosssign": "accept_crosssign"},
                         }
@@ -67,7 +76,7 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
                 ModelState(
                     "accept_crosssign",
                     {
-                        alice: {
+                        client_one: {
                             "action": "accept_crosssign",
                             "responses": {"accepted_crosssign": "verify_crosssign_rg"},
                         }
@@ -76,11 +85,11 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
                 ModelState(
                     "verify_crosssign_rg",
                     {
-                        alice: {
+                        client_one: {
                             "action": "verify_crosssign_emoji",
                             "responses": {"verified_crosssign": "verify_crosssign_g"},
                         },
-                        bob: {
+                        client_two: {
                             "action": "verify_crosssign_emoji",
                             "responses": {"verified_crosssign": "verify_crosssign_r"},
                         },
@@ -89,7 +98,7 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
                 ModelState(
                     "verify_crosssign_r",
                     {
-                        alice: {
+                        client_one: {
                             "action": "verify_crosssign_emoji",
                             "responses": {"verified_crosssign": "complete"},
                         }
@@ -98,7 +107,7 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
                 ModelState(
                     "verify_crosssign_g",
                     {
-                        bob: {
+                        client_two: {
                             "action": "verify_crosssign_emoji",
                             "responses": {"verified_crosssign": "complete"},
                         }
@@ -107,17 +116,14 @@ class VerifyClientLights(TwoClientsOneServerTestCase):
                 ModelState(
                     "complete",
                     {
-                        alice: {"action": "exit", "responses": {}},
-                        bob: {"action": "exit", "responses": {}},
+                        client_one: {"action": "exit", "responses": {}},
+                        client_two: {"action": "exit", "responses": {}},
                     },
                 ),
             ],
             "init_r",
         )
+
         model.calculate_transitions()
 
-        self.client_one.set_colour(alice)
-        self.client_one.set_model(model)
-        self.client_two.set_colour(bob)
-        self.client_two.set_model(model)
         return model

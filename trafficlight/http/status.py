@@ -18,7 +18,7 @@ from typing import Any, List
 
 from flask import Blueprint, abort, render_template, request, send_file, typing
 
-from trafficlight.store import get_clients, get_test, get_test_suites
+from trafficlight.store import get_clients, get_test, get_tests, get_testsuites
 from trafficlight.tests import TestSuite
 
 logging.basicConfig(level=logging.DEBUG)
@@ -29,29 +29,25 @@ logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
-
 bp = Blueprint("status", __name__, url_prefix="/status")
 
 
 @bp.route("/", methods=["GET"])
 def index() -> typing.ResponseValue:
     return render_template(
-        "status_index.j2.html", clients=get_clients(), tests=get_tests()
+        "status_index.j2.html", clients=get_clients(), tests=get_tests(), test_suites = get_testsuites()
     )
-
-
 
 
 @bp.route("/junit.xml", methods=["GET"])
 def as_junit() -> typing.ResponseValue:
-
     # for now we assume there's only one test; when we add the second we'll need to expand this logic a bit.
-    testsuites: List[TestSuite] = get_test_suites()
+    testsuites: List[TestSuite] = get_testsuites()
 
     errors = 0 + sum(suite.errors() for suite in testsuites)
     failures = 0 + sum(suite.failures() for suite in testsuites)
     skipped = 0 + sum(suite.skipped() for suite in testsuites)
-    test_count = 0 + sum(len(suite.test_cases) for suite in testsuites)
+    test_count = 0 + sum(len(suite.test_cases or []) for suite in testsuites)
 
     return render_template(
         "junit.j2.xml",
@@ -87,8 +83,7 @@ def test_image(uuid: str) -> typing.ResponseValue:
         abort(404)
 
 
-
-@bp.route("/<string:uuid>/status", methods=["GET"])
+@bp.route("/<string:uuid>/suitestatus", methods=["GET"])
 def testsuite_status(uuid: str) -> typing.ResponseValue:
     refresh = request.args.get("refresh", default=0, type=int)
     logger.info("Finding test %s", uuid)
@@ -98,8 +93,9 @@ def testsuite_status(uuid: str) -> typing.ResponseValue:
     else:
         abort(404)
 
-@bp.route("/<string:suite_uuid>/<string:uuid>/status", methods=["GET"])
-def testcase_status(suite_uuid: str, uuid: str) -> typing.ResponseValue:
+
+@bp.route("/<string:uuid>/status", methods=["GET"])
+def testcase_status(uuid: str) -> typing.ResponseValue:
     refresh = request.args.get("refresh", default=0, type=int)
     logger.info("Finding test %s", uuid)
     test = get_test(uuid)

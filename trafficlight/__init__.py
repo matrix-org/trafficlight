@@ -13,15 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import typing
-import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-from flask import Flask
+from flask import Flask, redirect, url_for
 
-import trafficlight.tests
-from trafficlight.store import Client, TestCase, add_test, generate_model
+from trafficlight.tests import load_test_suites
+from trafficlight.store import add_testsuite
 
 
 # Format in "2 hours" / "2 minutes" etc.
@@ -56,16 +54,17 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
     except OSError:
         pass
 
-    from . import client, status
+    from trafficlight.http import client, status
 
-    suites = trafficlight.tests.get_suites()
+    suites = load_test_suites()
     for suite in suites:
-        suite.generate_test_cases()
-
+        cases = suite.generate_test_cases()
+        add_testsuite(suite)
     app.register_blueprint(client.bp)
     app.register_blueprint(status.bp)
+    @app.route("/")
+    def redirect_status():
+        return redirect(url_for("status.index"))
     app.jinja_env.filters["delaytime"] = format_delaytime
-
-
 
     return app

@@ -17,13 +17,12 @@ from typing import Any, Dict, cast
 
 from flask import Blueprint, request, typing
 
-from trafficlight.store import Client, add_client, get_client, get_clients, get_tests
-
+from trafficlight.store import add_client, get_client, get_clients, get_tests
+from trafficlight.objects import Client
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
 
 logging.getLogger("transitions").setLevel(logging.ERROR)
-# logging.getLogger('wekzeug').setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ def register(client_uuid: str) -> typing.ResponseValue:
     tests = get_tests()
     available_clients = list(filter(lambda x: x.model is None, get_clients()))
     for test in tests:
-        if not test.running:
+        if test.status == "waiting":
             clients = test.runnable(available_clients)
             if clients is not None:
                 logger.info("Running test %s", test)
