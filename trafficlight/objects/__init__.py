@@ -1,9 +1,9 @@
 import logging
 from datetime import datetime
 from io import BytesIO
-from typing import Dict, Any, List, Callable, Optional
+from typing import Dict, Any, List, Optional
 
-from transitions.extensions import GraphMachine
+from transitions.extensions import GraphMachine  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +15,7 @@ class ModelState(object):
 
 
 class Model(object):
-    def __init__(
-            self, state_list: List[ModelState], initial_state: str
-    ) -> None:
+    def __init__(self, state_list: List[ModelState], initial_state: str) -> None:
         self.uuid: Optional[str] = None
         self.state = initial_state
         states = []
@@ -34,7 +32,6 @@ class Model(object):
             "responses": [],
             "data": {"delay": 5000},
         }
-
 
     def __str__(self) -> str:
         return f"Model {self.uuid}"
@@ -83,8 +80,8 @@ class Model(object):
     def on_enter_completed(self) -> None:
         pass
         # Call the validator from the testcase.
-        #self.validator(self)
-        ## todo make this update the test case with results etc...
+        # self.validator(self)
+        # todo make this update the test case with results etc...
 
 
 class Client(object):
@@ -123,7 +120,7 @@ class Client(object):
         return action
 
     def respond(
-            self, update: Dict[str, Any], update_last_responded: bool = True
+        self, update: Dict[str, Any], update_last_responded: bool = True
     ) -> None:
         if self.model is None:
             raise Exception("Client %s has not been assigned a model yet", self.uuid)

@@ -14,7 +14,7 @@
 # limitations under the License.
 import io
 import logging
-from typing import Any, List
+from typing import List
 
 from flask import Blueprint, abort, render_template, request, send_file, typing
 
@@ -35,7 +35,10 @@ bp = Blueprint("status", __name__, url_prefix="/status")
 @bp.route("/", methods=["GET"])
 def index() -> typing.ResponseValue:
     return render_template(
-        "status_index.j2.html", clients=get_clients(), tests=get_tests(), test_suites = get_testsuites()
+        "status_index.j2.html",
+        clients=get_clients(),
+        tests=get_tests(),
+        test_suites=get_testsuites(),
     )
 
 

@@ -3,9 +3,10 @@ from typing import List
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects import Client, ModelState, Model
 from trafficlight.tests import TestSuite
+import uuid
+
 
 class SendMessagesTestSuite(TestSuite):
-
     def __init__(self) -> None:
         super(SendMessagesTestSuite, self).__init__()
         self.clients_needed = 2
@@ -19,17 +20,16 @@ class SendMessagesTestSuite(TestSuite):
         #                        model.data["bob_verified_crosssign"]["emoji"],
         #                        "Emoji were not matching")
 
-    def generate_model(self, clients: List[Client], servers: List[HomeserverConfig]) -> Model:
+    def generate_model(
+        self, clients: List[Client], servers: List[HomeserverConfig]
+    ) -> Model:
         client_one = clients[0].name
         client_two = clients[1].name
 
         # TODO instead of pulling names from clients, just use clients as keys directly in the below...
 
-        import uuid as guid
-
-        model_id = str(guid.uuid4())
         # Generating server
-        random_user = "user_" + str(guid.uuid4())
+        random_user = "user_" + str(uuid.uuid4())
         docker_api = servers[0].cs_api.replace("localhost", "10.0.2.2")
 
         login_data = {

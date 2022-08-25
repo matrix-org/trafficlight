@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from trafficlight.objects import Client
 from trafficlight.tests import TestSuite, TestCase
@@ -31,7 +31,7 @@ def get_testsuites() -> List[TestSuite]:
 
 def get_testsuite(uuid: str) -> Optional[TestSuite]:
     for testsuite in _testsuites:
-        if str(testsuite.suite_id) == str(uuid):
+        if testsuite.uuid == uuid:
             return testsuite
     return None
 

@@ -19,6 +19,7 @@ from flask import Blueprint, request, typing
 
 from trafficlight.store import add_client, get_client, get_clients, get_tests
 from trafficlight.objects import Client
+
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
 

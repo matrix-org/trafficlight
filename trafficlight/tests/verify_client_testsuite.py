@@ -3,8 +3,8 @@ from trafficlight.objects import ModelState, Model, Client
 from trafficlight.tests import TestSuite
 from typing import List
 
-class VerifyClientTestSuite(TestSuite):
 
+class VerifyClientTestSuite(TestSuite):
     def __init__(self) -> None:
         super(VerifyClientTestSuite, self).__init__()
         self.clients_needed = 2
@@ -18,7 +18,9 @@ class VerifyClientTestSuite(TestSuite):
         #                        model.data["bob_verified_crosssign"]["emoji"],
         #                        "Emoji were not matching")
 
-    def generate_model(self, clients: List[Client], servers: List[HomeserverConfig]) -> Model:
+    def generate_model(
+        self, clients: List[Client], servers: List[HomeserverConfig]
+    ) -> Model:
         alice = clients[0].name
         bob = clients[1].name
 

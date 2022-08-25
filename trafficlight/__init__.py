@@ -17,7 +17,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-from flask import Flask, redirect, url_for
+from flask import Flask
 
 from trafficlight.tests import load_test_suites
 from trafficlight.store import add_testsuite
@@ -57,20 +57,17 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
     except OSError:
         pass
 
-    from trafficlight.http import client, status
+    from trafficlight.http import client, status, root
 
     suites = load_test_suites()
     for suite in suites:
         logger.info(f"Generating test cases for {suite.uuid}")
-        cases = suite.generate_test_cases()
+        suite.generate_test_cases()
         add_testsuite(suite)
 
     app.register_blueprint(client.bp)
     app.register_blueprint(status.bp)
-
-    @app.route("/")
-    def redirect_status():
-        return redirect(url_for("status.index"))
+    app.register_blueprint(root.bp)
 
     app.jinja_env.filters["delaytime"] = format_delaytime
 

@@ -34,19 +34,21 @@ homerunner = trafficlight.homerunner.HomerunnerClient("http://localhost:54321")
 
 class TestCase(object):
     def __init__(
-            self,
-            uuid: str,
-            description: str,
-            client_types: List[ClientType],
-            server_type: ServerType,
-            model_generator: Callable[[List[Client], List[HomeserverConfig]], Model],
-            validator: Callable[[Model], None],
+        self,
+        uuid: str,
+        description: str,
+        client_types: List[ClientType],
+        server_type: ServerType,
+        model_generator: Callable[[List[Client], List[HomeserverConfig]], Model],
+        validator: Callable[[Model], None],
     ) -> None:
         self.uuid = uuid
         self.description = description
         self.client_types: List[ClientType] = client_types
         self.server_type: ServerType = server_type
-        self.model_generator: Callable[[List[Client], List[HomeserverConfig]], Model] = model_generator
+        self.model_generator: Callable[
+            [List[Client], List[HomeserverConfig]], Model
+        ] = model_generator
         self.validator = validator
         self.registered = datetime.now()
         self.model: Optional[Model] = None
@@ -56,12 +58,16 @@ class TestCase(object):
     def __str__(self) -> str:
         return f"TestCase {self.description} {self.uuid} Model {self.model} Status {self.status}"
 
-    def combine(self, available_clients: List[Client], client_types: List[ClientType]) -> List[Client]:
+    def combine(
+        self, available_clients: List[Client], client_types: List[ClientType]
+    ) -> Optional[List[Client]]:
         logger.info(f"{available_clients}, {client_types}")
         client_type = client_types[0]
 
         # Find all possible matches
-        matching_clients = list(filter(lambda x: client_type.match(x), available_clients))
+        matching_clients = list(
+            filter(lambda x: client_type.match(x), available_clients)
+        )
 
         inner_client_types = client_types.copy()
         inner_client_types.remove(client_type)
@@ -75,7 +81,9 @@ class TestCase(object):
                 # We have further matches to attempt:
                 inner_available_clients = available_clients.copy()
                 inner_available_clients.remove(client)
-                accepted_clients = self.combine(inner_available_clients, inner_client_types)
+                accepted_clients = self.combine(
+                    inner_available_clients, inner_client_types
+                )
                 if accepted_clients is not None:
                     accepted_clients.append(client)
                     return accepted_clients
@@ -115,7 +123,6 @@ class TestCase(object):
 
 
 class TestSuite(object):
-
     def __init__(self) -> None:
         self.uuid = str(uuid.uuid4())
         self.test_cases: Optional[List[TestCase]] = None
@@ -127,7 +134,9 @@ class TestSuite(object):
     def name(self) -> str:
         return self.__class__.__name__
 
-    def generate_model(self, clients: List[Client], homeservers: List[HomeserverConfig]) -> Model:
+    def generate_model(
+        self, clients: List[Client], homeservers: List[HomeserverConfig]
+    ) -> Model:
         pass
 
     def validate_model(self, model: Model) -> None:
@@ -137,12 +146,12 @@ class TestSuite(object):
         test_cases = []
 
         # TODO: aaactually, we need to iterate all permutations of this, so [a,b] -> [(aa),(ab),(ba),(bb)]
-        client_types_expanded = list(product(self.client_types or [], repeat=self.clients_needed))
-
-        if self.servers_needed == 1:
-            server_types_expanded = list(map(lambda x: (x,), self.server_types))
-        else:
-            raise Exception("AJKLAFJ")
+        client_types_expanded = list(
+            product(self.client_types or [], repeat=self.clients_needed)
+        )
+        server_types_expanded = list(
+            product(self.server_types or [], repeat=self.servers_needed)
+        )
 
         for client_type_list in client_types_expanded:
 
@@ -154,14 +163,18 @@ class TestSuite(object):
                 name = self.__class__.__name__ + "_" + client_names + "_" + server_names
                 guid = str(uuid.uuid4())
                 logger.info(
-                    f"Creating test {guid}\n Name: {name}\n Clients: {client_type_list}\n Servers: {server_type_list}")
-                test_cases.append(TestCase(guid,
-                                           name,
-                                           list(client_type_list),
-                                           server_type_list[0],
-                                           model_generator,
-                                           validator),
-                                  )
+                    f"Creating test {guid}\n Name: {name}\n Clients: {client_type_list}\n Servers: {server_type_list}"
+                )
+                test_cases.append(
+                    TestCase(
+                        guid,
+                        name,
+                        list(client_type_list),
+                        server_type_list[0],
+                        model_generator,
+                        validator,
+                    ),
+                )
         self.test_cases = test_cases
 
         return test_cases
@@ -183,7 +196,11 @@ class TestSuite(object):
 
     def skipped(self) -> int:
         if self.test_cases is not None:
-            return 0 + sum(1 for tc in self.test_cases if tc.status in ("waiting", "running", "skipped"))
+            return 0 + sum(
+                1
+                for tc in self.test_cases
+                if tc.status in ("waiting", "running", "skipped")
+            )
         return 0
 
 
@@ -194,6 +211,11 @@ def load_test_suites() -> List[TestSuite]:
     class_ = getattr(module, "VerifyClientTestSuite")
 
     test_suite: TestSuite = class_()
-    test_suite.server_types = [Synapse(), ]
-    test_suite.client_types = [ElementAndroid(), ElementWeb(), ]
+    test_suite.server_types = [
+        Synapse(),
+    ]
+    test_suite.client_types = [
+        ElementAndroid(),
+        ElementWeb(),
+    ]
     return [test_suite]
