@@ -93,7 +93,7 @@ You may need to create the complement-synapse image by checking out synapse and 
 Use this to start the test server:
 ```shell
 > . venv/bin/activate
-(venv) > FLASK_APP=trafficlight flask run --host 0.0.0.0
+(venv) > QUART_APP=trafficlight quart run --host 0.0.0.0
 ... server starts
 ```
 

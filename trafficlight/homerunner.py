@@ -15,7 +15,7 @@
 import logging
 from typing import Any, Dict, List
 
-import requests
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class HomerunnerClient(object):
             "BaseImageURI": base_image_uri,
         }
 
-    def create(self, model_id: str, images: List[str]) -> List[HomeserverConfig]:
+    async def create(self, model_id: str, images: List[str]) -> List[HomeserverConfig]:
         create_url = self.homerunner_url + "/create"
         homeservers = []
         for image in images:
@@ -60,18 +60,22 @@ class HomerunnerClient(object):
             "blueprint": {"Name": model_id, "Homeservers": homeservers},
         }
         logger.info(data)
-        rsp = requests.post(create_url, json=data)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(create_url, json=data) as rsp:
 
-        logger.info(rsp.content)
-        response = rsp.json()["homeservers"]
-        logger.info(response)
-        # TODO: check responsecode etc
-        homeserver_configs = []
-        for homeserver in homeservers:
-            # from our request
-            name = homeserver["Name"]
-            base_image_uri = homeserver["BaseImageURI"]
-            # from response
-            cs_api = response[name]["BaseURL"]
-            homeserver_configs.append(HomeserverConfig(name, cs_api, base_image_uri))
-        return homeserver_configs
+                json = await rsp.json()
+                logger.info(json)
+
+                response = json["homeservers"]
+                # TODO: check responsecode etc
+                homeserver_configs = []
+                for homeserver in homeservers:
+                    # from our request
+                    name = homeserver["Name"]
+                    base_image_uri = homeserver["BaseImageURI"]
+                    # from response
+                    cs_api = response[name]["BaseURL"]
+                    homeserver_configs.append(
+                        HomeserverConfig(name, cs_api, base_image_uri)
+                    )
+                return homeserver_configs

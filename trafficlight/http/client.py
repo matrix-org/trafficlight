@@ -15,7 +15,7 @@
 import logging
 from typing import Any, Dict, cast
 
-from flask import Blueprint, request, typing
+from quart import Blueprint, current_app, request, typing
 
 from trafficlight.objects import Client
 from trafficlight.store import add_client, get_client, get_clients, get_tests
@@ -31,9 +31,28 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("client", __name__, url_prefix="/client")
 
 
+async def check_for_new_tests() -> None:
+    tests = get_tests()
+    available_clients = list(filter(lambda x: x.model is None, get_clients()))
+    for test in tests:
+        if test.status == "waiting":
+            clients = test.runnable(available_clients)
+            if clients is not None:
+                logger.info("Starting test %s", test)
+                await test.run(clients)
+                return
+            else:
+                logger.info(
+                    "Not enough client_types to run test %s (have %s)",
+                    test,
+                    [str(item) for item in available_clients],
+                )
+
+
 @bp.route("/<string:client_uuid>/register", methods=["POST"])
-def register(client_uuid: str) -> typing.ResponseValue:
-    registration = cast(Dict[str, Any], request.json)
+async def register(client_uuid: str):  # type: ignore
+
+    registration = cast(Dict[str, Any], await request.json)
     logger.info("%s (    ) registered: %s", client_uuid, registration)
 
     existing = get_client(client_uuid)
@@ -48,26 +67,13 @@ def register(client_uuid: str) -> typing.ResponseValue:
     client = Client(client_uuid, registration)
     add_client(client)
 
-    tests = get_tests()
-    available_clients = list(filter(lambda x: x.model is None, get_clients()))
-    for test in tests:
-        if test.status == "waiting":
-            clients = test.runnable(available_clients)
-            if clients is not None:
-                logger.info("Running test %s", test)
-                test.run(clients)
-                return {}
-            else:
-                logger.info(
-                    "Not enough client_types to run test %s (have %s)",
-                    test,
-                    [str(item) for item in available_clients],
-                )
+    current_app.add_background_task(check_for_new_tests)
+
     return {}
 
 
 @bp.route("/<string:uuid>/poll", methods=["GET"])
-def poll(uuid: str) -> typing.ResponseValue:
+async def poll(uuid: str):  # type: ignore
     client = get_client(uuid)
     if client is None:
         # Very bad situation; client belives it's registered; server has no record
@@ -78,12 +84,13 @@ def poll(uuid: str) -> typing.ResponseValue:
 
 
 @bp.route("/<string:uuid>/respond", methods=["POST"])
-def respond(uuid: str) -> typing.ResponseValue:
+async def respond(uuid: str):  # type: ignore
     client = get_client(uuid)
     if client is None:
         # Again, bad situation; client is doing something and no-one knows why
         raise Exception("Unknown client performing update")
-    update = cast(Dict[str, Any], request.json)
+    response = await request.json
+    update = cast(Dict[str, Any], response)
     client.respond(update)
 
     return {}

@@ -101,7 +101,7 @@ class TestCase(object):
         else:
             return None
 
-    def run(self, client_list: List[Client]) -> None:
+    async def run(self, client_list: List[Client]) -> None:
         if self.status != "waiting":
             raise Exception("Logic error: already running this test")
         else:
@@ -113,7 +113,7 @@ class TestCase(object):
             client_name = client_name + 1
 
         # create server_types according to the server_types
-        server_list = self.server_type.create(self.uuid, homerunner)
+        server_list = await self.server_type.create(self.uuid, homerunner)
         # generate model given server config and selected client_types
         self.model = self.model_generator(client_list, server_list)
         self.model.uuid = self.uuid
