@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
@@ -20,6 +21,8 @@ from flask import Flask, redirect, url_for
 
 from trafficlight.tests import load_test_suites
 from trafficlight.store import add_testsuite
+
+logger = logging.getLogger(__name__)
 
 
 # Format in "2 hours" / "2 minutes" etc.
@@ -58,13 +61,17 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
 
     suites = load_test_suites()
     for suite in suites:
+        logger.info(f"Generating test cases for {suite.uuid}")
         cases = suite.generate_test_cases()
         add_testsuite(suite)
+
     app.register_blueprint(client.bp)
     app.register_blueprint(status.bp)
+
     @app.route("/")
     def redirect_status():
         return redirect(url_for("status.index"))
+
     app.jinja_env.filters["delaytime"] = format_delaytime
 
     return app

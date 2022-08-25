@@ -56,44 +56,41 @@ class TestCase(object):
     def __str__(self) -> str:
         return f"TestCase {self.description} {self.uuid} Model {self.model} Status {self.status}"
 
-    def combine(self, available_clients: List[Client], used_clients: List[Client],
-                client_types: List[ClientType]) -> bool:
-        # Current target
+    def combine(self, available_clients: List[Client], client_types: List[ClientType]) -> List[Client]:
+        logger.info(f"{available_clients}, {client_types}")
+        client_type = client_types[0]
 
-        client_type = client_types.pop(0)
         # Find all possible matches
         matching_clients = list(filter(lambda x: client_type.match(x), available_clients))
 
-        for client in matching_clients:
-            # Move client under test into used client_types
-            available_clients.remove(client)
-            used_clients.append(client)
+        inner_client_types = client_types.copy()
+        inner_client_types.remove(client_type)
 
-            if len(client_types) == 0:
+        for client in matching_clients:
+
+            if len(inner_client_types) == 0:
                 # If have a client in hand and we have zero remaining matches to test, return true
-                logger.info(f"Happy with {used_clients}")
-                return True
+                return [client]
             else:
                 # We have further matches to attempt:
-                if self.combine(available_clients, used_clients, client_types):
+                inner_available_clients = available_clients.copy()
+                inner_available_clients.remove(client)
+                accepted_clients = self.combine(inner_available_clients, inner_client_types)
+                if accepted_clients is not None:
+                    accepted_clients.append(client)
+                    return accepted_clients
 
-                    # We found a good match downstream (used_clients is now good)
-                    return True
-
-            # Restore and continue loop.
-            available_clients.append(client)
-            used_clients.remove(client)
-        return False
+        return None
 
     # takes a client list and returns client_types required to run the test
     def runnable(self, client_list: List[Client]) -> Optional[List[Client]]:
 
         available_clients = client_list.copy()
         client_types = self.client_types.copy()
-        used_clients: List[Client] = []
         # combine modifies the lists, so we ensure copies are passed in
-        if self.combine(available_clients, used_clients, client_types):
-            return used_clients
+        accepted_clients = self.combine(available_clients, client_types)
+        if accepted_clients is not None:
+            return accepted_clients
         else:
             return None
 
@@ -126,7 +123,6 @@ class TestSuite(object):
         self.server_types: Optional[List[ServerType]] = None
         self.clients_needed = 0
         self.servers_needed = 0
-        logger.info(f"UUID4 is {self.uuid}")
 
     def name(self) -> str:
         return self.__class__.__name__
@@ -141,29 +137,26 @@ class TestSuite(object):
         test_cases = []
 
         # TODO: aaactually, we need to iterate all permutations of this, so [a,b] -> [(aa),(ab),(ba),(bb)]
-        # easy for 1 or 2, hard for more...
-        if self.clients_needed == 1:
-            client_types_expanded = map(lambda x: (x,), self.client_types)
-        elif self.clients_needed == 2:
-            client_types_expanded = list(product(self.client_types or [], self.client_types or []))
-        else:
-            # TODO: implement n-way product function here.
-            raise Exception("ARGH WTF NOT YET")
+        client_types_expanded = list(product(self.client_types or [], repeat=self.clients_needed))
+
         if self.servers_needed == 1:
             server_types_expanded = list(map(lambda x: (x,), self.server_types))
         else:
             raise Exception("AJKLAFJ")
 
         for client_type_list in client_types_expanded:
-            logger.info("Trying list" + str(client_type_list))
+
             client_names = "-".join(map(lambda x: x.name(), client_type_list))
             for server_type_list in server_types_expanded:
                 server_names = "-".join(map(lambda x: x.name(), server_type_list))
                 model_generator = self.generate_model
                 validator = self.validate_model
-
-                test_cases.append(TestCase(str(uuid.uuid4()),
-                                           self.__class__.__name__ + "_" + client_names + "_" + server_names,
+                name = self.__class__.__name__ + "_" + client_names + "_" + server_names
+                guid = str(uuid.uuid4())
+                logger.info(
+                    f"Creating test {guid}\n Name: {name}\n Clients: {client_type_list}\n Servers: {server_type_list}")
+                test_cases.append(TestCase(guid,
+                                           name,
                                            list(client_type_list),
                                            server_type_list[0],
                                            model_generator,
