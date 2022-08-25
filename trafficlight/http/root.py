@@ -14,8 +14,7 @@
 # limitations under the License.
 import logging
 
-from flask import Blueprint, redirect, url_for, typing
-
+from flask import Blueprint, redirect, typing, url_for
 
 logging.basicConfig(level=logging.DEBUG)
 

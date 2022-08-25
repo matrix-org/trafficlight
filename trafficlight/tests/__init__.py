@@ -12,19 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from itertools import product
-import uuid
-import logging
-from datetime import datetime
-from typing import List, Callable, Optional
-
 import importlib
+import logging
+import uuid
+from datetime import datetime
+from itertools import product
+from typing import Callable, List, Optional
 
-from trafficlight.client_types import ElementWeb, ElementAndroid, ClientType
+import trafficlight.homerunner
+from trafficlight.client_types import ClientType, ElementAndroid, ElementWeb
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects import Client, Model
-from trafficlight.server_types import Synapse, ServerType
-import trafficlight.homerunner
+from trafficlight.server_types import ServerType, Synapse
 
 _CLIENT_NAMES = ["alice", "bob", "carol", "david", "eve", "frank"]
 

@@ -1,7 +1,8 @@
-from trafficlight.homerunner import HomeserverConfig
-from trafficlight.objects import ModelState, Model, Client
-from trafficlight.tests import TestSuite
 from typing import List
+
+from trafficlight.homerunner import HomeserverConfig
+from trafficlight.objects import Client, Model, ModelState
+from trafficlight.tests import TestSuite
 
 
 class VerifyClientTestSuite(TestSuite):

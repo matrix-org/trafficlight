@@ -19,8 +19,8 @@ from typing import Any, Dict, Optional
 
 from flask import Flask
 
-from trafficlight.tests import load_test_suites
 from trafficlight.store import add_testsuite
+from trafficlight.tests import load_test_suites
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
     except OSError:
         pass
 
-    from trafficlight.http import client, status, root
+    from trafficlight.http import client, root, status
 
     suites = load_test_suites()
     for suite in suites:

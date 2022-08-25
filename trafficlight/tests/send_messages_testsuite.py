@@ -1,9 +1,9 @@
+import uuid
 from typing import List
 
 from trafficlight.homerunner import HomeserverConfig
-from trafficlight.objects import Client, ModelState, Model
+from trafficlight.objects import Client, Model, ModelState
 from trafficlight.tests import TestSuite
-import uuid
 
 
 class SendMessagesTestSuite(TestSuite):

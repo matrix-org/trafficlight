@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from io import BytesIO
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from transitions.extensions import GraphMachine  # type: ignore
 

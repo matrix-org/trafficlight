@@ -16,7 +16,7 @@ import logging
 from typing import List, Optional
 
 from trafficlight.objects import Client
-from trafficlight.tests import TestSuite, TestCase
+from trafficlight.tests import TestCase, TestSuite
 
 logger = logging.getLogger(__name__)
 
