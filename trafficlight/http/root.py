@@ -14,7 +14,7 @@
 # limitations under the License.
 import logging
 
-from flask import Blueprint, redirect, typing, url_for
+from quart import Blueprint, redirect, url_for
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -24,5 +24,5 @@ bp = Blueprint("root", __name__, url_prefix="/")
 
 
 @bp.route("/", methods=["GET"])
-def redirect_status() -> typing.ResponseValue:
+async def redirect_status():  # type: ignore
     return redirect(url_for("status.index"))

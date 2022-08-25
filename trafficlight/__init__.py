@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-from flask import Flask
+from quart import Quart
 
 from trafficlight.store import add_testsuite
 from trafficlight.tests import load_test_suites
@@ -37,11 +36,10 @@ def format_delaytime(value: datetime) -> str:
     )
 
 
-def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
-    app = Flask(__name__, instance_relative_config=True)
+def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
+    app = Quart(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY="dev",
-        DATABASE=os.path.join(app.instance_path, "flaskr.sqlite"),
     )
 
     if test_config is None:
@@ -52,10 +50,6 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
         app.config.from_mapping(test_config)
 
     # ensure the instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
 
     from trafficlight.http import client, root, status
 

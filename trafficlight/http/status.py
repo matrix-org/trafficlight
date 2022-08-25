@@ -16,7 +16,7 @@ import io
 import logging
 from typing import List
 
-from flask import Blueprint, abort, render_template, request, send_file, typing
+from quart import Blueprint, abort, render_template, request, send_file
 
 from trafficlight.store import get_clients, get_test, get_tests, get_testsuites
 from trafficlight.tests import TestSuite
@@ -33,8 +33,8 @@ bp = Blueprint("status", __name__, url_prefix="/status")
 
 
 @bp.route("/", methods=["GET"])
-def index() -> typing.ResponseValue:
-    return render_template(
+async def index():  # type: ignore
+    return await render_template(
         "status_index.j2.html",
         clients=get_clients(),
         tests=get_tests(),
@@ -43,7 +43,7 @@ def index() -> typing.ResponseValue:
 
 
 @bp.route("/junit.xml", methods=["GET"])
-def as_junit() -> typing.ResponseValue:
+async def as_junit():  # type: ignore
     # for now we assume there's only one test; when we add the second we'll need to expand this logic a bit.
     testsuites: List[TestSuite] = get_testsuites()
 
@@ -52,7 +52,7 @@ def as_junit() -> typing.ResponseValue:
     skipped = 0 + sum(suite.skipped() for suite in testsuites)
     test_count = 0 + sum(len(suite.test_cases or []) for suite in testsuites)
 
-    return render_template(
+    return await render_template(
         "junit.j2.xml",
         testsuites=testsuites,
         errors=errors,
@@ -63,46 +63,46 @@ def as_junit() -> typing.ResponseValue:
 
 
 @bp.route("/<string:uuid>/context.png", methods=["GET"])
-def test_context_image(uuid: str) -> typing.ResponseValue:
+async def test_context_image(uuid: str):  # type: ignore
     test = get_test(uuid)
     if test is not None and test.model is not None:
         b = io.BytesIO()
         test.model.render_local_region(b)
         b.seek(0)
-        return send_file(b, mimetype="image/png")
+        return await send_file(b, mimetype="image/png")
     else:
         abort(404)
 
 
 @bp.route("/<string:uuid>/statemachine.png", methods=["GET"])
-def test_image(uuid: str) -> typing.ResponseValue:
+async def test_image(uuid: str):  # type: ignore
     test = get_test(uuid)
     if test is not None and test.model is not None:
         b = io.BytesIO()
         test.model.render_whole_graph(b)
         b.seek(0)
-        return send_file(b, mimetype="image/png")
+        return await send_file(b, mimetype="image/png")
     else:
         abort(404)
 
 
 @bp.route("/<string:uuid>/suitestatus", methods=["GET"])
-def testsuite_status(uuid: str) -> typing.ResponseValue:
+async def testsuite_status(uuid: str):  # type: ignore
     refresh = request.args.get("refresh", default=0, type=int)
     logger.info("Finding test %s", uuid)
     test = get_test(uuid)
     if test is not None:
-        return render_template("status_model.j2.html", test=test, refresh=refresh)
+        return await render_template("status_model.j2.html", test=test, refresh=refresh)
     else:
         abort(404)
 
 
 @bp.route("/<string:uuid>/status", methods=["GET"])
-def testcase_status(uuid: str) -> typing.ResponseValue:
+async def testcase_status(uuid: str):  # type: ignore
     refresh = request.args.get("refresh", default=0, type=int)
     logger.info("Finding test %s", uuid)
     test = get_test(uuid)
     if test is not None:
-        return render_template("status_model.j2.html", test=test, refresh=refresh)
+        return await render_template("status_model.j2.html", test=test, refresh=refresh)
     else:
         abort(404)
