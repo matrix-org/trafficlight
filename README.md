@@ -20,6 +20,8 @@ There are three APIs provided for interaction by the server:
 
 Register a new client with the server. Provide data about the client so the server can allocate to tests efficiently.
 
+NB: at present this may block for an extended period as servers and the test model are created. This should be moved to a background/worker task, but has not yet been done.
+
 `/client/<uuid>/poll`
 
 Poll is used by clients to retrieve the next action. It's just some JSON.
@@ -32,6 +34,21 @@ Report is used by clients to advance the state machine when they've finished the
 
 Inside the server is a state machine that handles actions by different clients; typically they're referred to by colour. When a real client 
 
+
+Additionally:
+
+`/status`
+
+Provides html for human-readable information about which clients are registered and what state they're in. Useful for debugging why a certain test has not yet run.
+
+`/status/junit.xml`
+
+Provides compatible junit.xml test output for use in other services / formatting / etc.
+
+ * Tests that have not started (not found enough clients to run) are `skipped`
+ * Tests that have started and completed are successes
+ * Tests that have started and explicitly fail are `failures`
+ * Tests that have started but are in any other state are `errors`
 
 ## Client controller loop
 
@@ -49,31 +66,36 @@ Polyjuice has a very similar poll method for getting data to clients but uses ma
 
 ## Installation
 
+As well as python dependencies installed via `pip`, libgraphviz-dev (debian) or graphviz-devel (fedora) is required for the status page graph rendering.
 
 ## Development
 
-In a virtual environment with pip ≥ 21.1, run
+Create a virtual environment with pip ≥ 21.1 and install
 ```shell
-pip install -e .[dev]
+> pwd
+/home/michaelk/work/trafficlight/
+> python -m venv venv/
+> venv/bin/pip install --upgrade pip
+> venv/bin/pip install -e .[dev]
 ```
 
-To run the unit tests, you can either use:
-```shell
-tox -e py
-```
-or
-```shell
-trial tests
-```
 
 To run the linters and `mypy` type checker, use `./scripts-dev/lint.sh`.
 
 ## Starting
 
-This requires a homerunner instance running (ideally on :54321 for now) to start and stop server instances as required.
+This requires a homerunner instance running (ideally on localhost:54321 which is the default) to start and stop server instances as required.
+
+You may need to create the complement-synapse image by checking out synapse and running:
+
+`scripts-dev/complement.sh --build-only`
 
 Use this to start the test server:
-`FLASK_APP=trafficlight flask run --host 0.0.0.0`
+```shell
+> . venv/bin/activate
+(venv) > FLASK_APP=trafficlight flask run --host 0.0.0.0
+... server starts
+```
 
 ## Releasing
 
