@@ -15,7 +15,7 @@
 import logging
 from typing import Any, Dict, cast
 
-from quart import Blueprint, current_app, request, typing
+from quart import Blueprint, current_app, request
 
 from trafficlight.objects import Client
 from trafficlight.store import add_client, get_client, get_clients, get_tests
