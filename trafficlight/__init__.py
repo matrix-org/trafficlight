@@ -12,14 +12,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
-import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from flask import Flask
 
-from trafficlight.store import Client, TestCase, add_test, generate_model
+from trafficlight.store import add_testsuite
+from trafficlight.tests import load_test_suites
+
+logger = logging.getLogger(__name__)
 
 
 # Format in "2 hours" / "2 minutes" etc.
@@ -54,51 +57,18 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Flask:
     except OSError:
         pass
 
-    from . import client, status
+    from trafficlight.http import client, root, status
+
+    suites = load_test_suites()
+    for suite in suites:
+        logger.info(f"Generating test cases for {suite.uuid}")
+        suite.generate_test_cases()
+        add_testsuite(suite)
 
     app.register_blueprint(client.bp)
     app.register_blueprint(status.bp)
+    app.register_blueprint(root.bp)
+
     app.jinja_env.filters["delaytime"] = format_delaytime
 
-    def android_matcher(x: Client) -> bool:
-        return str(x.registration["type"]) == "element-android"
-
-    def web_matcher(x: Client) -> bool:
-        return str(x.registration["type"]) == "element-web"
-
-    # Expand out the four test cases so far:
-    add_test(
-        TestCase(
-            uuid.uuid4(),
-            "android, web",
-            [android_matcher, web_matcher],
-            generate_model,
-        )
-    )
-    add_test(
-        TestCase(
-            uuid.uuid4(),
-            "web, android",
-            [web_matcher, android_matcher],
-            generate_model,
-        )
-    )
-    add_test(
-        TestCase(
-            uuid.uuid4(),
-            "web, web",
-            [web_matcher, web_matcher],
-            generate_model,
-        )
-    )
-    add_test(
-        TestCase(
-            uuid.uuid4(),
-            "android, android",
-            [android_matcher, android_matcher],
-            generate_model,
-        )
-    )
-
-    # Maybe even write them to a report afterwards
     return app

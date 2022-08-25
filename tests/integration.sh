@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# This bash script has been used to create and register clients, and force them through a simple flow.
+# This bash script has been used to create and register client_types, and force them through a simple flow.
 
-# It doesn't do anything like validate the steps make sense, etc, and will generally not work if other clients are registered.
+# It doesn't do anything like validate the steps make sense, etc, and will generally not work if other client_types are registered.
 
-# It's probably a not unreasonable place to hack around with clients to get the server into a specific condition; but fairly soon tests will need to be more complicated.
+# It's probably a not unreasonable place to hack around with client_types to get the server into a specific condition; but fairly soon tests will need to be more complicated.
 
 DEBUG=DEBUG
 RUN=`date +%s`

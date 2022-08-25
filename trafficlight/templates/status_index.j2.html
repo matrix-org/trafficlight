@@ -9,15 +9,25 @@
   <table>
     <tr><th>UUID</th><th>State</th><th>Last Polled</th><th>data</th></tr>
     {% for client in clients %}
-    <tr><td>{{ client.uuid }}</td><td>{{ client.status() }}</td><td>{{ client.last_polled }}</td><td>{{ client.registration }}</td></tr>
+    <tr><td>{{ client.uuid }}</td><td>{% if client.model %}<a href='{{ url_for("status.testcase_status", uuid = client.model.uuid )}}'>{{ client.model.state }}</a>{% else %}Unallocated{% endif %}<td>{{ client.last_polled }}</td><td>{{ client.registration }}</td></tr>
     {% endfor %}
   </table>
 
-  <h2>Tests</h2>
+  <h2>TestSuites</h2>
   <table>
-    <tr><th>Description</th><th>UUID</th><th>State</th></tr>
-    {% for test in tests %}
-    <tr><td><a href="{{ url_for("status.test_status", uuid = test.uuid) }}">{{ test.description }}</a></td><td>{{ test.uuid }}</td><td>{{ test.status() }}</td></tr>
+    <tr><th>Suite</th><th>Success</th><th>Skip</th><th>Fail</th><th>Err</th></tr>
+    {% for testsuite in test_suites %}
+    <tr><td><a href='{{ url_for("status.testsuite_status", uuid = testsuite.uuid) }}'>{{ testsuite.name() }}</a></td><td>{{ testsuite.successes() }}</td><td>{{ testsuite.skipped() }}</td><td>{{ testsuite.failures() }}</td><td>{{ testsuite.errors() }}</td></tr>
+    <tr><td colspan="3">
+      <table>
+        <tr><th>Case</th><th>UUID</th><th>Running</th></tr>
+        {% for test in testsuite.test_cases %}
+          <tr> <td><a href='{{ url_for("status.testcase_status", uuid = test.uuid) }}'>{{ test.description }}</a></td><td>{{ test.uuid }}</td><td>{{ test.status }}</td></tr>
+        {% endfor %}
+      </table>
+    </td></tr>
     {% endfor %}
   </table>
+
+
 {% endblock %}
