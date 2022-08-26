@@ -58,14 +58,14 @@ echo -n "$RED < " && curl http://localhost:5000/client/$RED/poll
 echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll
 
 # Both verify emoji
-echo -n "$GREEN > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "verified_crosssign"}' http://localhost:5000/client/$GREEN/respond
+echo -n "$GREEN > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "verified_crosssign", "data": {"emoji": "abcdefg"}}' http://localhost:5000/client/$GREEN/respond
 if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
 
 echo -n "$RED < " && curl http://localhost:5000/client/$RED/poll
 echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll
 
 
-echo -n "$RED > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "verified_crosssign"}' http://localhost:5000/client/$RED/respond
+echo -n "$RED > " && curl -XPOST -H 'Content-Type: application/json' -d '{"response": "verified_crosssign", "data": {"emoji": "abcdefg"}}' http://localhost:5000/client/$RED/respond
 if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
 
 

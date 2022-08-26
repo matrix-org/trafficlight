@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from io import BytesIO
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from transitions.extensions import GraphMachine  # type: ignore
 
@@ -32,6 +32,8 @@ class Model(object):
             "responses": [],
             "data": {"delay": 5000},
         }
+        self.completed_callback: Callable[[], str] = None
+        self.responses: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
     def __str__(self) -> str:
         return f"Model {self.uuid}"
@@ -62,7 +64,11 @@ class Model(object):
                     )
 
     def transition(self, colour: str, update: Dict[str, Any]) -> None:
-
+        if "data" in update:
+            if colour in self.responses:
+                self.responses[colour].update(update["data"])
+            else:
+                self.responses[colour] = update["data"]
         transition = colour + "_" + update["response"]
         old_state = self.state
         self.trigger(transition)  # type: ignore
@@ -77,11 +83,13 @@ class Model(object):
     def render_local_region(self, bytesio: BytesIO) -> None:
         self.get_graph(show_roi=True).draw(bytesio, format="png", prog="dot")  # type: ignore
 
-    def on_enter_completed(self) -> None:
-        pass
-        # Call the validator from the testcase.
-        # self.validator(self)
-        # todo make this update the test case with results etc...
+    def on_enter_complete(self) -> None:
+
+        if self.completed_callback is not None:
+            logger.info("Test completed, running validator")
+            self.completed_callback()
+        else:
+            logger.info("Test completed, no validator to run.")
 
 
 class Client(object):
@@ -128,6 +136,7 @@ class Client(object):
         if self.name is None:
             raise Exception("Client not allocated a name yet")
         logger.info("%s (%s) responded: %s", self.uuid, self.name, update)
+
         self.model.transition(self.name, update)
         if update_last_responded:
             self.last_responded = datetime.now()
@@ -139,6 +148,3 @@ class Client(object):
     def set_name(self, name: str) -> None:
         logger.info("Set name %s on %s", name, self.uuid)
         self.name = name
-
-    def complete(self) -> None:
-        self.completed = True

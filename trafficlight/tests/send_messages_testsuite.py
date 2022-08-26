@@ -4,6 +4,7 @@ from typing import List
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects import Client, Model, ModelState
 from trafficlight.tests import TestSuite
+from trafficlight.tests.assertions import assertCompleted
 
 
 class SendMessagesTestSuite(TestSuite):
@@ -13,7 +14,7 @@ class SendMessagesTestSuite(TestSuite):
         self.servers_needed = 1
 
     def validate_model(self, model: Model) -> None:
-        pass
+        assertCompleted(model)
 
         # TODO verify the model after completion, eg:
         #        self.assertEqual(model.data["alice_verified_crosssign"]['emoji'],

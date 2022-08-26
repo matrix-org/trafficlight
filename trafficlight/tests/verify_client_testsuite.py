@@ -3,6 +3,7 @@ from typing import List
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects import Client, Model, ModelState
 from trafficlight.tests import TestSuite
+from trafficlight.tests.assertions import assertCompleted, assertEqual
 
 
 class VerifyClientTestSuite(TestSuite):
@@ -11,13 +12,19 @@ class VerifyClientTestSuite(TestSuite):
         self.clients_needed = 2
         self.servers_needed = 1
 
-    def validate_results(self, model: Model) -> None:
-        pass
+    def validate_model(self, model: Model) -> None:
+        # NB: Clients do not handle this yet
+        assertCompleted(model)
 
-        # TODO verify the model after completion, eg:
-        #        self.assertEqual(model.data["alice_verified_crosssign"]['emoji'],
-        #                        model.data["bob_verified_crosssign"]["emoji"],
-        #                        "Emoji were not matching")
+        # NB: Better namespacing should be in place.
+
+        # NB: Alice and Bob are names, yes, but we don't know them in this test.
+        # Perhaps get client passed in instead.
+        assertEqual(
+            model.responses["alice"]["emoji"],
+            model.responses["bob"]["emoji"],
+            "Emoji accepted should be identical",
+        )
 
     def generate_model(
         self, clients: List[Client], servers: List[HomeserverConfig]
@@ -27,6 +34,7 @@ class VerifyClientTestSuite(TestSuite):
 
         homeserver = servers[0]
 
+        # TODO: move into neat user-generation tool
         import uuid as guid
 
         # Generating server
