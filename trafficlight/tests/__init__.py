@@ -12,8 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import glob
 import importlib
 import logging
+import os
 import uuid
 from datetime import datetime
 from itertools import product
@@ -161,8 +163,12 @@ class TestSuite(object):
                 validator = self.validate_model
                 name = self.__class__.__name__ + "_" + client_names + "_" + server_names
                 guid = str(uuid.uuid4())
+
                 logger.info(
-                    f"Creating test {guid}\n Name: {name}\n Clients: {client_type_list}\n Servers: {server_type_list}"
+                    f"Creating test {name}\n"
+                    f" UUID: {guid}\n"
+                    f" Clients: {[x.name() for x in client_type_list]}\n"
+                    f" Servers: {[x.name() for x in server_type_list]}\n"
                 )
                 test_cases.append(
                     TestCase(
@@ -203,18 +209,51 @@ class TestSuite(object):
         return 0
 
 
-def load_test_suites() -> List[TestSuite]:
+def load_test_suites(
+    base_path: str = "./trafficlight/tests", pattern: str = "**/*_testsuite.py"
+) -> List[TestSuite]:
     # TODO: iterate over packages and return big list
     # TODO: filter out unwanted server / client types
-    module = importlib.import_module("trafficlight.tests.verify_client_testsuite")
-    class_ = getattr(module, "VerifyClientTestSuite")
 
-    test_suite: TestSuite = class_()
-    test_suite.server_types = [
-        Synapse(),
-    ]
-    test_suite.client_types = [
-        ElementAndroid(),
-        ElementWeb(),
-    ]
-    return [test_suite]
+    # base_path is like "trafficlight/tests"
+    globber = base_path + "/" + pattern
+    files = glob.glob(globber, recursive=True)
+    # files is like ["trafficlight/tests/send_messages_testsuite.py",...]
+    logger.info(f"Converting {globber} into {len(files)} files")
+    test_suites: List[TestSuite] = []
+    for file in files:
+        parts = file.split(os.sep)
+        # Convert a filename into a module name ("send_messages_testsuite.py" -> "send_messages_testsuite")
+        file = parts[-1]
+        file = file.replace(".py", "", 1)
+        # Ignore leading "." ([".","trafficlight","tests"] -> ["trafficlight","tests"])
+        path = parts[1:-1]
+        # Finally combine into a full module name (trafficlight.tests.send_messages_testsuite)
+        module = ".".join(path) + "." + file
+        test_suites.extend(load_test_suites_from_module(module))
+
+    return test_suites
+
+
+def load_test_suites_from_module(module_name: str) -> List[TestSuite]:
+    module = importlib.import_module(module_name)
+    test_suites: List[TestSuite] = []
+    for name in dir(module):
+        obj = getattr(module, name)
+        if (
+            isinstance(obj, type)
+            and issubclass(obj, TestSuite)
+            and not isinstance(obj, TestSuite)
+        ):
+            logger.info(f"Found TestSuite {obj}")
+            test_suite: TestSuite = obj()
+            test_suite.server_types = [
+                Synapse(),
+            ]
+            test_suite.client_types = [
+                ElementAndroid(),
+                ElementWeb(),
+            ]
+            test_suites.append(test_suite)
+
+    return test_suites

@@ -55,7 +55,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
 
     suites = load_test_suites()
     for suite in suites:
-        logger.info(f"Generating test cases for {suite.uuid}")
+        logger.info(f"Generating test cases for {suite.name()}")
         suite.generate_test_cases()
         add_testsuite(suite)
 
