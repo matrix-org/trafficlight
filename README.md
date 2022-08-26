@@ -50,6 +50,20 @@ Provides compatible junit.xml test output for use in other services / formatting
  * Tests that have started and explicitly fail are `failures`
  * Tests that have started but are in any other state are `errors`
 
+## Writing tests
+
+Tests should be written in the `trafficlight.tests` package.
+
+To be picked up by the autodiscovery system, they should be named `**/*_testsuite.py` and should contain one or more classes that extend `trafficlight.tests.TestSuite`.
+
+These suites will then be expanded on startup into a number of test cases, using the list of clients and servers known to trafficlight at present.
+
+The testSuites should implement the two methods, `generate_model` and `validate_model`. THe generator should return a trafficlight.object.Model which represents the state machine the test should go through.
+
+The validator should post-process the model and ensure that all conditions have been successfully applied. `trafficlight.tests.assertions` contains useful `unittest`-style assertXXX() methods that can mark the test as `failed`. Other exceptions will mark the test as `error`.
+
+Current status of all tests is on the status dashboard.
+
 ## Client controller loop
 
 The client controllers should basically poll the server and have a switch block for each action being returned: For each action they should perform it and only respond when complete.
