@@ -24,6 +24,7 @@ from trafficlight.client_types import ClientType, ElementAndroid, ElementWeb
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects import Client, Model
 from trafficlight.server_types import ServerType, Synapse
+from trafficlight.tests.assertions import TestException
 
 _CLIENT_NAMES = ["alice", "bob", "carol", "david", "eve", "frank"]
 
@@ -39,8 +40,10 @@ class TestCase(object):
         client_types: List[ClientType],
         server_type: ServerType,
         model_generator: Callable[[List[Client], List[HomeserverConfig]], Model],
-        validator: Callable[[Model], None],
+        model_validator: Callable[[Model], None],
     ) -> None:
+        self.error: Optional[Exception] = None
+        self.client_list: Optional[List[Client]] = None
         self.uuid = uuid
         self.description = description
         self.client_types: List[ClientType] = client_types
@@ -48,7 +51,7 @@ class TestCase(object):
         self.model_generator: Callable[
             [List[Client], List[HomeserverConfig]], Model
         ] = model_generator
-        self.validator = validator
+        self.model_validator: Callable[[Model], None] = model_validator
         self.registered = datetime.now()
         self.model: Optional[Model] = None
         self.time = 0
@@ -89,6 +92,28 @@ class TestCase(object):
 
         return None
 
+    def completed_callback(self) -> str:
+
+        try:
+            logger.info(f"Found validator {self.model_validator}")
+            self.model_validator(self.model)
+            self.status = "success"
+
+        except TestException as e:
+            self.status = "failure"
+            self.error = e
+        except Exception as e2:
+            self.status = "error"
+            self.error = e2
+
+        for client in self.client_list:
+            client.completed = True
+
+        logger.info(
+            f"Validation complete: test was {self.status} with error {self.error}"
+        )
+        return self.status
+
     # takes a client list and returns client_types required to run the test
     def runnable(self, client_list: List[Client]) -> Optional[List[Client]]:
 
@@ -117,6 +142,11 @@ class TestCase(object):
         # generate model given server config and selected client_types
         self.model = self.model_generator(client_list, server_list)
         self.model.uuid = self.uuid
+        self.model.completed_callback = self.completed_callback
+        logger.info(
+            f"set callback {self.completed_callback} on {self.model} like so {self.model.completed_callback}"
+        )
+        self.client_list = client_list
         for client in client_list:
             client.set_model(self.model)
 
@@ -139,7 +169,7 @@ class TestSuite(object):
         pass
 
     def validate_model(self, model: Model) -> None:
-        pass
+        raise TestException("No validation method found")
 
     def generate_test_cases(self) -> List[TestCase]:
         test_cases = []
@@ -158,6 +188,7 @@ class TestSuite(object):
             for server_type_list in server_types_expanded:
                 server_names = "-".join(map(lambda x: x.name(), server_type_list))
                 model_generator = self.generate_model
+                logger.info(f"Using validation method {self.validate_model}")
                 validator = self.validate_model
                 name = self.__class__.__name__ + "_" + client_names + "_" + server_names
                 guid = str(uuid.uuid4())
