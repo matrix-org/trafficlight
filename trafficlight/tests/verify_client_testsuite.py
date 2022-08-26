@@ -1,12 +1,12 @@
 from typing import List
 
+import trafficlight.tests
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects import Client, Model, ModelState
-from trafficlight.tests import TestSuite
 from trafficlight.tests.assertions import assertCompleted, assertEqual
 
 
-class VerifyClientTestSuite(TestSuite):
+class VerifyClientTestSuite(trafficlight.tests.TestSuite):
     def __init__(self) -> None:
         super(VerifyClientTestSuite, self).__init__()
         self.clients_needed = 2
