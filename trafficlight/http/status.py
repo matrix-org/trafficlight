@@ -18,7 +18,7 @@ from typing import List
 
 from quart import Blueprint, abort, render_template, request, send_file
 
-from trafficlight.store import get_clients, get_test, get_tests, get_testsuites
+from trafficlight.store import get_clients, get_test, get_tests, get_testsuite, get_testsuites
 from trafficlight.tests import TestSuite
 
 logging.basicConfig(level=logging.DEBUG)
@@ -71,7 +71,7 @@ async def test_context_image(uuid: str):  # type: ignore
         b.seek(0)
         return await send_file(b, mimetype="image/png")
     else:
-        abort(404)
+        return await send_file("trafficlight/static/no_model.png", mimetype="image/png")
 
 
 @bp.route("/<string:uuid>/statemachine.png", methods=["GET"])
@@ -83,16 +83,15 @@ async def test_image(uuid: str):  # type: ignore
         b.seek(0)
         return await send_file(b, mimetype="image/png")
     else:
-        abort(404)
+        return await send_file("trafficlight/static/no_model.png", mimetype="image/png")
 
 
 @bp.route("/<string:uuid>/suitestatus", methods=["GET"])
 async def testsuite_status(uuid: str):  # type: ignore
     refresh = request.args.get("refresh", default=0, type=int)
-    logger.info("Finding test %s", uuid)
-    test = get_test(uuid)
-    if test is not None:
-        return await render_template("status_model.j2.html", test=test, refresh=refresh)
+    testsuite = get_testsuite(uuid)
+    if testsuite is not None:
+        return await render_template("status_suite.j2.html", testsuite=testsuite, refresh=refresh)
     else:
         abort(404)
 
@@ -103,6 +102,6 @@ async def testcase_status(uuid: str):  # type: ignore
     logger.info("Finding test %s", uuid)
     test = get_test(uuid)
     if test is not None:
-        return await render_template("status_model.j2.html", test=test, refresh=refresh)
+        return await render_template("status_case.j2.html", test=test, refresh=refresh)
     else:
         abort(404)
