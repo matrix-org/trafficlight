@@ -111,6 +111,15 @@ Use this to start the test server:
 ... server starts
 ```
 
+## Configuring
+
+Various options can be used to configure the tests:
+
+|| Name  || Default || Function ||
+|| TEST\_PATTERN || `**/*_testsuite.py` || Pattern to find tests. `**` for any recursive directory, `*` as normal wildcard ||
+
+Set options via environment variables by prefixing with `TRAFFICLIGHT_`, eg: `TRAFFICLIGHT_TEST_PATTERN=only_one_test.py`.
+
 ## Releasing
 
 ???
