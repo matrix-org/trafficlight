@@ -14,15 +14,17 @@
 # limitations under the License.
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 
 from quart import Quart
 
-from trafficlight.server_types import Synapse, ServerType
 from trafficlight.store import add_testsuite
 from trafficlight.tests import load_test_suites
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
+logging.getLogger("transitions").setLevel(logging.ERROR)
 
 
 # Format in "2 hours" / "2 minutes" etc.
@@ -38,28 +40,37 @@ def format_delaytime(value: datetime) -> str:
 
 
 def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
-    logger.info("Starting")
     app = Quart(__name__, instance_relative_config=True)
     # Defaults here:
-    app.config.update({"TEST_PATTERN": "**/*.py",
-                       "SERVER_TYPES": ["Synapse"],
-                       "CLIENT_TYPES": ["ElementWeb", "ElementAndroid"]
-                       })
+    app.config.update(
+        {
+            "TEST_PATTERN": "/**/*.py",
+            "SERVER_TYPES": "Synapse",
+            "CLIENT_TYPES": "ElementWeb,ElementAndroid",
+        }
+    )
 
     # Override via envvar: TRAFFICLIGHT_<key>;
     app.config.from_prefixed_env(prefix="TRAFFICLIGHT")
 
+    app.config["SERVER_TYPES"] = app.config["SERVER_TYPES"].split(",")
+    app.config["CLIENT_TYPES"] = app.config["CLIENT_TYPES"].split(",")
+
     # ensure the instance folder exists
-    logger.info(f"{app.config}")
-    suites = load_test_suites(app.config["TEST_PATTERN"],
-                              app.config["SERVER_TYPES"],
-                              app.config["CLIENT_TYPES"])
+    print(f"{app.config}")
+
+    suites = load_test_suites(
+        app.config["TEST_PATTERN"],
+        app.config["SERVER_TYPES"],
+        app.config["CLIENT_TYPES"],
+    )
     for suite in suites:
         logger.info(f"Generating test cases for {suite.name()}")
         suite.generate_test_cases()
         add_testsuite(suite)
 
     from trafficlight.http import client, root, status
+
     app.register_blueprint(client.bp)
     app.register_blueprint(status.bp)
     app.register_blueprint(root.bp)

@@ -22,10 +22,10 @@ from itertools import product
 from typing import Callable, List, Optional
 
 import trafficlight.homerunner
-from trafficlight.client_types import ClientType, ElementAndroid, ElementWeb
+from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects import Client, Model
-from trafficlight.server_types import ServerType, Synapse
+from trafficlight.server_types import ServerType
 from trafficlight.tests.assertions import TestException
 
 _CLIENT_NAMES = ["alice", "bob", "carol", "david", "eve", "frank"]
@@ -36,13 +36,13 @@ homerunner = trafficlight.homerunner.HomerunnerClient("http://localhost:54321")
 
 class TestCase(object):
     def __init__(
-            self,
-            uuid: str,
-            description: str,
-            client_types: List[ClientType],
-            server_type: ServerType,
-            model_generator: Callable[[List[Client], List[HomeserverConfig]], Model],
-            model_validator: Callable[[Model], None],
+        self,
+        uuid: str,
+        description: str,
+        client_types: List[ClientType],
+        server_type: ServerType,
+        model_generator: Callable[[List[Client], List[HomeserverConfig]], Model],
+        model_validator: Callable[[Model], None],
     ) -> None:
         self.error: Optional[Exception] = None
         self.client_list: Optional[List[Client]] = None
@@ -63,7 +63,7 @@ class TestCase(object):
         return f"TestCase {self.description} {self.uuid} Model {self.model} Status {self.status}"
 
     def combine(
-            self, available_clients: List[Client], client_types: List[ClientType]
+        self, available_clients: List[Client], client_types: List[ClientType]
     ) -> Optional[List[Client]]:
         logger.info(f"{available_clients}, {client_types}")
         client_type = client_types[0]
@@ -166,7 +166,7 @@ class TestSuite(object):
         return self.__class__.__name__
 
     def generate_model(
-            self, clients: List[Client], homeservers: List[HomeserverConfig]
+        self, clients: List[Client], homeservers: List[HomeserverConfig]
     ) -> Model:
         pass
 
@@ -240,11 +240,18 @@ class TestSuite(object):
         return 0
 
 
-def load_test_suites(pattern: str, server_type_str: List[str], client_type_str: List[str],
-                     base_path: str = "./trafficlight/tests ") -> List[TestSuite]:
-
-    server_types: List[ServerType] = list(map(lambda x: getattr(trafficlight.server_types, x), server_type_str))
-    client_types: List[ClientType] = list(map(lambda x: getattr(trafficlight.client_types, x), client_type_str))
+def load_test_suites(
+    pattern: str,
+    server_type_str: List[str],
+    client_type_str: List[str],
+    base_path: str = "./trafficlight/tests",
+) -> List[TestSuite]:
+    server_types: List[ServerType] = list(
+        map(lambda x: getattr(trafficlight.server_types, x)(), server_type_str)  # type: ignore
+    )
+    client_types: List[ClientType] = list(
+        map(lambda x: getattr(trafficlight.client_types, x)(), client_type_str)  # type: ignore
+    )
     logger.info(f"Converted {server_type_str} to {server_types}")
     logger.info(f"Converted {client_type_str} to {client_types}")
     # base_path is like "trafficlight/tests"
@@ -262,21 +269,24 @@ def load_test_suites(pattern: str, server_type_str: List[str], client_type_str: 
         path = parts[1:-1]
         # Finally combine into a full module name (trafficlight.tests.send_messages_testsuite)
         module = ".".join(path) + "." + file
-        test_suites.extend(load_test_suites_from_module(module, server_types, client_types))
+        test_suites.extend(
+            load_test_suites_from_module(module, server_types, client_types)
+        )
 
     return test_suites
 
 
-def load_test_suites_from_module(module_name: str, server_types: List[ServerType], client_types: List[ClientType]) -> \
-List[TestSuite]:
+def load_test_suites_from_module(
+    module_name: str, server_types: List[ServerType], client_types: List[ClientType]
+) -> List[TestSuite]:
     module = importlib.import_module(module_name)
     test_suites: List[TestSuite] = []
     for name in dir(module):
         obj = getattr(module, name)
         if (
-                isinstance(obj, type)
-                and issubclass(obj, TestSuite)
-                and not isinstance(obj, TestSuite)
+            isinstance(obj, type)
+            and issubclass(obj, TestSuite)
+            and not isinstance(obj, TestSuite)
         ):
             logger.info(f"Found TestSuite {obj}")
             test_suite: TestSuite = obj()
