@@ -22,6 +22,9 @@ from trafficlight.store import add_testsuite
 from trafficlight.tests import load_test_suites
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
+logging.getLogger("transitions").setLevel(logging.ERROR)
 
 
 # Format in "2 hours" / "2 minutes" etc.
@@ -39,26 +42,34 @@ def format_delaytime(value: datetime) -> str:
 def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     app = Quart(__name__, instance_relative_config=True)
     # Defaults here:
-    # Override via envvar: TRAFFICLIGHT_<key>
-    app.config.update({"TEST_PATTERN": "**/*.py"})
+    app.config.update(
+        {
+            "TEST_PATTERN": "/**/*.py",
+            "SERVER_TYPES": "Synapse",
+            "CLIENT_TYPES": "ElementWeb,ElementAndroid",
+        }
+    )
+
+    # Override via envvar: TRAFFICLIGHT_<key>;
     app.config.from_prefixed_env(prefix="TRAFFICLIGHT")
 
-    if test_config is None:
-        # load the instance config, if it exists, when not testing
-        app.config.from_pyfile("config.py", silent=True)
-    else:
-        # load the test config if passed in
-        app.config.from_mapping(test_config)
+    app.config["SERVER_TYPES"] = app.config["SERVER_TYPES"].split(",")
+    app.config["CLIENT_TYPES"] = app.config["CLIENT_TYPES"].split(",")
 
     # ensure the instance folder exists
+    print(f"{app.config}")
 
-    from trafficlight.http import client, root, status
-
-    suites = load_test_suites(pattern=app.config["TEST_PATTERN"])
+    suites = load_test_suites(
+        app.config["TEST_PATTERN"],
+        app.config["SERVER_TYPES"],
+        app.config["CLIENT_TYPES"],
+    )
     for suite in suites:
         logger.info(f"Generating test cases for {suite.name()}")
         suite.generate_test_cases()
         add_testsuite(suite)
+
+    from trafficlight.http import client, root, status
 
     app.register_blueprint(client.bp)
     app.register_blueprint(status.bp)

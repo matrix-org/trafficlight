@@ -20,10 +20,8 @@ from quart import Blueprint, current_app, request
 from trafficlight.objects import Client
 from trafficlight.store import add_client, get_client, get_clients, get_tests
 
-logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
 
-logging.getLogger("transitions").setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
