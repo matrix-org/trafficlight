@@ -14,10 +14,11 @@
 # limitations under the License.
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from quart import Quart
 
+from trafficlight.server_types import Synapse, ServerType
 from trafficlight.store import add_testsuite
 from trafficlight.tests import load_test_suites
 
@@ -37,29 +38,28 @@ def format_delaytime(value: datetime) -> str:
 
 
 def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
+    logger.info("Starting")
     app = Quart(__name__, instance_relative_config=True)
     # Defaults here:
-    # Override via envvar: TRAFFICLIGHT_<key>
-    app.config.update({"TEST_PATTERN": "**/*.py"})
+    app.config.update({"TEST_PATTERN": "**/*.py",
+                       "SERVER_TYPES": ["Synapse"],
+                       "CLIENT_TYPES": ["ElementWeb", "ElementAndroid"]
+                       })
+
+    # Override via envvar: TRAFFICLIGHT_<key>;
     app.config.from_prefixed_env(prefix="TRAFFICLIGHT")
 
-    if test_config is None:
-        # load the instance config, if it exists, when not testing
-        app.config.from_pyfile("config.py", silent=True)
-    else:
-        # load the test config if passed in
-        app.config.from_mapping(test_config)
-
     # ensure the instance folder exists
-
-    from trafficlight.http import client, root, status
-
-    suites = load_test_suites(pattern=app.config["TEST_PATTERN"])
+    logger.info(f"{app.config}")
+    suites = load_test_suites(app.config["TEST_PATTERN"],
+                              app.config["SERVER_TYPES"],
+                              app.config["CLIENT_TYPES"])
     for suite in suites:
         logger.info(f"Generating test cases for {suite.name()}")
         suite.generate_test_cases()
         add_testsuite(suite)
 
+    from trafficlight.http import client, root, status
     app.register_blueprint(client.bp)
     app.register_blueprint(status.bp)
     app.register_blueprint(root.bp)
