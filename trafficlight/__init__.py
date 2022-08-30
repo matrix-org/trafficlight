@@ -38,9 +38,10 @@ def format_delaytime(value: datetime) -> str:
 
 def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     app = Quart(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY="dev",
-    )
+    # Defaults here:
+    # Override via envvar: TRAFFICLIGHT_<key>
+    app.config.update({"TEST_PATTERN": "**/*.py"})
+    app.config.from_prefixed_env(prefix="TRAFFICLIGHT")
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -53,7 +54,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
 
     from trafficlight.http import client, root, status
 
-    suites = load_test_suites()
+    suites = load_test_suites(pattern=app.config["TEST_PATTERN"])
     for suite in suites:
         logger.info(f"Generating test cases for {suite.name()}")
         suite.generate_test_cases()
