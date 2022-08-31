@@ -18,7 +18,13 @@ from typing import List
 
 from quart import Blueprint, abort, render_template, request, send_file
 
-from trafficlight.store import get_clients, get_test, get_tests, get_testsuite, get_testsuites
+from trafficlight.store import (
+    get_clients,
+    get_test,
+    get_tests,
+    get_testsuite,
+    get_testsuites,
+)
 from trafficlight.tests import TestSuite
 
 logging.basicConfig(level=logging.DEBUG)
@@ -91,7 +97,9 @@ async def testsuite_status(uuid: str):  # type: ignore
     refresh = request.args.get("refresh", default=0, type=int)
     testsuite = get_testsuite(uuid)
     if testsuite is not None:
-        return await render_template("status_suite.j2.html", testsuite=testsuite, refresh=refresh)
+        return await render_template(
+            "status_suite.j2.html", testsuite=testsuite, refresh=refresh
+        )
     else:
         abort(404)
 
