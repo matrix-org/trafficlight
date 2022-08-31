@@ -7,23 +7,24 @@ setTimeout(function(){
 }, {{ refresh }});
 </script>
 {% endif %}
-  <h2>{{ test.description }}</h2>
-  <p>Clients required: {% for x in test.client_types  %}{{x.name()}} {% endfor %}</p>
-  <p>Servers required: {% for x in test.server_types  %}{{x.name()}} {% endfor %}</p>
-  {% if test.model %}
-  <p>Model data: {{ test.model.data }}</p>
-  {% endif %}
-  <p>Current status: {{ test.status }}
-  {% if test.error %}
-<blockquote>
-      {{ test.error }}
-</blockquote>
-  {% endif %}
-</p>
+<h3>{{ test.description }}</h3>
+  <table class="table table-sm">
+      <tbody>
+      <tr><td>Clients</td><td>{% for x in test.client_types  %}{{x.name()}} {% endfor %}</td></tr>
+      <tr><td>Server</td><td>{{ test.server_type.name() }}</td></tr>
+      {% if test.model %}
+      <tr><td>Model Data</td><td><blockquote>{{ test.model.data }}</blockquote></td></tr>
+      {% endif %}
+      <tr><td>Status</td><td>{{ test.status }}</td></tr>
+      {% if test.error %}
+      <tr><td>Error</td><td><blockquote>{{ test.error }}</blockquote></td></tr>
+      {% endif %}
+      </tbody>
+  </table>
 
-<h2>Clients</h2>
+<h4>Clients</h4>
 {% if test.client_list %}
-<table class="table table-small">
+<table class="table table-sm">
     <thead class="thead-dark">
         <tr><th>UUID</th><th>Action</th><th>Registered</th><th>Last Polled</th><th>Last responded</th></tr>
     </thead>
@@ -39,10 +40,11 @@ setTimeout(function(){
     {% endfor %}
   </tbody>
 </table>
-{% else %}
-Clients not allocated yet.
-{% endif %}
-
+<h4>Model</h4>
 <a href="{{ url_for("status.test_image", uuid = test.uuid) }}"><img src="{{ url_for("status.test_context_image", uuid = test.uuid) }}" id="test_context_image"></a>
+
+{% else %}
+No clients have been allocated to this test yet.
+{% endif %}
 
 {% endblock %}
