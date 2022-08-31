@@ -44,7 +44,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     # Defaults here:
     app.config.update(
         {
-            "TEST_PATTERN": "/**/*.py",
+            "TEST_PATTERN": "/**/*_testsuite.py",
             "SERVER_TYPES": "Synapse",
             "CLIENT_TYPES": "ElementWeb,ElementAndroid",
         }
