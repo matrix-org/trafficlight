@@ -10,7 +10,7 @@ from trafficlight.tests.assertions import assertCompleted
 class SendMessagesTestSuite(trafficlight.tests.TestSuite):
     def __init__(self) -> None:
         super(SendMessagesTestSuite, self).__init__()
-        self.clients_needed = 2
+        self.clients_needed = 1
         self.servers_needed = 1
 
     def validate_model(self, model: Model) -> None:
@@ -25,7 +25,7 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
         self, clients: List[Client], servers: List[HomeserverConfig]
     ) -> Model:
         client_one = clients[0].name
-        client_two = clients[1].name
+        #client_two = clients[1].name
 
         # TODO instead of pulling names from clients, just use clients as keys directly in the below...
 
@@ -51,66 +51,38 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
                         client_one: {
                             "action": "register",
                             "data": login_data,
-                            "responses": {"registered": "init_g"},
+                            "responses": {"registered": "create_room"},
                         },
                     },
                 ),
+                # ModelState(
+                #     "init_g",
+                #     {
+                #         client_two: {
+                #             "action": "login",
+                #             "data": login_data,
+                #             "responses": {"loggedin": "create_room"},
+                #         }
+                #     },
+                # ),
                 ModelState(
-                    "init_g",
-                    {
-                        client_two: {
-                            "action": "login",
-                            "data": login_data,
-                            "responses": {"loggedin": "start_crosssign"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "start_crosssign",
-                    {
-                        client_two: {
-                            "action": "start_crosssign",
-                            "responses": {"started_crosssign": "accept_crosssign"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "accept_crosssign",
+                    "create_room",
                     {
                         client_one: {
-                            "action": "accept_crosssign",
-                            "responses": {"accepted_crosssign": "verify_crosssign_rg"},
+                            "action": "create_room",
+                            "data": {"name": "little test room"},
+                            "responses": {"room_created": "send"},
                         }
                     },
                 ),
+                # todo: invite
                 ModelState(
-                    "verify_crosssign_rg",
+                    "send",
                     {
                         client_one: {
-                            "action": "verify_crosssign_emoji",
-                            "responses": {"verified_crosssign": "verify_crosssign_g"},
-                        },
-                        client_two: {
-                            "action": "verify_crosssign_emoji",
-                            "responses": {"verified_crosssign": "verify_crosssign_r"},
-                        },
-                    },
-                ),
-                ModelState(
-                    "verify_crosssign_r",
-                    {
-                        client_one: {
-                            "action": "verify_crosssign_emoji",
-                            "responses": {"verified_crosssign": "complete"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "verify_crosssign_g",
-                    {
-                        client_two: {
-                            "action": "verify_crosssign_emoji",
-                            "responses": {"verified_crosssign": "complete"},
+                            "action": "send_message",
+                            "data": {"message": "hi there!"},
+                            "responses": {"message_sent": "complete"},
                         }
                     },
                 ),
@@ -118,7 +90,7 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
                     "complete",
                     {
                         client_one: {"action": "exit", "responses": {}},
-                        client_two: {"action": "exit", "responses": {}},
+                        #client_two: {"action": "exit", "responses": {}},
                     },
                 ),
             ],
