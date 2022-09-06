@@ -71,3 +71,8 @@ if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
 
 echo -n "$RED < " && curl http://localhost:5000/client/$RED/poll
 echo -n "$GREEN < " && curl http://localhost:5000/client/$GREEN/poll
+
+if [[ "DEBUG" == "$DEBUG" ]]; then echo "DEBUG?" && read ; fi;
+
+echo -n "$RED > " && curl -XPOST -F 'logfile=@logfile-red.txt;type=text/plain' http://localhost:5000/client/$RED/upload
+echo -n "$GREEN > " && curl -XPOST -F 'logfile=@logfile-green.txt;type=text/plain' http://localhost:5000/client/$GREEN/upload

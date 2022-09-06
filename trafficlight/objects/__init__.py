@@ -34,6 +34,7 @@ class Model(object):
         }
         self.completed_callback: Callable[[], str] = None
         self.responses: Dict[str, Dict[str, Dict[str, Any]]] = {}
+        self.files: Dict[str, str] = {}
 
     def __str__(self) -> str:
         return f"Model {self.uuid}"
@@ -102,9 +103,13 @@ class Client(object):
         self.last_responded: Optional[datetime] = None
         self.registered = datetime.now()
         self.completed = False
+        self.last_error: Optional[Dict[str, str]] = None
 
     def __str__(self) -> str:
         return f"Client {self.uuid} Model {self.model} Registration {self.registration}"
+
+    def available(self) -> bool:
+        return self.model is None and not self.completed
 
     def poll(self, update_last_polled: bool = True) -> Dict[str, Any]:
         if self.model is None:
@@ -138,6 +143,43 @@ class Client(object):
         logger.info("%s (%s) responded: %s", self.uuid, self.name, update)
 
         self.model.transition(self.name, update)
+        if update_last_responded:
+            self.last_responded = datetime.now()
+
+    def error(self, error: Dict[str, str], update_last_responded: bool = True) -> None:
+        # If we error, always mark us as completed
+        self.completed = True
+        self.last_error = error
+
+        logger.info("%s had an error: %s", self.uuid, str(error))
+
+        if self.model is None or self.name is None:
+            logger.info(
+                "Client %s has not been assigned a model yet. Dropping error", self.uuid
+            )
+            return
+
+        self.model.transition(self.name, {"response": "error", "error": error})
+
+        if update_last_responded:
+            self.last_responded = datetime.now()
+
+    def upload(self, name: str, path: str, update_last_responded: bool = True) -> None:
+        if self.model is None:
+            raise Exception("Client %s has not been assigned a model yet", self.uuid)
+
+        if self.name is None:
+            raise Exception("Client not allocated a name yet")
+
+        logger.info(
+            "%s (%s) uploaded a file: %s (stored at %s)",
+            self.uuid,
+            self.name,
+            name,
+            path,
+        )
+        self.model.files[self.name + "_" + name] = path
+
         if update_last_responded:
             self.last_responded = datetime.now()
 
