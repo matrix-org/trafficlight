@@ -40,7 +40,7 @@ async def check_for_new_tests() -> None:
                 await test.run(clients)
                 return
             else:
-                logger.info(
+                logger.debug(
                     "Not enough client_types to run test %s (have %s)",
                     test,
                     [str(item) for item in available_clients],

@@ -20,6 +20,11 @@ import aiohttp
 logger = logging.getLogger(__name__)
 
 
+class HomerunnerError(Exception):
+    def __init__(self, message: str):
+        self.homerunnerError = message
+
+
 class HomeserverConfig(object):
     """
     The configuration of a created homserver
@@ -62,12 +67,14 @@ class HomerunnerClient(object):
         logger.info(data)
         async with aiohttp.ClientSession() as session:
             async with session.post(create_url, json=data) as rsp:
+                if rsp.status != 200:
+                    error = await rsp.text()
+                    raise HomerunnerError(error)
 
                 json = await rsp.json()
-                logger.info(json)
 
                 response = json["homeservers"]
-                # TODO: check responsecode etc
+
                 homeserver_configs = []
                 for homeserver in homeservers:
                     # from our request

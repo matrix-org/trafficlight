@@ -135,7 +135,13 @@ class TestCase(object):
             self.status = "serversetup"
 
         # create server_types according to the server_types
-        server_list = await self.server_type.create(self.uuid, homerunner)
+        try:
+            server_list = await self.server_type.create(self.uuid, homerunner)
+        except Exception as e:
+            self.error = e
+            self.status = "error"
+            return
+
         self.status = "clientsetup"
 
         client_name = 0
@@ -144,17 +150,21 @@ class TestCase(object):
             client_name = client_name + 1
 
         # generate model given server config and selected client_types
-        self.model = self.model_generator(client_list, server_list)
+        try:
+            self.model = self.model_generator(client_list, server_list)
+        except Exception as e:
+            self.error = e
+            self.status = "error"
+            return
+
         self.model.uuid = self.uuid
         self.model.completed_callback = self.completed_callback
-        logger.info(
-            f"set callback {self.completed_callback} on {self.model} like so {self.model.completed_callback}"
-        )
         self.client_list = client_list
         for client in client_list:
             client.set_model(self.model)
 
         self.status = "running"
+        logger.info("Test case setup and ready to run")
 
 
 class TestSuite(object):
