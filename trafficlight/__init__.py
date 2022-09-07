@@ -47,11 +47,15 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
             "TEST_PATTERN": "/**/*_testsuite.py",
             "SERVER_TYPES": "Synapse",
             "CLIENT_TYPES": "ElementWeb,ElementAndroid",
+            "UPLOAD_FOLDER": "/tmp/",
         }
     )
 
-    # Override via envvar: TRAFFICLIGHT_<key>;
+    # Allows override via env var: TRAFFICLIGHT_<key>;
     app.config.from_prefixed_env(prefix="TRAFFICLIGHT")
+
+    # TODO: ensure uploads folder is available
+    # can i create README.md in there with a comment, for instance...
 
     app.config["SERVER_TYPES"] = app.config["SERVER_TYPES"].split(",")
     app.config["CLIENT_TYPES"] = app.config["CLIENT_TYPES"].split(",")
@@ -60,9 +64,9 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     print(f"{app.config}")
 
     suites = load_test_suites(
-        app.config["TEST_PATTERN"],
-        app.config["SERVER_TYPES"],
-        app.config["CLIENT_TYPES"],
+        app.config.get("TEST_PATTERN"),
+        app.config.get("SERVER_TYPES"),
+        app.config.get("CLIENT_TYPES"),
     )
     for suite in suites:
         logger.info(f"Generating test cases for {suite.name()}")

@@ -16,6 +16,7 @@ import logging
 from typing import Any, Dict, cast
 
 from quart import Blueprint, current_app, request
+from werkzeug.utils import secure_filename
 
 from trafficlight.objects import Client
 from trafficlight.store import add_client, get_client, get_clients, get_tests
@@ -25,13 +26,12 @@ from trafficlight.store import add_client, get_client, get_clients, get_tests
 
 logger = logging.getLogger(__name__)
 
-
 bp = Blueprint("client", __name__, url_prefix="/client")
 
 
 async def check_for_new_tests() -> None:
     tests = get_tests()
-    available_clients = list(filter(lambda x: x.model is None, get_clients()))
+    available_clients = list(filter(lambda x: x.available(), get_clients()))
     for test in tests:
         if test.status == "waiting":
             clients = test.runnable(available_clients)
@@ -90,5 +90,45 @@ async def respond(uuid: str):  # type: ignore
     response = await request.json
     update = cast(Dict[str, Any], response)
     client.respond(update)
+
+    return {}
+
+
+@bp.route("/<string:uuid>/error", methods=["POST"])
+async def error(uuid: str):  # type: ignore
+    client = get_client(uuid)
+    error_json = await request.json
+    logger.info(error_json)
+    if client is None:
+        # Again, bad situation; client is doing something and no-one knows why
+        # But in this case it's trying to complain, so we should express it in the logs
+        logger.info("Got error from ${uuid}, unable to route internally\n${response}")
+        raise Exception("Unknown client raising error")
+
+    update = cast(Dict[str, Any], error_json)
+    # Using the same API format as sentry to capture the error in a reasonable way:
+    error_body = update["error"]
+
+    client.error(error_body)
+
+    return {}
+
+
+@bp.route("/<string:uuid>/upload", methods=["POST"])
+async def upload(uuid: str):  # type: ignore
+    client = get_client(uuid)
+
+    if client is None:
+        # Again, bad situation; client is doing something and no-one knows why
+        # But in this case it's trying to complain, so we should express it in the logs
+        logger.info("Got upload from ${uuid}, unable to route internally")
+        raise Exception("Unknown client raising error")
+
+    for name, file in (await request.files).items():
+        filename = secure_filename(file.filename)
+        target = str(current_app.config.get("UPLOAD_FOLDER")) + filename
+        logger.info(f"Uploading file {name} to {target}")
+        await file.save(target)
+        client.upload(name, filename)
 
     return {}

@@ -16,7 +16,7 @@ import io
 import logging
 from typing import List
 
-from quart import Blueprint, abort, render_template, request, send_file
+from quart import Blueprint, abort, current_app, render_template, request, send_file
 
 from trafficlight.store import (
     get_clients,
@@ -90,6 +90,17 @@ async def test_image(uuid: str):  # type: ignore
         return await send_file(b, mimetype="image/png")
     else:
         return await send_file("trafficlight/static/no_model.png", mimetype="image/png")
+
+
+@bp.route("/<string:uuid>/files/<string:name>", methods=["GET"])
+async def test_file(uuid: str, name: str):  # type: ignore
+    test = get_test(uuid)
+    logger.info("Getting ${uuid} ${name}")
+    if name in test.model.files:
+        path = test.model.files[name]
+        return await send_file(current_app.config["UPLOAD_FOLDER"] + path)
+    else:
+        abort(404)
 
 
 @bp.route("/<string:uuid>/suitestatus", methods=["GET"])

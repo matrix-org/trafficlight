@@ -34,6 +34,25 @@ Report is used by clients to advance the state machine when they've finished the
 
 Inside the server is a state machine that handles actions by different clients; typically they're referred to by colour. When a real client 
 
+`/client/<uuid>/error`
+
+```
+{
+  "error": { 
+     "type": "unknown_error",
+     "path": "/path_to_file/file.name",
+     "details": "arbitrary long message for humans to read about the error"
+  }
+}
+```
+
+Error is used by clients to indicate an issue with the test client - for instance a timeout waiting for action or in some other way that the client has stopped functioning.
+
+`/client/<uuid>/upload`
+
+Mime-multipart upload of an arbitrary set of files related to the client.
+
+Used for uploading videos, audio files, log files.
 
 Additionally:
 
