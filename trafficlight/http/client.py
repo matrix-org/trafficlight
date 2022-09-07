@@ -18,7 +18,7 @@ from typing import Any, Dict, cast
 from quart import Blueprint, current_app, request
 from werkzeug.utils import secure_filename
 
-from trafficlight.objects import Client
+from trafficlight.objects.client import Client
 from trafficlight.store import add_client, get_client, get_clients, get_tests
 
 # Set transitions' log level to INFO; DEBUG messages will be omitted
