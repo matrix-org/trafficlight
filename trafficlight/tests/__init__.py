@@ -25,7 +25,7 @@ import trafficlight.homerunner
 from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects.client import Client
-from trafficlight.objects.model import Model, ModelState
+from trafficlight.objects.model import Model
 from trafficlight.server_types import ServerType
 from trafficlight.tests.assertions import TestException
 

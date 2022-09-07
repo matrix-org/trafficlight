@@ -2,8 +2,6 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from transitions.extensions import GraphMachine  # type: ignore
-
 from trafficlight.objects.model import Model
 
 logger = logging.getLogger(__name__)
