@@ -22,10 +22,10 @@ from itertools import product
 from typing import Callable, List, Optional
 
 import trafficlight.homerunner
-from trafficlight.client_types import ClientType, ElementAndroid, ElementWeb
+from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects import Client, Model
-from trafficlight.server_types import ServerType, Synapse
+from trafficlight.server_types import ServerType
 from trafficlight.tests.assertions import TestException
 
 _CLIENT_NAMES = ["alice", "bob", "carol", "david", "eve", "frank"]
@@ -241,11 +241,19 @@ class TestSuite(object):
 
 
 def load_test_suites(
-    base_path: str = "./trafficlight/tests", pattern: str = "**/*_testsuite.py"
+    pattern: str,
+    server_type_str: List[str],
+    client_type_str: List[str],
+    base_path: str = "./trafficlight/tests",
 ) -> List[TestSuite]:
-    # TODO: iterate over packages and return big list
-    # TODO: filter out unwanted server / client types
-
+    server_types: List[ServerType] = list(
+        map(lambda x: getattr(trafficlight.server_types, x)(), server_type_str)  # type: ignore
+    )
+    client_types: List[ClientType] = list(
+        map(lambda x: getattr(trafficlight.client_types, x)(), client_type_str)  # type: ignore
+    )
+    logger.info(f"Converted {server_type_str} to {server_types}")
+    logger.info(f"Converted {client_type_str} to {client_types}")
     # base_path is like "trafficlight/tests"
     globber = base_path + "/" + pattern
     files = glob.glob(globber, recursive=True)
@@ -261,12 +269,16 @@ def load_test_suites(
         path = parts[1:-1]
         # Finally combine into a full module name (trafficlight.tests.send_messages_testsuite)
         module = ".".join(path) + "." + file
-        test_suites.extend(load_test_suites_from_module(module))
+        test_suites.extend(
+            load_test_suites_from_module(module, server_types, client_types)
+        )
 
     return test_suites
 
 
-def load_test_suites_from_module(module_name: str) -> List[TestSuite]:
+def load_test_suites_from_module(
+    module_name: str, server_types: List[ServerType], client_types: List[ClientType]
+) -> List[TestSuite]:
     module = importlib.import_module(module_name)
     test_suites: List[TestSuite] = []
     for name in dir(module):
@@ -278,13 +290,8 @@ def load_test_suites_from_module(module_name: str) -> List[TestSuite]:
         ):
             logger.info(f"Found TestSuite {obj}")
             test_suite: TestSuite = obj()
-            test_suite.server_types = [
-                Synapse(),
-            ]
-            test_suite.client_types = [
-                ElementAndroid(),
-                ElementWeb(),
-            ]
+            test_suite.server_types = server_types
+            test_suite.client_types = client_types
             test_suites.append(test_suite)
 
     return test_suites

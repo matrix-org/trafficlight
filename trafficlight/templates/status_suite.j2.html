@@ -1,0 +1,30 @@
+{% extends("base.j2.html") %}
+
+{% block content %}
+{% if refresh > 0 %}
+<script>
+setTimeout(function(){
+   window.location.reload(1);
+}, {{ refresh }});
+</script>
+{% endif %}
+  <table class="table">
+    <thead class="thead-dark">
+    <tr><th>Suite</th><th>Skipped</th><th>Success</th><th>Fail</th><th>Err</th></tr>
+    </thead>
+    <tbody>
+    <tr><td class="w-100">{{ testsuite.name() }}</td><td>{{ testsuite.skipped() }}</td><td>{{ testsuite.successes() }}</td><td>{{ testsuite.failures() }}</td><td>{{ testsuite.errors() }}</td></tr>
+    </tbody>
+  </table>
+
+      <table class="table table-sm">
+        <thead class="thead-light">
+        <tr><th>Case</th><th>UUID</th><th>Running</th></tr>
+        </thead>
+        <tbody>
+        {% for test in testsuite.test_cases %}
+          <tr> <td><a href='{{ url_for("status.testcase_status", uuid = test.uuid) }}'>{{ test.description }}</a></td><td>{{ test.uuid }}</td><td>{{ test.status }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+{% endblock %}

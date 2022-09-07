@@ -115,8 +115,11 @@ Use this to start the test server:
 
 Various options can be used to configure the tests:
 
-|| Name  || Default || Function ||
-|| TEST\_PATTERN || `**/*_testsuite.py` || Pattern to find tests. `**` for any recursive directory, `*` as normal wildcard ||
+| Name          | Default                      | Function |
+| ----          | -------                      | -------- |
+| TEST\_PATTERN | `**/*_testsuite.py`          | Pattern to find tests. `**` for any recursive directory, `*` as normal wildcard |
+| SERVER\_TYPES | `Synapse`                    | Comma-seperated list of server types to generate tests with. Current option is only `Synapse` |
+| CLIENT\_TYPES | `ElementWeb,ElementAndroid`  | Comma-seperated list of client types to generate tests with. Current options are `ElementWeb` and `ElementAndroid` |
 
 Set options via environment variables by prefixing with `TRAFFICLIGHT_`, eg: `TRAFFICLIGHT_TEST_PATTERN=only_one_test.py`.
 

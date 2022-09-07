@@ -1,0 +1,50 @@
+{% extends("base.j2.html") %}
+{% block content %}
+{% if refresh > 0 %}
+<script>
+setTimeout(function(){
+   window.location.reload(1);
+}, {{ refresh }});
+</script>
+{% endif %}
+<h3>{{ test.description }}</h3>
+  <table class="table table-sm">
+      <tbody>
+      <tr><td>Clients</td><td>{% for x in test.client_types  %}{{x.name()}} {% endfor %}</td></tr>
+      <tr><td>Server</td><td>{{ test.server_type.name() }}</td></tr>
+      {% if test.model %}
+      <tr><td>Model Data</td><td><blockquote>{{ test.model.data }}</blockquote></td></tr>
+      {% endif %}
+      <tr><td>Status</td><td>{{ test.status }}</td></tr>
+      {% if test.error %}
+      <tr><td>Error</td><td><blockquote>{{ test.error }}</blockquote></td></tr>
+      {% endif %}
+      </tbody>
+  </table>
+
+<h4>Clients</h4>
+{% if test.client_list %}
+<table class="table table-sm">
+    <thead class="thead-dark">
+        <tr><th>UUID</th><th>Action</th><th>Registered</th><th>Last Polled</th><th>Last responded</th></tr>
+    </thead>
+    <tbody>
+    {% for client in test.client_list %}
+<   <tr>
+       <td>{{ client.uuid }}</td>
+       <td>{{ client.poll(update_last_polled=False)['action'] }}</td>
+       <td>{{ client.registered | delaytime }}</td>
+       <td>{{ client.last_polled | delaytime }}</td>
+       <td>{{ client.last_responded | delaytime }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<h4>Model</h4>
+<a href="{{ url_for("status.test_image", uuid = test.uuid) }}"><img src="{{ url_for("status.test_context_image", uuid = test.uuid) }}" id="test_context_image"></a>
+
+{% else %}
+No clients have been allocated to this test yet.
+{% endif %}
+
+{% endblock %}
