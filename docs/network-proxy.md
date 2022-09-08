@@ -3,8 +3,22 @@
 This acts as a client (polls for updates and actions to perform)
 and provides network changes as required.
 
-The current set of actions supported by this are:
+When registering, the proxy should claim to be a client of type `network-proxy`. 
 
+The current set of actions supported by the proxy are:
+
+## idle
+
+Idle for the time given in `delay` for a new command, as with other clients.
+
+```
+{ 
+   "action": "idle",
+   "data": {
+       "delay": 5000
+   }
+}
+```
 ## disableEndpoint 
 
 Disable all (GET/POST/HEAD/PUT etc) http requests to this exact endpoint.
@@ -37,33 +51,12 @@ Enabling an endpoint that has not been disabled is not an error (as the action c
 }
 ```
 
-When complete, a "endpointDisabled" response should be sent.
+When complete, a "endpointEnabled" response should be sent.
+
+## exit
+
+The proxy should stop forwarding traffic and may do so in an unclean fashion (not waiting for responses) if required - the test has been completed. (it is also valid to cleanly terminate all connections before exiting)
 
 ## Other considerations
 
 The proxy should (ideally) log all denied requests and upload them as a file after the test completes via the `/client/<xxx>/upload`, to make it easy to check what was disabled.
-
-
-# alternate thought:
-
-```
-{
-   "action": "setRules",
-   "data": {
-      "disabledRegexes": [
-            "/_matrix/client/v1/.*"
-      ],
-      "enabledRegexes": [
-            "/_matrix/client/v1/sendMessage
-      ]
-   }
-
-}
-```
-
-This should send a `rulesSet` response once the rules have been set.
-
-This would express that all endpoints under client/v1 except for client/v1/sendMessage are disabled.
-
-Sending another 'setRules' message should replace the rules with the new ones. Sending an entirely blank "data" section should remove all rules. 
-
