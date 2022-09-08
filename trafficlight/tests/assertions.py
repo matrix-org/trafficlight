@@ -15,6 +15,7 @@
 from typing import Any
 
 from trafficlight.objects.model import Model
+
 #
 # Aware that we're skipping naming conventions here.
 # Doing so to keep in sync with unittest -style (junit style?) conventions
