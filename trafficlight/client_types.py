@@ -17,3 +17,8 @@ class ElementWeb(ClientType):
 class ElementAndroid(ClientType):
     def match(self, x: Client) -> bool:
         return str(x.registration["type"]) == "element-android"
+
+
+class NetworkProxy(ClientType):
+    def match(self, x: Client) -> bool:
+        return str(x.registration["type"]) == "networkProxy"

@@ -19,10 +19,10 @@ import os
 import uuid
 from datetime import datetime
 from itertools import product
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 
 import trafficlight.homerunner
-from trafficlight.client_types import ClientType
+from trafficlight.client_types import ClientType, NetworkProxy
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects.client import Client
 from trafficlight.objects.model import Model
@@ -42,7 +42,8 @@ class TestCase(object):
         description: str,
         client_types: List[ClientType],
         server_type: ServerType,
-        model_generator: Callable[[List[Client], List[HomeserverConfig]], Model],
+        network_proxy_type: ClientType,
+        model_generator: Callable[[List[Client], List[HomeserverConfig], Optional[Client]], Model],
         model_validator: Callable[[Model], None],
     ) -> None:
         self.error: Optional[Exception] = None
@@ -51,8 +52,9 @@ class TestCase(object):
         self.description = description
         self.client_types: List[ClientType] = client_types
         self.server_type: ServerType = server_type
+        self.network_proxy_type: ClientType = network_proxy_type
         self.model_generator: Callable[
-            [List[Client], List[HomeserverConfig]], Model
+            [List[Client], List[HomeserverConfig], Optional[Client]], Model
         ] = model_generator
         self.model_validator: Callable[[Model], None] = model_validator
         self.registered = datetime.now()
@@ -118,18 +120,32 @@ class TestCase(object):
         return self.status
 
     # takes a client list and returns client_types required to run the test
-    def runnable(self, client_list: List[Client]) -> Optional[List[Client]]:
+    def runnable(
+        self, client_list: List[Client]
+    ) -> Tuple[List[Client], Optional[Client]]:
 
         available_clients = client_list.copy()
         client_types = self.client_types.copy()
+        network_proxy: Client = None
+        if self.network_proxy_type:
+            matching_network_proxies = list(
+                filter(lambda x: self.network_proxy_type.match(x), available_clients)
+            )
+            if len(matching_network_proxies) > 1:
+                network_proxy = matching_network_proxies[0]
+            else:
+                return None
+
         # combine modifies the lists, so we ensure copies are passed in
         accepted_clients = self.combine(available_clients, client_types)
         if accepted_clients is not None:
-            return accepted_clients
+            return accepted_clients, network_proxy
         else:
             return None
 
-    async def run(self, client_list: List[Client]) -> None:
+    async def run(
+        self, client_list: List[Client], network_proxy: Optional[Client]
+    ) -> None:
         if self.status != "waiting":
             raise Exception("Logic error: already running this test")
         else:
@@ -152,7 +168,7 @@ class TestCase(object):
 
         # generate model given server config and selected client_types
         try:
-            self.model = self.model_generator(client_list, server_list)
+            self.model = self.model_generator(client_list, server_list, network_proxy)
         except Exception as e:
             self.error = e
             self.status = "error"
@@ -161,8 +177,11 @@ class TestCase(object):
         self.model.uuid = self.uuid
         self.model.completed_callback = self.completed_callback
         self.client_list = client_list
+
         for client in client_list:
             client.set_model(self.model)
+
+        network_proxy.set_model(self.model)
 
         self.status = "running"
         logger.info("Test case setup and ready to run")
@@ -176,12 +195,16 @@ class TestSuite(object):
         self.server_types: Optional[List[ServerType]] = None
         self.clients_needed = 0
         self.servers_needed = 0
+        self.network_proxy_needed = False
 
     def name(self) -> str:
         return self.__class__.__name__
 
     def generate_model(
-        self, clients: List[Client], homeservers: List[HomeserverConfig]
+        self,
+        clients: List[Client],
+        homeservers: List[HomeserverConfig],
+        network_proxy: Optional[Client],
     ) -> Model:
         pass
 
@@ -202,6 +225,7 @@ class TestSuite(object):
         for client_type_list in client_types_expanded:
 
             client_names = "-".join(map(lambda x: x.name(), client_type_list))
+
             for server_type_list in server_types_expanded:
                 server_names = "-".join(map(lambda x: x.name(), server_type_list))
                 model_generator = self.generate_model
@@ -216,12 +240,16 @@ class TestSuite(object):
                     f" Clients: {[x.name() for x in client_type_list]}\n"
                     f" Servers: {[x.name() for x in server_type_list]}\n"
                 )
+
+                network_proxy = NetworkProxy() if self.network_proxy_needed else None
+
                 test_cases.append(
                     TestCase(
                         guid,
                         name,
                         list(client_type_list),
                         server_type_list[0],
+                        network_proxy,
                         model_generator,
                         validator,
                     ),
