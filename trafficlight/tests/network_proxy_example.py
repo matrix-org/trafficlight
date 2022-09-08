@@ -8,11 +8,11 @@ from trafficlight.objects.model import Model, ModelState
 from trafficlight.tests.assertions import assertCompleted
 
 
-class SendMessagesTestSuite(trafficlight.tests.TestSuite):
+class NetworkProxyTestSuite(trafficlight.tests.TestSuite):
     def __init__(self) -> None:
-        super(SendMessagesTestSuite, self).__init__()
+        super(NetworkProxyTestSuite, self).__init__()
         self.clients_needed = 2
-        self.network_proxy = True
+        self.network_proxy_needed = True
         self.servers_needed = 1
 
     def validate_model(self, model: Model) -> None:
@@ -57,9 +57,9 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
                     "setup",
                     {
                         network_proxy_name: {
-                            "action": "proxyUrl",
+                            "action": "proxyTo",
                             "data": {"url": servers[0].cs_api},
-                            "responses": {"proxyUrlSet": "disable"},
+                            "responses": {"proxyToSet": "disable"},
                         },
                     },
                 ),
@@ -102,7 +102,7 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
                     },
                 ),
             ],
-            "disable",
+            "setup",
         )
 
         model.calculate_transitions()

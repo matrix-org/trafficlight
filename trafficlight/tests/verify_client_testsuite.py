@@ -28,7 +28,10 @@ class VerifyClientTestSuite(trafficlight.tests.TestSuite):
         )
 
     def generate_model(
-        self, clients: List[Client], servers: List[HomeserverConfig], network_proxy: Optional[Client]
+        self,
+        clients: List[Client],
+        servers: List[HomeserverConfig],
+        network_proxy: Optional[Client],
     ) -> Model:
         alice = clients[0].name
         bob = clients[1].name

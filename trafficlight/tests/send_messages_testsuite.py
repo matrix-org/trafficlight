@@ -23,7 +23,10 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
         #                        "Emoji were not matching")
 
     def generate_model(
-        self, clients: List[Client], servers: List[HomeserverConfig], network_proxy: Optional[Client]
+        self,
+        clients: List[Client],
+        servers: List[HomeserverConfig],
+        network_proxy: Optional[Client],
     ) -> Model:
         client_one = clients[0].name
         client_two = clients[1].name

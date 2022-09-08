@@ -21,4 +21,4 @@ class ElementAndroid(ClientType):
 
 class NetworkProxy(ClientType):
     def match(self, x: Client) -> bool:
-        return str(x.registration["type"]) == "networkProxy"
+        return str(x.registration["type"]) == "network-proxy"

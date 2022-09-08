@@ -34,14 +34,16 @@ async def check_for_new_tests() -> None:
     available_clients = list(filter(lambda x: x.available(), get_clients()))
     for test in tests:
         if test.status == "waiting":
-            clients, network_proxy = test.runnable(available_clients)
-            if clients is not None:
+            runnable = test.runnable(available_clients)
+            logger.info(f"Got ${runnable}")
+            if runnable is not None:
+                clients, network_proxy = runnable
                 logger.info("Starting test %s", test)
                 await test.run(clients, network_proxy)
                 return
             else:
                 logger.debug(
-                    "Not enough client_types to run test %s (have %s)",
+                    "Not enough clients to run test %s (have %s)",
                     test,
                     [str(item) for item in available_clients],
                 )

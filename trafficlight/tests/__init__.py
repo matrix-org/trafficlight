@@ -43,7 +43,9 @@ class TestCase(object):
         client_types: List[ClientType],
         server_type: ServerType,
         network_proxy_type: ClientType,
-        model_generator: Callable[[List[Client], List[HomeserverConfig], Optional[Client]], Model],
+        model_generator: Callable[
+            [List[Client], List[HomeserverConfig], Optional[Client]], Model
+        ],
         model_validator: Callable[[Model], None],
     ) -> None:
         self.error: Optional[Exception] = None
@@ -131,9 +133,11 @@ class TestCase(object):
             matching_network_proxies = list(
                 filter(lambda x: self.network_proxy_type.match(x), available_clients)
             )
-            if len(matching_network_proxies) > 1:
+            if len(matching_network_proxies) > 0:
                 network_proxy = matching_network_proxies[0]
+                logger.info("Found a proxy")
             else:
+                logger.info(f"Didn't find a proxy (have {available_clients}")
                 return None
 
         # combine modifies the lists, so we ensure copies are passed in
@@ -165,6 +169,9 @@ class TestCase(object):
         for client in client_list:
             client.name = _CLIENT_NAMES[client_name]
             client_name = client_name + 1
+
+        if network_proxy:
+            network_proxy.name = "network-proxy"
 
         # generate model given server config and selected client_types
         try:
@@ -233,15 +240,15 @@ class TestSuite(object):
                 validator = self.validate_model
                 name = self.__class__.__name__ + "_" + client_names + "_" + server_names
                 guid = str(uuid.uuid4())
+                network_proxy = NetworkProxy() if self.network_proxy_needed else None
 
                 logger.info(
                     f"Creating test {name}\n"
                     f" UUID: {guid}\n"
                     f" Clients: {[x.name() for x in client_type_list]}\n"
                     f" Servers: {[x.name() for x in server_type_list]}\n"
+                    f" NetworkProxy: {network_proxy.name() if network_proxy else 'None'}\n"
                 )
-
-                network_proxy = NetworkProxy() if self.network_proxy_needed else None
 
                 test_cases.append(
                     TestCase(
