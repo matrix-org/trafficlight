@@ -40,8 +40,25 @@ setTimeout(function(){
     {% endfor %}
   </tbody>
 </table>
+
+<h4>Files</h4>
+<table class="table table-sm">
+    <thead class="thead-dark">
+    <tr><th>Name</th><th>Download</th></tr>
+    </thead>
+    <tbody>
+    {% for file_name in test.model.files.keys() %}
+<   <tr>
+       <td>{{ file_name }}</td>
+       <td><a href="{{ url_for('status.test_file', uuid = test.uuid, name = file_name) }}">Download</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
 <h4>Model</h4>
-<a href="{{ url_for("status.test_image", uuid = test.uuid) }}"><img src="{{ url_for("status.test_context_image", uuid = test.uuid) }}" id="test_context_image"></a>
+<a href="{{ url_for('status.test_image', uuid = test.uuid) }}"><img src="{{ url_for('status.test_context_image', uuid = test.uuid) }}" id="test_context_image"></a>
 
 {% else %}
 No clients have been allocated to this test yet.
