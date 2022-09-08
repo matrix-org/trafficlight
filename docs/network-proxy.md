@@ -33,6 +33,8 @@ Sets the endpoint that the network proxy should forward to
 }
 ```
 
+When complete a `proxyToSet` response should be sent.
+
 ## disableEndpoint 
 
 Disable all (GET/POST/HEAD/PUT etc) http requests to this exact endpoint.
