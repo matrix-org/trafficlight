@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 from typing import Any, Dict, cast
 
@@ -28,23 +29,26 @@ logger = logging.getLogger(__name__)
 
 bp = Blueprint("client", __name__, url_prefix="/client")
 
+new_tests_lock = asyncio.Lock()
+
 
 async def check_for_new_tests() -> None:
-    tests = get_tests()
-    available_clients = list(filter(lambda x: x.available(), get_clients()))
-    for test in tests:
-        if test.status == "waiting":
-            clients = test.runnable(available_clients)
-            if clients is not None:
-                logger.info("Starting test %s", test)
-                await test.run(clients)
-                return
-            else:
-                logger.debug(
-                    "Not enough client_types to run test %s (have %s)",
-                    test,
-                    [str(item) for item in available_clients],
-                )
+    async with new_tests_lock:
+        tests = get_tests()
+        available_clients = list(filter(lambda x: x.available(), get_clients()))
+        for test in tests:
+            if test.status == "waiting":
+                clients = test.runnable(available_clients)
+                if clients is not None:
+                    logger.info("Starting test %s", test)
+                    await test.run(clients)
+                    return
+                else:
+                    logger.debug(
+                        "Not enough client_types to run test %s (have %s)",
+                        test,
+                        [str(item) for item in available_clients],
+                    )
 
 
 @bp.route("/<string:client_uuid>/register", methods=["POST"])
