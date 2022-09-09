@@ -14,7 +14,7 @@
 # limitations under the License.
 from typing import Any
 
-from trafficlight.objects import Model
+from trafficlight.objects.model import Model
 
 #
 # Aware that we're skipping naming conventions here.

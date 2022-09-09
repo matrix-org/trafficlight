@@ -1,4 +1,4 @@
-from trafficlight.objects import Client
+from trafficlight.objects.client import Client
 
 
 class ClientType(object):
