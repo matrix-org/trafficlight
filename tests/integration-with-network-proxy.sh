@@ -19,7 +19,7 @@ echo -n "$BAR # " && curl -X POST -H 'Content-Type: application/json' http://loc
 
 echo "Check UI" && read
 
-echo -n "$PROXY # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/$PROXY/register -d '{"type": "network-proxy", "version": "0.0.1"}'
+echo -n "$PROXY # " && curl -X POST -H 'Content-Type: application/json' http://localhost:5000/client/$PROXY/register -d '{"type": "network-proxy", "version": "0.0.1", "url": "http://localhost:12345/"}'
 
 echo "Started test..." && read
 
