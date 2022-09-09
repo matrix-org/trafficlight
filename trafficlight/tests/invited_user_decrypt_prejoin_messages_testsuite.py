@@ -7,9 +7,9 @@ from trafficlight.objects import Client, Model, ModelState
 from trafficlight.tests.assertions import assertCompleted
 
 
-class SendMessagesTestSuite(trafficlight.tests.TestSuite):
+class InviteUserDecryptPrejoinMessagesTestSuite(trafficlight.tests.TestSuite):
     def __init__(self) -> None:
-        super(SendMessagesTestSuite, self).__init__()
+        super(InviteUserDecryptPrejoinMessagesTestSuite, self).__init__()
         self.clients_needed = 1
         self.servers_needed = 1
 
@@ -24,16 +24,25 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
     def generate_model(
         self, clients: List[Client], servers: List[HomeserverConfig]
     ) -> Model:
-        client_one = clients[0].name
+        alice = clients[0].name
+        #bob = clients[1].name
 
         # TODO instead of pulling names from clients, just use clients as keys directly in the below...
 
         # Generating server
-        random_user = "user_" + str(uuid.uuid4())
         docker_api = servers[0].cs_api.replace("localhost", "10.0.2.2")
 
-        login_data = {
-            "username": random_user,
+        login_data_alice = {
+            "username": "alice_" + str(uuid.uuid4()),
+            "password": "bubblebobblebabble",
+            "homeserver_url": {
+                "local_docker": docker_api,  # hmm... todo this...
+                "local": servers[0].cs_api,
+            },
+        }
+
+        login_data_bob = {
+            "username": "bob_" + str(uuid.uuid4()),
             "password": "bubblebobblebabble",
             "homeserver_url": {
                 "local_docker": docker_api,  # hmm... todo this...
@@ -45,44 +54,60 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
         model = Model(
             [
                 ModelState(
-                    "init_r",
+                    "register",
                     {
-                        client_one: {
+                        alice: {
                             "action": "register",
-                            "data": login_data,
+                            "data": login_data_alice,
                             "responses": {"registered": "create_room"},
                         },
+                        # bob: {
+                        #     "action": "register",
+                        #     "data": login_data_bob,
+                        #     "responses": {"registered": "create_room"},
+                        # }
                     },
                 ),
                 ModelState(
                     "create_room",
                     {
-                        client_one: {
+                        alice: {
                             "action": "create_room",
                             "data": {"name": "little test room"},
-                            "responses": {"room_created": "send"},
+                            "responses": {"room_created": "change_history_settings"},
+                        }
+                    },
+                ),
+                ModelState(
+                    "change_history_settings",
+                    {
+                        alice: {
+                            "action": "change_room_history_visibility",
+                            "data": {"historyVisibility": "invited"},
+                            "responses": {"changed": "complete"},
                         }
                     },
                 ),
                 ModelState(
                     "send",
                     {
-                        client_one: {
+                        alice: {
                             "action": "send_message",
-                            "data": {"message": "hi there!"},
+                            "data": {"message": "Bob should not be able to read this, as he isn't invited yet"},
                             "responses": {"message_sent": "complete"},
                         }
                     },
                 ),
+                
                 ModelState(
                     "complete",
                     {
-                        client_one: {"action": "exit", "responses": {}},
-                        #client_two: {"action": "exit", "responses": {}},
+                        alice: {"action": "exit", "responses": {}},
+                        #bob: {"action": "exit", "responses": {}},
                     },
                 ),
             ],
-            "init_r",
+            "register",
         )
 
         model.calculate_transitions()
