@@ -1,4 +1,4 @@
-name: Linting and Tests
+name: Build, Linting and Tests
 on:
   push:
     branches: ["main"]
@@ -17,4 +17,32 @@ jobs:
       - run: python -m pip install .[dev]
       - run: tox -e check_types
       - run: tox -e check_codestyle
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    needs: checks
+    steps:
+       - name: Checkout clean copy
+         uses: actions/checkout@v3
+       - name: Login to registry
+         uses: docker/login-action
+         with:
+           registry: ghcr.io
+           username: ${{ github.actor }}
+           password: ${{ secrets.GITHUB_TOKEN }}
+       - name: Work out labels
+         id: meta
+         uses: docker/metadata-action
+         with: 
+           images: ghcr.io/${{ github.repository }}
 
+       - name: Build and push docker image
+         uses: docker/build-push-action
+         with:
+           context: .
+           push: true
+           tags: ${{ steps.meta.outputs.tags }}
+           labels: ${{ steps.meta.outputs.labels }}
