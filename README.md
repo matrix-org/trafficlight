@@ -130,6 +130,14 @@ Use this to start the test server:
 ... server starts
 ```
 
+## Docker
+
+There is a docker image that runs using hypercorn in production mode. It is available at ghcr.io/matrix-org/trafficlight, and all PRs and the main branch are published there.
+
+`docker run -p 5000:5000 ghcr.io/matrix-org/trafficlight`
+
+Passing in envvars below will forward them to the application as expected.
+
 ## Configuring
 
 Various options can be used to configure the tests:
