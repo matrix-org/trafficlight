@@ -24,13 +24,15 @@ tmux split-pane -h -c ./trafficlight
 tmux send-keys -t $session '. venv/bin/activate' Enter
 tmux send-keys -t $session 'QUART_APP=trafficlight quart run --host 0.0.0.0' Enter
 
-tmux select-pane -t 0
-
-tmux split-pane -v -c ./matrix-react-sdk
-tmux send-keys -t $session 'yarn test:trafficlight' Enter
-
-tmux select-pane -t 2
-tmux split-pane -v -c ./matrix-react-sdk
-tmux send-keys -t $session 'yarn test:trafficlight' Enter
+CLIENT_COUNT=4
+tmux new-window -n adapters -c ./matrix-react-sdk
+tmux send-keys -t $session 'XDG_CONFIG_HOME="/tmp/cypress-home-0" yarn test:trafficlight' Enter
+tmux select-layout tiled
+for i in $(seq 1 $((CLIENT_COUNT-1)))
+do
+	tmux split-pane -c ./matrix-react-sdk
+	tmux send-keys -t $session "XDG_CONFIG_HOME=\"/tmp/cypress-home-$i\" yarn test:trafficlight" Enter
+	tmux select-layout tiled
+done
 
 tmux attach-session -t $session
