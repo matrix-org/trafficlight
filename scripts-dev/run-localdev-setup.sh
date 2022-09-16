@@ -24,13 +24,14 @@ tmux split-pane -h -c ./trafficlight
 tmux send-keys -t $session '. venv/bin/activate' Enter
 tmux send-keys -t $session 'QUART_APP=trafficlight quart run --host 0.0.0.0' Enter
 
-CLIENT_COUNT=4
-tmux new-window -n adapters -c ./matrix-react-sdk
-tmux send-keys -t $session 'XDG_CONFIG_HOME="/tmp/cypress-home-0" yarn test:trafficlight' Enter
-tmux select-layout tiled
-for i in $(seq 1 $((CLIENT_COUNT-1)))
+CLIENT_COUNT=2
+for i in $(seq 1 $CLIENT_COUNT)
 do
-	tmux split-pane -c ./matrix-react-sdk
+	if [ "$i" -eq "1" ]; then
+		tmux new-window -n adapters -c ./matrix-react-sdk
+	else
+		tmux split-pane -c ./matrix-react-sdk
+	fi
 	tmux send-keys -t $session "XDG_CONFIG_HOME=\"/tmp/cypress-home-$i\" yarn test:trafficlight" Enter
 	tmux select-layout tiled
 done
