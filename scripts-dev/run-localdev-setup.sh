@@ -5,8 +5,8 @@
 #  - trafficlight: a checkout of this repo
 #  - matrix-react-sdk: a checkout of matrix-react-sdk, where the trafficlight adapter can be found.
 
-# Additionally, an environmental variable `ELEMENT_WEB_LOCATION` should be set
-# with the location of the `element-web` repository where the dev server can be run from.
+# Additionally, an environmental variable `CYPRESS_BASE_URL` should be set
+# with url of the element-web instance that should be tested.
 
 systemctl list-units --type=service | grep -q docker
 IS_DOCKER_RUNNING=$?
@@ -32,6 +32,11 @@ do
 	else
 		tmux split-pane -c ./matrix-react-sdk
 	fi
+	# docker cuts the network when starting the whole setup
+	# so give it 5 seconds cut and then wait until the network has come back by polling the cypress url
+	# so the tests don't fail because of this
+	tmux send-keys -t $session "sleep 5" Enter
+	tmux send-keys -t $session 'while [[ "$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' $CYPRESS_BASE_URL)" != "200" ]]; do sleep 1; done' Enter
 	tmux send-keys -t $session "XDG_CONFIG_HOME=\"/tmp/cypress-home-$i\" yarn test:trafficlight" Enter
 	tmux select-layout tiled
 done
