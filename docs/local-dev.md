@@ -14,6 +14,10 @@ There are 4 to 5 processes that need to run to be able to run the traffic light 
 
 So make sure to install the instructions below in these directories.
 
+### TMUX
+
+`tmux` is a `screen`-type terminal multiplexer, and can generally be installed from your package management system (eg `apt install tmux`)
+
 ### Docker
 
 Make sure you have docker installed
