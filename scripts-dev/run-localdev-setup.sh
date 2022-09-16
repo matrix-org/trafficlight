@@ -8,7 +8,8 @@
 # Additionally, an environmental variable `CYPRESS_BASE_URL` should be set
 # with url of the element-web instance that should be tested.
 
-systemctl list-units --type=service | grep -q docker
+echo "Docker Version: "
+docker info -f '{{.ServerVersion}}'
 IS_DOCKER_RUNNING=$?
 if [ $IS_DOCKER_RUNNING -ne "0" ]; then
 	echo 'start docker first';
