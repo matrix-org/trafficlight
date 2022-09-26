@@ -17,14 +17,14 @@ class Synapse(ServerType):
     async def create(
         self, model_id: str, homerunner: HomerunnerClient
     ) -> List[HomeserverConfig]:
-        return await homerunner.create(model_id, ["complement-synapse"])
+        return await homerunner.create(model_id, ["michaelka/complement-synapse"])
 
 
 class Dendrite(ServerType):
     async def create(
         self, model_id: str, homerunner: HomerunnerClient
     ) -> List[HomeserverConfig]:
-        return await homerunner.create(model_id, ["complement-dendrite"])
+        return await homerunner.create(model_id, ["michaelka/complement-dendrite"])
 
 
 class MixedFederation(ServerType):
@@ -32,5 +32,5 @@ class MixedFederation(ServerType):
         self, model_id: str, homerunner: HomerunnerClient
     ) -> List[HomeserverConfig]:
         return await homerunner.create(
-            model_id, ["complement-dendrite", "complement-synapse"]
+            model_id, ["michaelka/complement-dendrite", "michaelka/complement-synapse"]
         )
