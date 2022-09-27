@@ -76,7 +76,7 @@ class Model(object):
 
     def error(self, colour: str, error: Dict[str, Any]) -> None:
         logger.info(f"Failing test due to client-side error {error}")
-        self.set_state("error")
+        self.set_state("error")  # type: ignore
 
     def transition(self, colour: str, update: Dict[str, Any]) -> None:
         if "data" in update:
