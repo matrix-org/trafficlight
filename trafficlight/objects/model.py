@@ -73,10 +73,12 @@ class Model(object):
                     self.machine.add_transition(
                         colour + "_" + action_name, name, destination
                     )
+        # permit 'error' to always transition to error.
+        self.machine.add_transition("error", "*", "error")
 
     def error(self, colour: str, error: Dict[str, Any]) -> None:
         logger.info(f"Failing test due to client-side error {error}")
-        self.set_state("error")  # type: ignore
+        self.trigger("error")  # type: ignore
 
     def transition(self, colour: str, update: Dict[str, Any]) -> None:
         if "data" in update:
