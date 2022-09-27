@@ -23,6 +23,9 @@ class Model(object):
             states.append(state.name)
             state_map[state.name] = state
 
+        # always have an error state
+        states.append("error")
+
         self.machine = GraphMachine(model=self, states=states, initial=initial_state)
 
         self.state_map = state_map
@@ -30,6 +33,11 @@ class Model(object):
             "action": "idle",
             "responses": [],
             "data": {"delay": 5000},
+        }
+        self.error_action = {
+            "action": "exit",
+            "responses": [],
+            "data": {},
         }
         self.completed_callback: Callable[[], str] = None
         self.responses: Dict[str, Dict[str, Dict[str, Any]]] = {}
@@ -45,7 +53,10 @@ class Model(object):
             specific_action = action_map.get(colour)
             if specific_action is not None:
                 return specific_action
-        return self.generic_action
+        if self.state == "error":
+            return self.error_action
+        else:
+            return self.generic_action
 
     def calculate_transitions(self) -> None:
         for name, state in self.state_map.items():
@@ -62,6 +73,10 @@ class Model(object):
                     self.machine.add_transition(
                         colour + "_" + action_name, name, destination
                     )
+
+    def error(self, colour: str, error: Dict[str, Any]) -> None:
+        logger.info(f"Failing test due to client-side error {error}")
+        self.set_state("error")
 
     def transition(self, colour: str, update: Dict[str, Any]) -> None:
         if "data" in update:
@@ -82,6 +97,9 @@ class Model(object):
 
     def render_local_region(self, bytesio: BytesIO) -> None:
         self.get_graph(show_roi=True).draw(bytesio, format="png", prog="dot")  # type: ignore
+
+    def on_enter_error(self) -> None:
+        self.on_enter_complete()
 
     def on_enter_complete(self) -> None:
 

@@ -73,7 +73,7 @@ class Client(object):
             )
             return
 
-        self.model.transition(self.name, {"response": "error", "error": error})
+        self.model.error(self.name, error)
 
         if update_last_responded:
             self.last_responded = datetime.now()
