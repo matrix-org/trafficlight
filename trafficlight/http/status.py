@@ -98,7 +98,7 @@ async def test_file(uuid: str, name: str):  # type: ignore
     logger.info("Getting ${uuid} ${name}")
     if name in test.model.files:
         path = test.model.files[name]
-        return await send_file(current_app.config["UPLOAD_FOLDER"] + path)
+        return await send_file(path)
     else:
         abort(404)
 
