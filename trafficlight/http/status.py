@@ -16,7 +16,7 @@ import io
 import logging
 from typing import List
 
-from quart import Blueprint, abort, current_app, render_template, request, send_file
+from quart import Blueprint, abort, render_template, request, send_file
 
 from trafficlight.store import (
     get_clients,
