@@ -82,9 +82,6 @@ class HomerunnerClient(object):
                     base_image_uri = homeserver["BaseImageURI"]
                     # from response
                     cs_api = response[name]["BaseURL"]
-                    # This replaces 0.0.0.0 with a name that should point there
-                    # Horrid hack, pls remove.
-                    cs_api = cs_api.replace("0.0.0.0", "homeservers")
                     homeserver_configs.append(
                         HomeserverConfig(name, cs_api, base_image_uri)
                     )
