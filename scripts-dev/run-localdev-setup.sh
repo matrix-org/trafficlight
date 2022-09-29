@@ -8,6 +8,7 @@ IFS=$'\n\t'
 #  - trafficlight-adapter-element-web: a checkout of https://github.com/matrix-org/trafficlight-adapter-element-web
 #  - trafficlight-proxy: a checkout of https://github.com/vector-im/trafficlight-proxy/
 
+
 # Additionally, an environmental variable `CYPRESS_BASE_URL` should be set
 # with url of the element-web instance that should be tested.
 
