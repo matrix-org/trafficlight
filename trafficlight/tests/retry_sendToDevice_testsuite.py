@@ -157,7 +157,7 @@ class TestProxyTestSuite(trafficlight.tests.TestSuite):
                     "verify_utd_message",
                     {
                         bob: {
-                            "action": "verify_utd",
+                            "action": "verify_last_message_is_utd",
                             "data": {},
                             "responses": {"verified": "enable_endpoint"},
                         }
@@ -192,6 +192,7 @@ class TestProxyTestSuite(trafficlight.tests.TestSuite):
                     {
                         bob: {
                             "action": "wait",
+                            "data": {},
                             "responses": {"wait_over": "verify_message_in_timeline"},
                         }
                     },
