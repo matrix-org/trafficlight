@@ -5,8 +5,8 @@ IFS=$'\n\t'
 # This script assumes to be run from the root of the following directory layout:
 #  - complement: a checkout of the complement repo, with homeserver built
 #  - trafficlight: a checkout of this repo
-#  - matrix-react-sdk: a checkout of matrix-react-sdk, where the trafficlight adapter can be found.
-#  - trafficlight-proxy-client: a checkout of trafficlight proxy
+#  - trafficlight-adapter-element-web: a checkout of https://github.com/matrix-org/trafficlight-adapter-element-web
+#  - trafficlight-proxy: a checkout of https://github.com/vector-im/trafficlight-proxy/
 
 # Additionally, an environmental variable `CYPRESS_BASE_URL` should be set
 # with url of the element-web instance that should be tested.
@@ -32,9 +32,9 @@ CLIENT_COUNT=${CLIENT_COUNT:-2}
 for i in $(seq 1 $CLIENT_COUNT)
 do
 	if [ "$i" -eq "1" ]; then
-		tmux new-window -n adapters -c ./matrix-react-sdk
+		tmux new-window -n adapters -c ./trafficlight-adapter-element-web 
 	else
-		tmux split-pane -c ./matrix-react-sdk
+		tmux split-pane -c ./trafficlight-adapter-element-web 
 	fi
 	# docker cuts the network when starting the whole setup
 	# so give it 5 seconds cut and then wait until the network has come back by polling the cypress url
@@ -47,7 +47,7 @@ done
 
 REQUIRES_PROXY=${REQUIRES_PROXY:-false}
 if [[ $REQUIRES_PROXY == "true" ]]; then
-	tmux split-pane -v -c ./trafficlight-proxy-client
+	tmux split-pane -v -c ./trafficlight-proxy
 	tmux send-keys -t $session 'yarn start' Enter
 fi
 
