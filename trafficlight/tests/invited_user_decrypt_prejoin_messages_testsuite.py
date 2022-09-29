@@ -23,7 +23,7 @@ class InviteUserDecryptPrejoinMessagesTestSuite(trafficlight.tests.TestSuite):
         #                        "Emoji were not matching")
 
     def generate_model(
-        self, clients: List[Client], servers: List[HomeserverConfig]
+        self, clients: List[Client], servers: List[HomeserverConfig], network_proxy: Optional[Client]
     ) -> Model:
         alice = clients[0].name
         bob = clients[1].name
