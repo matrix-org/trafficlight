@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 import trafficlight.tests
 from trafficlight.homerunner import HomeserverConfig
