@@ -79,7 +79,6 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
                     "complete",
                     {
                         client_one: {"action": "exit", "responses": {}},
-                        #client_two: {"action": "exit", "responses": {}},
                     },
                 ),
             ],
