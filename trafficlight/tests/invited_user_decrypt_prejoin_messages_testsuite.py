@@ -94,7 +94,9 @@ class InviteUserDecryptPrejoinMessagesTestSuite(trafficlight.tests.TestSuite):
                     {
                         alice: {
                             "action": "send_message",
-                            "data": {"message": "Bob should not be able to read this, as he isn't invited yet"},
+                            "data": {
+                                "message": "Bob should not be able to read this, as he isn't invited yet"
+                            },
                             "responses": {"message_sent": "register_b"},
                         }
                     },
@@ -114,7 +116,9 @@ class InviteUserDecryptPrejoinMessagesTestSuite(trafficlight.tests.TestSuite):
                     {
                         alice: {
                             "action": "invite_user",
-                            "data": {"userId": f'{login_data_bob["username"]}:{servers[0].server_name}'},
+                            "data": {
+                                "userId": f'{login_data_bob["username"]}:{servers[0].server_name}'
+                            },
                             "responses": {"invited": "send_message_after_invite"},
                         }
                     },
@@ -124,7 +128,9 @@ class InviteUserDecryptPrejoinMessagesTestSuite(trafficlight.tests.TestSuite):
                     {
                         alice: {
                             "action": "send_message",
-                            "data": {"message": "Bob should be able to read this message!"},
+                            "data": {
+                                "message": "Bob should be able to read this message!"
+                            },
                             "responses": {"message_sent": "accept_invite"},
                         }
                     },
@@ -144,7 +150,9 @@ class InviteUserDecryptPrejoinMessagesTestSuite(trafficlight.tests.TestSuite):
                     {
                         bob: {
                             "action": "verify_message_in_timeline",
-                            "data": {"message": "Bob should be able to read this message!"},
+                            "data": {
+                                "message": "Bob should be able to read this message!"
+                            },
                             "responses": {"verified": "complete"},
                         }
                     },
