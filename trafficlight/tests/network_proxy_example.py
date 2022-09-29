@@ -8,10 +8,11 @@ from trafficlight.objects.model import Model, ModelState
 from trafficlight.tests.assertions import assertCompleted
 
 
-class SendMessagesTestSuite(trafficlight.tests.TestSuite):
+class NetworkProxyTestSuite(trafficlight.tests.TestSuite):
     def __init__(self) -> None:
-        super(SendMessagesTestSuite, self).__init__()
-        self.clients_needed = 1
+        super(NetworkProxyTestSuite, self).__init__()
+        self.clients_needed = 2
+        self.network_proxy_needed = True
         self.servers_needed = 1
 
     def validate_model(self, model: Model) -> None:
@@ -29,63 +30,79 @@ class SendMessagesTestSuite(trafficlight.tests.TestSuite):
         network_proxy: Optional[Client],
     ) -> Model:
         client_one = clients[0].name
+        client_two = clients[1].name
 
         # TODO instead of pulling names from clients, just use clients as keys directly in the below...
 
         # Generating server
         random_user = "user_" + str(uuid.uuid4())
-        docker_api = servers[0].cs_api.replace("localhost", "10.0.2.2")
 
         login_data = {
             "username": random_user,
             "password": "bubblebobblebabble",
             "homeserver_url": {
-                "local_docker": docker_api,  # hmm... todo this...
-                "local": servers[0].cs_api,
+                "local_docker": network_proxy.registration.get("url"),
+                "local": network_proxy.registration.get("url"),
             },
         }
+
+        # TODO: work out what local_docker should do :|
+
+        network_proxy_name = network_proxy.name
 
         # maybe factor out the above, maybe not...
         model = Model(
             [
                 ModelState(
-                    "init_r",
+                    "setup",
                     {
-                        client_one: {
-                            "action": "register",
-                            "data": login_data,
-                            "responses": {"registered": "create_room"},
+                        network_proxy_name: {
+                            "action": "proxyTo",
+                            "data": {"url": servers[0].cs_api},
+                            "responses": {"proxyToSet": "disable"},
                         },
                     },
                 ),
                 ModelState(
-                    "create_room",
+                    "disable",
                     {
-                        client_one: {
-                            "action": "create_room",
-                            "data": {"name": "little test room"},
-                            "responses": {"room_created": "send"},
-                        }
+                        network_proxy_name: {
+                            "action": "disableEndpoint",
+                            "data": {"endpoint": "/_matrix/client/v1/rooms"},
+                            "responses": {"endpointDisabled": "login"},
+                        },
                     },
                 ),
                 ModelState(
-                    "send",
+                    "login",
                     {
                         client_one: {
-                            "action": "send_message",
-                            "data": {"message": "hi there!"},
-                            "responses": {"message_sent": "complete"},
-                        }
+                            "action": "login",
+                            "data": login_data,
+                            "responses": {"loggedIn": "enable"},
+                        },
+                    },
+                ),
+                ModelState(
+                    "enable",
+                    {
+                        network_proxy_name: {
+                            "action": "enableEndpoint",
+                            "data": {"endpoint": "/_matrix/client/v1/rooms"},
+                            "responses": {"endpointEnabled": "complete"},
+                        },
                     },
                 ),
                 ModelState(
                     "complete",
                     {
                         client_one: {"action": "exit", "responses": {}},
+                        client_two: {"action": "exit", "responses": {}},
+                        network_proxy_name: {"action": "exit", "responses": {}},
                     },
                 ),
             ],
-            "init_r",
+            "setup",
         )
 
         model.calculate_transitions()

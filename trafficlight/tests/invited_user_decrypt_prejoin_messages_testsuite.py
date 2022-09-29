@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 import trafficlight.tests
 from trafficlight.homerunner import HomeserverConfig
@@ -23,7 +23,10 @@ class InviteUserDecryptPrejoinMessagesTestSuite(trafficlight.tests.TestSuite):
         #                        "Emoji were not matching")
 
     def generate_model(
-        self, clients: List[Client], servers: List[HomeserverConfig]
+        self,
+        clients: List[Client],
+        servers: List[HomeserverConfig],
+        network_proxy: Optional[Client],
     ) -> Model:
         alice = clients[0].name
         bob = clients[1].name
