@@ -29,9 +29,9 @@ CLIENT_COUNT=2
 for i in $(seq 1 $CLIENT_COUNT)
 do
 	if [ "$i" -eq "1" ]; then
-		tmux new-window -n adapters -c ./matrix-react-sdk
+		tmux new-window -n adapters -c ./trafficlight-adapter-element-web
 	else
-		tmux split-pane -c ./matrix-react-sdk
+		tmux split-pane -c ./trafficlight-adapter-element-web
 	fi
 	# docker cuts the network when starting the whole setup
 	# so give it 5 seconds cut and then wait until the network has come back by polling the cypress url
