@@ -134,6 +134,6 @@ async def upload(uuid: str):  # type: ignore
         target = str(current_app.config.get("UPLOAD_FOLDER")) + uuid + filename
         logger.info(f"Uploading file {name} to {target}")
         await file.save(target)
-        client.upload(name, target)
+        client.upload(filename, target)
 
     return {}
