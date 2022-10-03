@@ -74,7 +74,7 @@ class HomerunnerClient(object):
                 json = await rsp.json()
 
                 response = json["homeservers"]
-                asyncio.sleep(10)
+
                 homeserver_configs = []
                 for homeserver in homeservers:
                     # from our request
