@@ -10,7 +10,7 @@ setTimeout(function(){
 {% endif %}
   <table class="table">
     <thead class="thead-dark">
-    <tr><th>Suite</th><th>Skipped</th><th>Success</th><th>Fail</th><th>Err</th></tr>
+    <tr><th>Suite</th><th>Waiting</th><th>Success</th><th>Fail</th><th>Err</th></tr>
     </thead>
     <tbody>
     <tr><td class="w-100">{{ testsuite.name() }}</td><td>{{ testsuite.skipped() }}</td><td>{{ testsuite.successes() }}</td><td>{{ testsuite.failures() }}</td><td>{{ testsuite.errors() }}</td></tr>
