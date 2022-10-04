@@ -21,11 +21,11 @@ class VerifyClientTestSuite(trafficlight.tests.TestSuite):
 
         # NB: Alice and Bob are names, yes, but we don't know them in this test.
         # Perhaps get client passed in instead.
-        #assertEqual(
+        # assertEqual(
         #    model.responses["alice"]["emoji"],
         #    model.responses["bob"]["emoji"],
         #    "Emoji accepted should be identical",
-        #)
+        # )
 
     def generate_model(
         self,
