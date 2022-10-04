@@ -46,7 +46,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
         {
             "TEST_PATTERN": "/**/invited_user_decrypt_prejoin_messages_more_clients_testsuite.py",
             "SERVER_TYPES": "Synapse",
-            "CLIENT_TYPES": "ElementWeb,ElementAndroid",
+            "CLIENT_TYPES": "ElementWeb",
             "UPLOAD_FOLDER": "/tmp/",
         }
     )

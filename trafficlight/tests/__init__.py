@@ -29,7 +29,21 @@ from trafficlight.objects.model import Model
 from trafficlight.server_types import ServerType
 from trafficlight.tests.assertions import TestException
 
-_CLIENT_NAMES = ["alice", "bob", "carol", "david", "eve", "frank"]
+_CLIENT_NAMES = [
+    "alice",
+    "bob",
+    "carol",
+    "david",
+    "eve",
+    "frank",
+    "gertrude",
+    "hannah",
+    "imogen",
+    "james",
+    "kirk",
+    "leo",
+    "michael",
+]
 
 logger = logging.getLogger(__name__)
 homerunner = trafficlight.homerunner.HomerunnerClient("http://localhost:54321")
@@ -70,7 +84,7 @@ class TestCase(object):
     def combine(
         self, available_clients: List[Client], client_types: List[ClientType]
     ) -> Optional[List[Client]]:
-        logger.info(f"{available_clients}, {client_types}")
+        # logger.info(f"{available_clients}, {client_types}")
         client_type = client_types[0]
 
         # Find all possible matches
