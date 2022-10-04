@@ -20,7 +20,21 @@ from typing import List
 
 from trafficlight.internals.test import Test
 
-_CLIENT_NAMES = ["alice", "bob", "carol", "david", "eve", "frank"]
+_CLIENT_NAMES = [
+    "alice",
+    "bob",
+    "carol",
+    "david",
+    "eve",
+    "frank",
+    "gertrude",
+    "hannah",
+    "imogen",
+    "james",
+    "kirk",
+    "leo",
+    "michael",
+]
 
 logger = logging.getLogger(__name__)
 
