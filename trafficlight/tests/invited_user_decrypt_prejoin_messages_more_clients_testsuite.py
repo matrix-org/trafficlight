@@ -8,7 +8,9 @@ from trafficlight.objects.model import Model, ModelState
 from trafficlight.tests.assertions import assertCompleted
 
 
-class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(trafficlight.tests.TestSuite):
+class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
+    trafficlight.tests.TestSuite
+):
     def __init__(self) -> None:
         super(InviteUserDecryptPrejoinMessagesMoreClientsTestSuite, self).__init__()
         self.clients_needed = 10
@@ -59,16 +61,22 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(trafficlight.tests.Te
         # Alice and Bob are treated separately!
         additional_clients_needed = self.clients_needed - 2
         for i in range(additional_clients_needed):
-            invite_model_states.append(ModelState(f'register_{i}',
-            {
-            clients[i + 2].name: {
-                "action": "register",
-                "data": generate_login_data(servers[0].cs_api),
-                "responses": {
-                    "registered": "invite_user" if i == additional_clients_needed - 1 else f'register_{i+1}'
-                }
-            }
-            }))
+            invite_model_states.append(
+                ModelState(
+                    f"register_{i}",
+                    {
+                        clients[i + 2].name: {
+                            "action": "register",
+                            "data": generate_login_data(servers[0].cs_api),
+                            "responses": {
+                                "registered": "invite_user"
+                                if i == additional_clients_needed - 1
+                                else f"register_{i+1}"
+                            },
+                        }
+                    },
+                )
+            )
         print("\nDONE\n")
         # maybe factor out the above, maybe not...
         model = Model(
@@ -192,13 +200,14 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(trafficlight.tests.Te
 
         return model
 
+
 def generate_login_data(cs_api):
     docker_api = cs_api.replace("localhost", "10.0.2.2")
-    return  {
-            "username": "user_" + str(uuid.uuid4()),
-            "password": "bubblebobblebabble",
-            "homeserver_url": {
-                "local_docker": docker_api,  # hmm... todo this...
-                "local": cs_api,
-            },
-        }
+    return {
+        "username": "user_" + str(uuid.uuid4()),
+        "password": "bubblebobblebabble",
+        "homeserver_url": {
+            "local_docker": docker_api,  # hmm... todo this...
+            "local": cs_api,
+        },
+    }
