@@ -25,7 +25,7 @@ tmux split-pane -h -c ./trafficlight
 tmux send-keys -t $session '. venv/bin/activate' Enter
 tmux send-keys -t $session 'QUART_APP=trafficlight quart run --host 0.0.0.0' Enter
 
-CLIENT_COUNT=2
+CLIENT_COUNT=10
 for i in $(seq 1 $CLIENT_COUNT)
 do
 	if [ "$i" -eq "1" ]; then
