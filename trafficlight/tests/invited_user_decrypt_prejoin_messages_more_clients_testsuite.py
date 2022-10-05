@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import trafficlight.tests
 from trafficlight.homerunner import HomeserverConfig
@@ -201,7 +201,7 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
         return model
 
 
-def generate_login_data(cs_api):
+def generate_login_data(cs_api: str) -> Dict[str, Any]:
     docker_api = cs_api.replace("localhost", "10.0.2.2")
     return {
         "username": "user_" + str(uuid.uuid4()),
