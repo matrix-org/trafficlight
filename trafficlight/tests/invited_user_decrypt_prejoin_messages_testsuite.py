@@ -65,11 +65,11 @@ class InviteUserDecryptPrejoinMessagesTestSuite(trafficlight.tests.TestSuite):
                             "data": login_data_alice,
                             "responses": {"registered": "create_room"},
                         },
-                        # bob: {
-                        #     "action": "register",
-                        #     "data": login_data_bob,
-                        #     "responses": {"registered": "create_room"},
-                        # }
+                        bob: {
+                            "action": "register",
+                            "data": login_data_bob,
+                            "responses": {"registered": "create_room"},
+                        }
                     },
                 ),
                 ModelState(
@@ -100,20 +100,20 @@ class InviteUserDecryptPrejoinMessagesTestSuite(trafficlight.tests.TestSuite):
                             "data": {
                                 "message": "Bob should not be able to read this, as he isn't invited yet"
                             },
-                            "responses": {"message_sent": "register_b"},
+                            "responses": {"message_sent": "invite_user"},
                         }
                     },
                 ),
-                ModelState(
-                    "register_b",
-                    {
-                        bob: {
-                            "action": "register",
-                            "data": login_data_bob,
-                            "responses": {"registered": "invite_user"},
-                        }
-                    },
-                ),
+                # ModelState(
+                #     "register_b",
+                #     {
+                #         bob: {
+                #             "action": "register",
+                #             "data": login_data_bob,
+                #             "responses": {"registered": "invite_user"},
+                #         }
+                #     },
+                # ),
                 ModelState(
                     "invite_user",
                     {
