@@ -51,6 +51,7 @@ async def check_for_new_tests() -> None:
                         [str(item) for item in available_clients],
                     )
 
+
 @bp.route("/<string:client_uuid>/register", methods=["POST"])
 async def register(client_uuid: str):  # type: ignore
 
