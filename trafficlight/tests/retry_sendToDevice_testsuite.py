@@ -13,7 +13,6 @@ class TestProxyTestSuite(trafficlight.tests.TestSuite):
         self.clients_needed = 2
         self.network_proxy_needed = True
         self.servers_needed = 1
-        
 
     def validate_model(self, model: Model) -> None:
         # NB: Clients do not handle this yet
@@ -25,7 +24,10 @@ class TestProxyTestSuite(trafficlight.tests.TestSuite):
         # Perhaps get client passed in instead.
 
     def generate_model(
-        self, clients: List[Client], servers: List[HomeserverConfig], network_proxy: Optional[Client]
+        self,
+        clients: List[Client],
+        servers: List[HomeserverConfig],
+        network_proxy: Optional[Client],
     ) -> Model:
         alice = clients[0].name
         bob = clients[1].name
@@ -52,8 +54,8 @@ class TestProxyTestSuite(trafficlight.tests.TestSuite):
             "homeserver_url": {
                 "local_docker": docker_api,  # hmm... todo this...
                 "local": proxy_address,
-                },
-            }
+            },
+        }
         network_proxy_name = network_proxy.name
         # maybe factor out the above, maybe not...
         model = Model(
@@ -105,7 +107,9 @@ class TestProxyTestSuite(trafficlight.tests.TestSuite):
                     {
                         alice: {
                             "action": "invite_user",
-                            "data": {"userId": f'{login_data_bob["username"]}:{servers[0].server_name}'},
+                            "data": {
+                                "userId": f'{login_data_bob["username"]}:{servers[0].server_name}'
+                            },
                             "responses": {"invited": "accept_invite"},
                         }
                     },
@@ -217,7 +221,7 @@ class TestProxyTestSuite(trafficlight.tests.TestSuite):
                         bob: {
                             "action": "exit",
                             "responses": {},
-                        }
+                        },
                     },
                 ),
             ],
