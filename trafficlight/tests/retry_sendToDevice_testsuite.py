@@ -4,7 +4,7 @@ import trafficlight.tests
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects.client import Client
 from trafficlight.objects.model import Model, ModelState
-from trafficlight.tests.assertions import assertCompleted, assertEqual
+from trafficlight.tests.assertions import assertCompleted
 
 
 class TestProxyTestSuite(trafficlight.tests.TestSuite):
