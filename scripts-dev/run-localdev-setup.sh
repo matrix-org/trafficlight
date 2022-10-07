@@ -1,9 +1,13 @@
 #!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
 
 # This script assumes to be run from the root of the following directory layout:
 #  - complement: a checkout of the complement repo, with homeserver built
 #  - trafficlight: a checkout of this repo
-#  - matrix-react-sdk: a checkout of matrix-react-sdk, where the trafficlight adapter can be found.
+#  - trafficlight-adapter-element-web: a checkout of https://github.com/matrix-org/trafficlight-adapter-element-web
+#  - trafficlight-proxy: a checkout of https://github.com/vector-im/trafficlight-proxy/
+
 
 # Additionally, an environmental variable `CYPRESS_BASE_URL` should be set
 # with url of the element-web instance that should be tested.
@@ -25,7 +29,7 @@ tmux split-pane -h -c ./trafficlight
 tmux send-keys -t $session '. venv/bin/activate' Enter
 tmux send-keys -t $session 'QUART_APP=trafficlight quart run --host 0.0.0.0' Enter
 
-CLIENT_COUNT=2
+CLIENT_COUNT=${CLIENT_COUNT:-2}
 for i in $(seq 1 $CLIENT_COUNT)
 do
 	if [ "$i" -eq "1" ]; then
@@ -41,5 +45,11 @@ do
 	tmux send-keys -t $session "XDG_CONFIG_HOME=\"/tmp/cypress-home-$i\" yarn test:trafficlight" Enter
 	tmux select-layout tiled
 done
+
+REQUIRES_PROXY=${REQUIRES_PROXY:-false}
+if [[ $REQUIRES_PROXY == "true" ]]; then
+	tmux split-pane -v -c ./trafficlight-proxy
+	tmux send-keys -t $session 'yarn start' Enter
+fi
 
 tmux attach-session -t $session
