@@ -4,7 +4,7 @@ import trafficlight.tests
 from trafficlight.homerunner import HomeserverConfig
 from trafficlight.objects.client import Client
 from trafficlight.objects.model import Model, ModelState
-from trafficlight.tests.assertions import assertCompleted, assertEqual
+from trafficlight.tests.assertions import assertCompleted
 
 
 class MessageDecryptionAfterStorageClearedTestSuite(trafficlight.tests.TestSuite):
@@ -51,8 +51,8 @@ class MessageDecryptionAfterStorageClearedTestSuite(trafficlight.tests.TestSuite
             "homeserver_url": {
                 "local_docker": docker_api,
                 "local": homeserver.cs_api,
-                },
-            }
+            },
+        }
 
         # maybe factor out the above, maybe not...
         model = Model(
@@ -131,7 +131,9 @@ class MessageDecryptionAfterStorageClearedTestSuite(trafficlight.tests.TestSuite
                     {
                         bob: {
                             "action": "send_message",
-                            "data": {"message": "Alice should be able to read this message!"},
+                            "data": {
+                                "message": "Alice should be able to read this message!"
+                            },
                             "responses": {"message_sent": "verify_message_in_timeline"},
                         }
                     },
