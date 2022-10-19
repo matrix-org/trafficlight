@@ -134,7 +134,7 @@ class DehydatedDeviceTestSuite(trafficlight.tests.TestSuite):
                     {
                         bob: {
                             "action": "advance_clock",
-                            "data": { "milliseconds": 1209600000 },
+                            "data": {"milliseconds": 1209600000},
                             "responses": {"advanced_clock": "bob_sends_message"},
                         }
                     },
@@ -158,8 +158,8 @@ class DehydatedDeviceTestSuite(trafficlight.tests.TestSuite):
                             "action": "login",
                             "data": {
                                 **login_data_alice,
-                                "key_backup_passphrase": "helloworld123helloworld"
-                             },
+                                "key_backup_passphrase": "helloworld123helloworld",
+                            },
                             "responses": {"loggedin": "alice_opens_room"},
                         }
                     },
@@ -169,9 +169,7 @@ class DehydatedDeviceTestSuite(trafficlight.tests.TestSuite):
                     {
                         alice: {
                             "action": "open-room",
-                            "data": {
-                                "name": "little test room"
-                             },
+                            "data": {"name": "little test room"},
                             "responses": {"room-opened": "verify_message_in_timeline"},
                         }
                     },
