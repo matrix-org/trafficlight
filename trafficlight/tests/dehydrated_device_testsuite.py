@@ -77,6 +77,9 @@ class DehydatedDeviceTestSuite(trafficlight.tests.TestSuite):
                         }
                     },
                 ),
+                # Enabling dehydrated devices in element-web does not work as expected.
+                # The dehydrated device is only uploaded when you do a second login and restore
+                # from key backup. So this is a failing test for now.
                 ModelState(
                     "enable_dehydrated_device",
                     {
@@ -114,7 +117,6 @@ class DehydatedDeviceTestSuite(trafficlight.tests.TestSuite):
                     {
                         alice: {
                             "action": "accept_invite",
-                            # "data": {"message": "Bob should be able to read this message!"},
                             "responses": {"accepted": "alice_logs_out"},
                         }
                     },
