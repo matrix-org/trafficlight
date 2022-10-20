@@ -85,7 +85,9 @@ class DehydatedDeviceTestSuite(trafficlight.tests.TestSuite):
                     {
                         alice: {
                             "action": "enable_dehydrated_device",
-                            "data": {"key_backup_passphrase": "helloworld123helloworld"},
+                            "data": {
+                                "key_backup_passphrase": "helloworld123helloworld"
+                            },
                             "responses": {"enabled_dehydrated_device": "create_room"},
                         }
                     },
