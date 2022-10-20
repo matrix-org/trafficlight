@@ -82,7 +82,9 @@ class MessageWarningTestSuite(trafficlight.tests.TestSuite):
                     {
                         bob: {
                             "action": "enable_key_backup",
-                            "data": {"key_backup_passphrase": "helloworld123helloworld"},
+                            "data": {
+                                "key_backup_passphrase": "helloworld123helloworld"
+                            },
                             "responses": {"key_backup_enabled": "alice_creates_room"},
                         }
                     },
