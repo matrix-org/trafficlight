@@ -177,7 +177,9 @@ class TestProxyTestSuite(trafficlight.tests.TestSuite):
                             "data": {
                                 "endpoint": "/_matrix/client/r0/sync",
                             },
-                            "responses": {"endpointEnabled": "Wait_for_keys_to_come_in"},
+                            "responses": {
+                                "endpointEnabled": "Wait_for_keys_to_come_in"
+                            },
                         }
                     },
                 ),
