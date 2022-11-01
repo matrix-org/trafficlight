@@ -20,6 +20,7 @@ if [ $IS_DOCKER_RUNNING -ne "0" ]; then
 	exit
 fi
 
+echo "Using CYPRESS_BASE_URL $CYPRESS_BASE_URL"
 session="trafficlight"
 
 tmux new-session -d -s $session -c ./complement
