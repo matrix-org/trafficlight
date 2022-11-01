@@ -13,13 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from quart import Quart
 
+from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import add_testsuite
-from trafficlight.tests import load_test_suites
+from trafficlight.tests import load_tests
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -44,9 +46,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     # Defaults here:
     app.config.update(
         {
-            "TEST_PATTERN": "/**/*_testsuite.py",
-            "SERVER_TYPES": "Synapse",
-            "CLIENT_TYPES": "ElementWeb",
+            "TEST_PATTERN": "/**/*_test.py",
             "UPLOAD_FOLDER": "/tmp/",
         }
     )
@@ -57,25 +57,25 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     # TODO: ensure uploads folder is available
     # can i create README.md in there with a comment, for instance...
 
-    app.config["SERVER_TYPES"] = app.config["SERVER_TYPES"].split(",")
-    app.config["CLIENT_TYPES"] = app.config["CLIENT_TYPES"].split(",")
-
     # ensure the instance folder exists
     print(f"{app.config}")
 
-    suites = load_test_suites(
+    tests = load_tests(
         app.config.get("TEST_PATTERN"),
-        app.config.get("SERVER_TYPES"),
-        app.config.get("CLIENT_TYPES"),
     )
-    for suite in suites:
-        logger.info(f"Generating test cases for {suite.name()}")
-        suite.generate_test_cases()
-        add_testsuite(suite)
+    for test in tests:
+        logger.info(f"Generating test cases for {test.name()}")
+        test_cases = test.generate_test_cases()
+        for test_case in test_cases:
+            logger.info(f" - { test_case }")
 
-    from trafficlight.http import client, root, status
+        guid = str(uuid.uuid4())
+        test_suite = TestSuite(guid, test, test_cases)
+        add_testsuite(test_suite)
 
-    app.register_blueprint(client.bp)
+    from trafficlight.http import adapter, root, status
+
+    app.register_blueprint(adapter.bp)
     app.register_blueprint(status.bp)
     app.register_blueprint(root.bp)
 

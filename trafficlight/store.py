@@ -15,12 +15,13 @@
 import logging
 from typing import List, Optional
 
-from trafficlight.objects.client import Client
-from trafficlight.tests import TestCase, TestSuite
+from trafficlight.internals.testcase import TestCase
+from trafficlight.internals.testsuite import TestSuite
+from trafficlight.objects.adapter import Adapter
 
 logger = logging.getLogger(__name__)
 
-_clients: List[Client] = []
+_adapters: List[Adapter] = []
 _testsuites: List[TestSuite] = []
 _testcases: List[TestCase] = []
 
@@ -29,9 +30,9 @@ def get_testsuites() -> List[TestSuite]:
     return _testsuites
 
 
-def get_testsuite(uuid: str) -> Optional[TestSuite]:
+def get_testsuite(guid: str) -> Optional[TestSuite]:
     for testsuite in _testsuites:
-        if testsuite.uuid == uuid:
+        if testsuite.guid == guid:
             return testsuite
     return None
 
@@ -40,9 +41,9 @@ def get_tests() -> List[TestCase]:
     return _testcases
 
 
-def get_test(uuid: str) -> Optional[TestCase]:
+def get_test(guid: str) -> Optional[TestCase]:
     for test in _testcases:
-        if str(test.uuid) == str(uuid):
+        if str(test.guid) == str(guid):
             return test
     return None
 
@@ -52,16 +53,16 @@ def add_testsuite(testsuite: TestSuite) -> None:
     _testcases.extend(testsuite.test_cases or [])
 
 
-def get_clients() -> List[Client]:
-    return _clients
+def get_adapters() -> List[Adapter]:
+    return _adapters
 
 
-def get_client(uuid: str) -> Optional[Client]:
-    for client in get_clients():
-        if client.uuid == uuid:
-            return client
+def get_adapter(guid: str) -> Optional[Adapter]:
+    for adapter in get_adapters():
+        if adapter.guid == guid:
+            return adapter
     return None
 
 
-def add_client(client: Client) -> None:
-    _clients.append(client)
+def add_adapter(adapter: Adapter) -> None:
+    _adapters.append(adapter)

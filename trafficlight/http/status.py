@@ -18,14 +18,14 @@ from typing import List
 
 from quart import Blueprint, abort, render_template, request, send_file
 
+from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import (
-    get_clients,
+    get_adapters,
     get_test,
     get_tests,
     get_testsuite,
     get_testsuites,
 )
-from trafficlight.tests import TestSuite
 
 logging.basicConfig(level=logging.DEBUG)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
@@ -42,7 +42,7 @@ bp = Blueprint("status", __name__, url_prefix="/status")
 async def index():  # type: ignore
     return await render_template(
         "status_index.j2.html",
-        clients=get_clients(),
+        clients=get_adapters(),
         tests=get_tests(),
         test_suites=get_testsuites(),
     )

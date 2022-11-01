@@ -25,7 +25,7 @@ class HomerunnerError(Exception):
         self.homerunnerError = message
 
 
-class HomeserverConfig(object):
+class HomeServer(object):
     """
     The configuration of a created homserver
     """
@@ -36,6 +36,9 @@ class HomeserverConfig(object):
         self.base_image_uri = base_image_uri
         # TODO: include sufficient data to destroy
         # Might not be needed: homerunner does have a timeout
+
+    def finished(self):
+        pass
 
 
 class HomerunnerClient(object):
@@ -55,7 +58,7 @@ class HomerunnerClient(object):
             "BaseImageURI": base_image_uri,
         }
 
-    async def create(self, model_id: str, images: List[str]) -> List[HomeserverConfig]:
+    async def create(self, model_id: str, images: List[str]) -> List[HomeServer]:
         create_url = self.homerunner_url + "/create"
         homeservers = []
         for image in images:
@@ -82,7 +85,5 @@ class HomerunnerClient(object):
                     base_image_uri = homeserver["BaseImageURI"]
                     # from response
                     cs_api = response[name]["BaseURL"]
-                    homeserver_configs.append(
-                        HomeserverConfig(name, cs_api, base_image_uri)
-                    )
+                    homeserver_configs.append(HomeServer(name, cs_api, base_image_uri))
                 return homeserver_configs

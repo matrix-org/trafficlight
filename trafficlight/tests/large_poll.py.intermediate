@@ -1,0 +1,169 @@
+from trafficlight.client_types import ElementWeb, ElementAndroid, ElementIos
+from trafficlight.internals.conditions import Condition
+from trafficlight.internals.conditions.response_condition import ResponseCondition
+from trafficlight.internals.conditions.event_condition import EventCondition
+from trafficlight.internals.clients import Clients
+from trafficlight.internals.homeserver import HomeServer
+from trafficlight.internals.actions import Action, BaseAction
+from trafficlight.internals.test import Test
+from trafficlight.tests import Configuration
+from trafficlight.server_types import Synapse
+
+def expecting(response: str) -> Condition:
+    return ResponseCondition(response)
+
+
+def until_told(message: str) -> Condition:
+    return EventCondition(message)
+
+def register(client: Clients, server: HomeServer):
+    client.poll({ "action": "register",
+                  "data": { "homeserver_url": server.cs_api,
+                            "user": client.name,
+                            "password": "randomstring"
+                          }
+                })
+
+class Room():
+    def __init__(self, name: str):
+        self.name = name
+        self.id = None
+
+class JoinRoomAction(BaseAction):
+    def __init__(self, room: Room):
+        self.room = room
+
+    def be_polled(self):
+        return {
+               "type":"join_room",
+               "data": { "room_id": self.room.id }
+        }
+
+   def be_responded(self, data):
+       if data["event"] == "room_created":
+           self.chain()
+
+  def be_told(self):
+      pass
+
+class CreateRoomAction(BaseAction):
+    def __init__(self, room: Room):
+        self.room = room
+
+    def be_polled(self):
+        return {"type": "create_room",
+                "data": {
+                    "access_control": "open",
+                    "name": self.room.name
+                }}
+
+    def be_told(self):
+        pass
+
+    def be_responded(self, data):
+        if data["event"] == "room_created":
+            self.room.id = data["room_id"]
+
+
+
+def create_room(client: Clients, room_name: str):
+    room = Room(room_name)
+    client.will(CreateRoomAction(room))
+    return room
+
+def join_room(client: Clients, room: Room)
+    client.will(JoinRoomAction(room))
+
+
+class Poll:
+    def __init__(self, room: Room, question: str, options: List[str]):
+        self.room = room
+        self.question = question
+        self.options = options
+
+class CreatePollAction(BaseAction):
+    def __init__(self, the_poll: Poll):
+        self.poll = the_poll
+
+    def on_poll(self):
+        return {
+            "action": "create_poll",
+            "data": {
+                "question": self.poll.question,
+                "room": self.poll.room.id,
+                "options": self.poll.options
+            }
+
+        }
+
+    def on_event(self):
+        pass
+
+    def on_respond(self, data):
+        if data["event"] == "poll_created":
+            self.poll.event = data["poll_event_id"]
+
+
+def create_poll(client: Clients, room: Room, question: str, options: List[str]):
+    the_poll = Poll(room, question, options)
+    client.will(CreatePollAction(the_poll))
+    return the_poll
+
+class MassJoinAction(Action):
+
+
+class LargePollTest(Test):
+    def __init__(self, config: Configuration):
+        """
+        Runs on startup. Configures TestSuite and stores references
+        to required servers/clients etc.
+        @param self:
+        @param config:
+        @return:
+        """
+        config.name("Large poll test")
+
+        self.homeserver = config.server_under_test(Synapse())
+
+        # TODO: make "all_clients" an option which is ideally used
+        # so we can test element web and android and ...
+        self.alice = config.client_under_test("poll creator", [ElementWeb(), ElementAndroid(), ElementIos()])
+        self.bob = config.client_under_test("poll viewer", [ElementWeb(), ElementAndroid(), ElementIos()])
+        self.coordinator = config.coordinator()
+        self.local_action = config.local_action()
+
+
+    def setup(self) -> None:
+        """
+        Describe the test in this method.
+
+        Runs after clients and servers are allocated
+        @param self:
+        @return:
+        """
+
+        self.alice.register(self.homeserver)
+        self.bob.register(self.homeserver)
+
+        poll_room = self.alice.create_room("Poll Test Room")
+
+        self.alice.will(self.bob.tell("join_room"))
+        self.alice.will(self.local_action.tell("do_your_thing"))
+
+        self.bob.idle(until_told("join_room"))
+        self.bob.join_room(poll_room)
+        self.bob.will(self.coordinator.tell("bob_done"))
+
+        self.local_action.idle(until_told("do_your_thing"))
+        self.local_action.will(MassJoinAction(poll_room, 1000))
+
+        self.local_action.will(self.coordinator.tell("local_action_done"))
+
+        self.coordinator.idle_until_all("bob_done", "local_action_done")
+        self.coordinator.will(self.alice.tell("everything_has_been_joined"))
+
+        # alice will check room is OK
+        self.alice.idle(until_told("everything_has_been_joined"))
+        self.alice.create_poll(poll_room, "What is the price of things", ["one","two","three","four"])
+
+
