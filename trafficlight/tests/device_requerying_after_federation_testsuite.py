@@ -33,7 +33,7 @@ class DeviceRequeryingAfterFederationTestSuite(trafficlight.tests.TestSuite):
         bob = clients[1].name
 
         homeserver1 = servers[0]
-        homeserver2 = servers[0]
+        homeserver2 = servers[1]
 
         # TODO: move into neat user-generation tool
         import uuid as guid
