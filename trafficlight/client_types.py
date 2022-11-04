@@ -14,6 +14,11 @@ class ElementWeb(ClientType):
         return str(x.registration["type"]) == "element-web"
 
 
+class HydrogenWeb(ClientType):
+    def match(self, x: Client) -> bool:
+        return str(x.registration["type"]) == "hydrogen-web"
+
+
 class ElementAndroid(ClientType):
     def match(self, x: Client) -> bool:
         return str(x.registration["type"]) == "element-android"

@@ -44,9 +44,9 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     # Defaults here:
     app.config.update(
         {
-            "TEST_PATTERN": "/**/*_testsuite.py",
+            "TEST_PATTERN": "/**/send_messages_testsuite_hydrogen.py",
             "SERVER_TYPES": "Synapse",
-            "CLIENT_TYPES": "ElementWeb",
+            "CLIENT_TYPES": "ElementWeb,HydrogenWeb",
             "UPLOAD_FOLDER": "/tmp/",
         }
     )

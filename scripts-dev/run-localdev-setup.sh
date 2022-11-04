@@ -52,4 +52,11 @@ if [[ $REQUIRES_PROXY == "true" ]]; then
 	tmux send-keys -t $session 'yarn start' Enter
 fi
 
+
+REQUIRES_HYDROGEN=${REQUIRES_HYDROGEN:-false}
+if [[ $REQUIRES_HYDROGEN == "true" ]]; then
+	tmux split-pane -v -c ./trafficlight-adapter-hydrogen-web
+	tmux send-keys -t $session 'while [[ "$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' $BASE_APP_URL)" != "200" ]]; do echo "hello"; sleep 1; done' Enter
+	tmux send-keys -t $session 'yarn test:trafficlight' Enter
+fi
 tmux attach-session -t $session

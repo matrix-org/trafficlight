@@ -188,7 +188,8 @@ class TestCase(object):
         for client in client_list:
             client.set_model(self.model)
 
-        network_proxy.set_model(self.model)
+        if network_proxy:
+            network_proxy.set_model(self.model)
 
         self.status = "running"
         logger.info("Test case setup and ready to run")
