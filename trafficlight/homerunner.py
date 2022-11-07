@@ -48,12 +48,17 @@ class HomerunnerClient(object):
 
     def _generate_homeserver(self, base_image_uri: str) -> Dict[str, Any]:
         """
-        For now, we don't require any Users or Rooms to be created automatically
+        For now, we only need user for hydrogen adapter!
         """
         self.hsid = self.hsid + 1
         return {
             "Name": "trafficlight" + str(self.hsid),
-            "Users": [],
+            "Users": [
+                {
+                    "Localpart": "testuser",
+                    "DisplayName": "testuser"
+                }
+            ],
             "Rooms": [],
             "BaseImageURI": base_image_uri,
         }
