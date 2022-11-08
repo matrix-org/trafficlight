@@ -7,6 +7,9 @@ from trafficlight.objects.client import Client
 from trafficlight.objects.model import Model, ModelState
 from trafficlight.tests.assertions import assertCompleted
 
+# Test Script:
+# CLIENT_COUNT=2 HYDROGEN_COUNT=8 CYPRESS_BASE_URL="https://develop.element.io" HYDROGEN_APP_URL="http://localhost:3000" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
+
 
 class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
     trafficlight.tests.TestSuite
@@ -30,8 +33,10 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
         servers: List[HomeserverConfig],
         network_proxy: Optional[Client],
     ) -> Model:
-        alice = clients[0].name
-        bob = clients[1].name
+        elementClients = list(filter(lambda c: c.registration["type"] == "element-web", clients))
+        hydrogenClients = list(filter(lambda c: c.registration["type"] == "hydrogen-web", clients))
+        alice = elementClients[0].name
+        bob = elementClients[1].name
 
         # TODO instead of pulling names from clients, just use clients as keys directly in the below...
 
@@ -56,28 +61,75 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
             },
         }
 
+        login_model_states = []
         invite_model_states = []
+        accept_invite_states = []
+        verify_message_states = []
 
         # Alice and Bob are treated separately!
         additional_clients_needed = self.clients_needed - 2
         for i in range(additional_clients_needed):
-            invite_model_states.append(
+            login_model_states.append(
                 ModelState(
-                    f"register_{i}",
+                    f"login_{i}",
                     {
-                        clients[i + 2].name: {
-                            "action": "register",
-                            "data": generate_login_data(servers[0].cs_api),
+                        hydrogenClients[i].name: {
+                            "action": "login",
+                            "data": generate_login_data(servers[0].cs_api, f"testuser{i+1}"),
                             "responses": {
-                                "registered": "invite_user"
-                                if i == additional_clients_needed - 1
-                                else f"register_{i+1}"
+                                "loggedin": "invite_user" if i == additional_clients_needed - 1 else f"login_{i+1}"
                             },
                         }
                     },
                 )
             )
-        print("\nDONE\n")
+
+            invite_model_states.append(
+                ModelState(
+                    f"invite_{i}",
+                    {
+                        alice: {
+                            "action": "invite_user",
+                            "data": {
+                                "userId": f'testuser{i+1}:{servers[0].server_name}',
+                            },
+                            "responses": {
+                                "invited": "accept_invite" if i == additional_clients_needed - 1 else f"invite_{i+1}"
+                            },
+                        }
+                    },
+                )
+            )
+
+            accept_invite_states.append(
+                ModelState(
+                    f"accept_invite_{i}",
+                    {
+                        hydrogenClients[i].name: {
+                            "action": "accept_invite",
+                            "data": {},
+                            "responses": {
+                                "accepted": "verify_message_in_timeline" if i == additional_clients_needed - 1 else f"accept_invite_{i+1}"
+                            },
+                        }
+                    },
+                )
+            )
+
+            verify_message_states.append(
+                ModelState(
+                    f"verify_message_utd_{i}",
+                    {
+                        hydrogenClients[i].name: {
+                            "action": "verify_last_message_is_utd",
+                            "data": {},
+                            "responses": {
+                                "verified": "complete" if i == additional_clients_needed - 1 else f"verify_message_utd_{i+1}"
+                            },
+                        }
+                    },
+                )
+            )
         # maybe factor out the above, maybe not...
         model = Model(
             [
@@ -89,11 +141,6 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
                             "data": login_data_alice,
                             "responses": {"registered": "create_room"},
                         },
-                        # bob: {
-                        #     "action": "register",
-                        #     "data": login_data_bob,
-                        #     "responses": {"registered": "create_room"},
-                        # }
                     },
                 ),
                 ModelState(
@@ -134,11 +181,11 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
                         bob: {
                             "action": "register",
                             "data": login_data_bob,
-                            "responses": {"registered": "register_0"},
+                            "responses": {"registered": "login_0"},
                         }
                     },
                 ),
-                *invite_model_states,
+                *login_model_states,
                 ModelState(
                     "invite_user",
                     {
@@ -147,44 +194,47 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
                             "data": {
                                 "userId": f'{login_data_bob["username"]}:{servers[0].server_name}'
                             },
-                            "responses": {"invited": "send_message_after_invite"},
+                            "responses": {"invited": "invite_0"},
                         }
                     },
                 ),
-                ModelState(
-                    "send_message_after_invite",
-                    {
-                        alice: {
-                            "action": "send_message",
-                            "data": {
-                                "message": "Bob should be able to read this message!"
-                            },
-                            "responses": {"message_sent": "accept_invite"},
-                        }
-                    },
-                ),
+                *invite_model_states,
                 ModelState(
                     "accept_invite",
                     {
                         bob: {
                             "action": "accept_invite",
                             # "data": {"message": "Bob should be able to read this message!"},
-                            "responses": {"accepted": "verify_message_in_timeline"},
+                            "responses": {"accepted": "send_message_after_invite"},
                         }
                     },
                 ),
+                ModelState(
+                    "send_message_after_invite",
+                    {
+                        bob: {
+                            "action": "send_message",
+                            "data": {
+                                "message": "Everybody should be able to read this message!"
+                            },
+                            "responses": {"message_sent": "accept_invite_0"},
+                        }
+                    },
+                ),
+                *accept_invite_states,
                 ModelState(
                     "verify_message_in_timeline",
                     {
                         bob: {
                             "action": "verify_message_in_timeline",
                             "data": {
-                                "message": "Bob should be able to read this message!"
+                                "message": "Everybody should be able to read this message!"
                             },
-                            "responses": {"verified": "complete"},
+                            "responses": {"verified": "verify_message_utd_0"},
                         }
                     },
                 ),
+                *verify_message_states,
                 ModelState(
                     "complete",
                     {
@@ -201,11 +251,11 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
         return model
 
 
-def generate_login_data(cs_api: str) -> Dict[str, Any]:
+def generate_login_data(cs_api: str, username: str) -> Dict[str, Any]:
     docker_api = cs_api.replace("localhost", "10.0.2.2")
     return {
-        "username": "user_" + str(uuid.uuid4()),
-        "password": "bubblebobblebabble",
+        "username": username,
+        "password": "complement_meets_min_pasword_req_" + username,
         "homeserver_url": {
             "local_docker": docker_api,  # hmm... todo this...
             "local": cs_api,
