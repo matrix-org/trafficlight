@@ -53,12 +53,7 @@ class HomerunnerClient(object):
         self.hsid = self.hsid + 1
         return {
             "Name": "trafficlight" + str(self.hsid),
-            "Users": [
-                {
-                    "Localpart": "testuser",
-                    "DisplayName": "testuser"
-                }
-            ],
+            "Users": [{"Localpart": "testuser", "DisplayName": "testuser"}],
             "Rooms": [],
             "BaseImageURI": base_image_uri,
         }

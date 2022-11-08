@@ -82,9 +82,7 @@ class HydrogenActionsTest(trafficlight.tests.TestSuite):
                     {
                         client_one: {
                             "action": "send_message",
-                            "data": {
-                                "message": "hello world!"
-                            },
+                            "data": {"message": "hello world!"},
                             "responses": {"message_sent": "create-room-2"},
                         }
                     },
@@ -146,9 +144,7 @@ class HydrogenActionsTest(trafficlight.tests.TestSuite):
                     {
                         client_one: {
                             "action": "verify_message_in_timeline",
-                            "data": {
-                                "message": "hello world!"
-                            },
+                            "data": {"message": "hello world!"},
                             "responses": {"verified": "logout"},
                         }
                     },
