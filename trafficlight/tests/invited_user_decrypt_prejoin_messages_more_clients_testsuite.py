@@ -33,8 +33,12 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
         servers: List[HomeserverConfig],
         network_proxy: Optional[Client],
     ) -> Model:
-        elementClients = list(filter(lambda c: c.registration["type"] == "element-web", clients))
-        hydrogenClients = list(filter(lambda c: c.registration["type"] == "hydrogen-web", clients))
+        elementClients = list(
+            filter(lambda c: c.registration["type"] == "element-web", clients)
+        )
+        hydrogenClients = list(
+            filter(lambda c: c.registration["type"] == "hydrogen-web", clients)
+        )
         alice = elementClients[0].name
         bob = elementClients[1].name
 
@@ -75,9 +79,13 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
                     {
                         hydrogenClients[i].name: {
                             "action": "login",
-                            "data": generate_login_data(servers[0].cs_api, f"testuser{i+1}"),
+                            "data": generate_login_data(
+                                servers[0].cs_api, f"testuser{i+1}"
+                            ),
                             "responses": {
-                                "loggedin": "invite_user" if i == additional_clients_needed - 1 else f"login_{i+1}"
+                                "loggedin": "invite_user"
+                                if i == additional_clients_needed - 1
+                                else f"login_{i+1}"
                             },
                         }
                     },
@@ -91,10 +99,12 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
                         alice: {
                             "action": "invite_user",
                             "data": {
-                                "userId": f'testuser{i+1}:{servers[0].server_name}',
+                                "userId": f"testuser{i+1}:{servers[0].server_name}",
                             },
                             "responses": {
-                                "invited": "accept_invite" if i == additional_clients_needed - 1 else f"invite_{i+1}"
+                                "invited": "accept_invite"
+                                if i == additional_clients_needed - 1
+                                else f"invite_{i+1}"
                             },
                         }
                     },
@@ -109,7 +119,9 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
                             "action": "accept_invite",
                             "data": {},
                             "responses": {
-                                "accepted": "verify_message_in_timeline" if i == additional_clients_needed - 1 else f"accept_invite_{i+1}"
+                                "accepted": "verify_message_in_timeline"
+                                if i == additional_clients_needed - 1
+                                else f"accept_invite_{i+1}"
                             },
                         }
                     },
@@ -124,7 +136,9 @@ class InviteUserDecryptPrejoinMessagesMoreClientsTestSuite(
                             "action": "verify_last_message_is_utd",
                             "data": {},
                             "responses": {
-                                "verified": "complete" if i == additional_clients_needed - 1 else f"verify_message_utd_{i+1}"
+                                "verified": "complete"
+                                if i == additional_clients_needed - 1
+                                else f"verify_message_utd_{i+1}"
                             },
                         }
                     },
