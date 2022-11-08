@@ -6,6 +6,9 @@ from trafficlight.objects.client import Client
 from trafficlight.objects.model import Model, ModelState
 from trafficlight.tests.assertions import assertCompleted
 
+# Test Script:
+# CLIENT_COUNT=2 REQUIRES_PROXY=true CYPRESS_BASE_URL="https://develop.element.io" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
+
 
 class VerifyClientOrderTestSuite(trafficlight.tests.TestSuite):
     def __init__(self) -> None:
