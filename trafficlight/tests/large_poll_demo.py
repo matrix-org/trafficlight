@@ -10,7 +10,7 @@ class LargePollTest(Test):
         super().__init__()
         self._client_under_test([ElementWeb(), ElementAndroid()], "alice")
         self._client_under_test([ElementWeb(), ElementAndroid()], "bob")
-        self._server_under_test(Synapse(), "server")
+        self._server_under_test(Synapse(), ["server"])
 
     async def run(self, alice: Client, bob: Client, server: HomeServer) -> None:
         await alice.register(server)
@@ -18,12 +18,10 @@ class LargePollTest(Test):
         await bob.register(server)
         await alice.invite_user("@" + bob.localpart + ":" + server.server_name)
         await bob.accept_invite()
-        await alice.create_poll("Options go here!", ["a","b","c"])
+        await alice.create_poll("Options go here!", ["a", "b", "c"])
 
         # TODO implement this. In the server-side part of the test is fine
         # But make it asyncio-based so it doesn't block the rest of the server's logic.
         # await generate_fake_users_and_respond_to_poll(1000)
         # poll_responses = await alice.verify_poll("Options go here!")
         # assertEquals(len(poll_responses) == 1000)
-
-

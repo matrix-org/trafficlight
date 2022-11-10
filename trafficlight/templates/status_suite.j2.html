@@ -13,17 +13,17 @@ setTimeout(function(){
     <tr><th>Suite</th><th>Waiting</th><th>Success</th><th>Fail</th><th>Err</th></tr>
     </thead>
     <tbody>
-    <tr><td class="w-100">{{ testsuite.name() }}</td><td>{{ testsuite.skipped() }}</td><td>{{ testsuite.successes() }}</td><td>{{ testsuite.failures() }}</td><td>{{ testsuite.errors() }}</td></tr>
+    <tr><td class="w-100">{{ testsuite.name() }}</td><td>{{ testsuite.waiting() }}</td><td>{{ testsuite.running() }}</td><td>{{ testsuite.successes() }}</td><td>{{ testsuite.failures() }}</td><td>{{ testsuite.errors() }}</td></tr>
     </tbody>
   </table>
 
       <table class="table table-sm">
         <thead class="thead-light">
-        <tr><th>Case</th><th>UUID</th><th>Running</th></tr>
+        <tr><th>Case</th><th>GUID</th><th>Running</th></tr>
         </thead>
         <tbody>
         {% for test in testsuite.test_cases %}
-          <tr> <td><a href='{{ url_for("status.testcase_status", uuid = test.uuid) }}'>{{ test.description }}</a></td><td>{{ test.uuid }}</td><td>{{ test.status }}</td></tr>
+          <tr> <td><a href='{{ url_for("status.testcase_status", guid = test.guid) }}'>{{ test.description() }}</a></td><td>{{ test.guid }}</td><td>{{ test.state }}</td></tr>
         {% endfor %}
         </tbody>
       </table>

@@ -11,29 +11,29 @@ class ServerType(object):
         return self.name()
 
     async def create(
-        self, model_id: str, homerunner: HomerunnerClient
+        self, test_case_id: str, homerunner: HomerunnerClient
     ) -> List[HomeServer]:
         pass
 
 
 class Synapse(ServerType):
     async def create(
-        self, model_id: str, homerunner: HomerunnerClient
+        self, test_case_id: str, homerunner: HomerunnerClient
     ) -> List[HomeServer]:
-        return await homerunner.create(model_id, ["complement-synapse"])
+        return await homerunner.create(test_case_id, ["complement-synapse"])
 
 
 class Dendrite(ServerType):
     async def create(
-        self, model_id: str, homerunner: HomerunnerClient
+        self, test_case_id: str, homerunner: HomerunnerClient
     ) -> List[HomeServer]:
-        return await homerunner.create(model_id, ["complement-dendrite"])
+        return await homerunner.create(test_case_id, ["complement-dendrite"])
 
 
 class MixedFederation(ServerType):
     async def create(
-        self, model_id: str, homerunner: HomerunnerClient
+        self, test_case_id: str, homerunner: HomerunnerClient
     ) -> List[HomeServer]:
         return await homerunner.create(
-            model_id, ["complement-dendrite", "complement-synapse"]
+            test_case_id, ["complement-dendrite", "complement-synapse"]
         )

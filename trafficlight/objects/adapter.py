@@ -27,7 +27,9 @@ class Adapter(object):
         self.completed = True
 
     def poll(self, update_last_polled: bool = True) -> Dict[str, Any]:
-        if self.client is None:
+        if self.completed:
+            action = {"action": "exit", "responses": []}
+        elif self.client is None:
             # No model has been allocated yet; idle.
             action = {"action": "idle", "responses": [], "data": {"delay": 30000}}
         else:
@@ -61,8 +63,8 @@ class Adapter(object):
                 self.guid,
             )
             return
-
-        self.client._give_poll_exception(error)
+        exception = Exception(f"{error} from adapter")
+        self.client._give_poll_exception(exception)
 
         if update_last_responded:
             self.last_responded = datetime.now()

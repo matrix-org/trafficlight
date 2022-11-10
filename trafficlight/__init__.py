@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
@@ -25,8 +24,6 @@ from trafficlight.tests import load_tests
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
-
-logging.getLogger("transitions").setLevel(logging.ERROR)
 
 
 # Format in "2 hours" / "2 minutes" etc.
@@ -69,8 +66,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
         for test_case in test_cases:
             logger.info(f" - { test_case }")
 
-        guid = str(uuid.uuid4())
-        test_suite = TestSuite(guid, test, test_cases)
+        test_suite = TestSuite(test, test_cases)
         add_testsuite(test_suite)
 
     from trafficlight.http import adapter, root, status

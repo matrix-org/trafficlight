@@ -35,7 +35,7 @@ class AlternativeTestExample(Test):
         self._client_under_test([ElementWeb(), ElementAndroid()], "alice")
         self._client_under_test([ElementWeb(), ElementAndroid()], "bob")
         # Nearly there ..
-        self._server_under_test(Synapse(), "server")
+        self._server_under_test(Synapse(), ["server"])
 
     async def run(self, alice: Client, bob: Client, server: HomeServer) -> None:
         """

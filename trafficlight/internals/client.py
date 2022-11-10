@@ -24,7 +24,7 @@ class Client:
         self.test_case = test_case
         # Client login details
         self.localpart = "user_" + name
-        self.password = "pass_" + name
+        self.password = "pass_bibble_bobble_" + name
 
         self.current_poll_response = DEFAULT_POLL_RESPONSE
         self.current_poll_future = None

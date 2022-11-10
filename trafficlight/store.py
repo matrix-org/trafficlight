@@ -41,7 +41,7 @@ def get_tests() -> List[TestCase]:
     return _testcases
 
 
-def get_test(guid: str) -> Optional[TestCase]:
+def get_test_case(guid: str) -> Optional[TestCase]:
     for test in _testcases:
         if str(test.guid) == str(guid):
             return test

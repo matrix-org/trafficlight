@@ -1,4 +1,3 @@
-import uuid
 from itertools import product
 from typing import Dict, List
 
@@ -56,14 +55,12 @@ class Test(object):
 
         for client_types in client_type_product:
 
-            guid = str(uuid.uuid4())
             remapped_client_types = {}
             for i in range(0, len(client_var_names)):
                 remapped_client_types[client_var_names[i]] = client_types[i]
 
             test_cases.append(
                 TestCase(
-                    guid,
                     self,
                     self.server_type,
                     self.server_names,

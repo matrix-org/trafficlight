@@ -43,12 +43,10 @@ async def check_for_new_tests() -> None:
                 logger.info("Starting test %s", test_case)
                 await test_case.run(adapters_required, homerunner)
                 return
-            else:
-                logger.debug(
-                    "Not enough client_types to run test %s (have %s)",
-                    test_case,
-                    [str(item) for item in available_adapters],
-                )
+    logger.debug(
+        "Not enough client_types to run any test(have %s)",
+        [str(item) for item in available_adapters],
+    )
 
 
 @bp.route("/<string:adapter_uuid>/register", methods=["POST"])
@@ -78,7 +76,7 @@ async def register(adapter_uuid: str):  # type: ignore
 async def poll(uuid: str):  # type: ignore
     adapter = get_adapter(uuid)
     if adapter is None:
-        # Very bad situation; client belives it's registered; server has no record
+        # Very bad situation; client believes it's registered; server has no record
         # do not update server state; tell client to exit and restart with new UUID.
         return {"action": "exit", "responses": []}
 

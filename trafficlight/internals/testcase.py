@@ -1,3 +1,4 @@
+import hashlib
 import logging
 from typing import Dict, List, Optional
 
@@ -13,14 +14,17 @@ logger = logging.getLogger(__name__)
 class TestCase:
     def __init__(
         self,
-        guid: str,
         test,
         server_type: ServerType,
         server_names: List[str],
         client_types: Dict[str, ClientType],
     ) -> None:
         self.last_exception = None
-        self.guid = guid
+        self.guid = hashlib.md5(
+            f"TestCase{test.name()}{server_type.name()}{server_names}{client_types}".encode(
+                "utf-8"
+            )
+        ).hexdigest()
         self.client_types = client_types
         self.server_type = server_type
         self.server_names = server_names
@@ -28,9 +32,13 @@ class TestCase:
         self.state = "waiting"
         self.servers: List[HomeServer] = []
         self.files: Dict[str, str] = {}
+        self.adapters: Dict[str, Adapter] = None
 
     def __repr__(self):
         return f"{self.test.name()} ({self.server_type} {self.client_types})"
+
+    def description(self) -> str:
+        return f"{self.server_type} {self.client_types}"
 
     def allocate_adapters(
         self, available_adapters: List[Adapter]
@@ -53,24 +61,26 @@ class TestCase:
         return used_adapters
 
     async def run(self, adapters: Dict[str, Adapter], homerunner: HomerunnerClient):
-
+        self.state = "preparing"
+        self.adapters = adapters
         # turn adapters into clients
         kwargs = {}
         for (client_var_name, adapter) in adapters.items():
-            client = Client(f"{self.test.name()} {client_var_name}", self)
+            client = Client(client_var_name, self)
             adapter.set_client(client)
             kwargs[client_var_name] = client
 
         homeservers = await self.server_type.create(self.guid, homerunner)
-        for i in range(0, self.server_names):
+        for i in range(0, len(self.server_names)):
             kwargs[self.server_names[i]] = homeservers[i]
 
         # This may well bail out entirely if the configuration of the test is incorrect
         # But this is a badly written test so is actually OK.
         try:
             logger.info(f"Test setup. Beginning run with kwargs {kwargs}")
+            self.state = "running"
             await self.test.run(**kwargs)  # type: ignore
-            self.state = "done"
+            self.state = "success"
         except Exception as e:
             self.state = "failed"
             self.last_exception = e

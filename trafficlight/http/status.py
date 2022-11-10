@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import io
 import logging
 from typing import List
 
@@ -21,17 +20,11 @@ from quart import Blueprint, abort, render_template, request, send_file
 from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import (
     get_adapters,
-    get_test,
+    get_test_case,
     get_tests,
     get_testsuite,
     get_testsuites,
 )
-
-logging.basicConfig(level=logging.DEBUG)
-# Set transitions' log level to INFO; DEBUG messages will be omitted
-
-# logging.getLogger('transitions').setLevel(logging.ERROR)
-# logging.getLogger('wekzeug').setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +35,7 @@ bp = Blueprint("status", __name__, url_prefix="/status")
 async def index():  # type: ignore
     return await render_template(
         "status_index.j2.html",
-        clients=get_adapters(),
+        adapters=get_adapters(),
         tests=get_tests(),
         test_suites=get_testsuites(),
     )
@@ -68,45 +61,21 @@ async def as_junit():  # type: ignore
     )
 
 
-@bp.route("/<string:uuid>/context.png", methods=["GET"])
-async def test_context_image(uuid: str):  # type: ignore
-    test = get_test(uuid)
-    if test is not None and test.model is not None:
-        b = io.BytesIO()
-        test.model.render_local_region(b)
-        b.seek(0)
-        return await send_file(b, mimetype="image/png")
-    else:
-        return await send_file("trafficlight/static/no_model.png", mimetype="image/png")
-
-
-@bp.route("/<string:uuid>/statemachine.png", methods=["GET"])
-async def test_image(uuid: str):  # type: ignore
-    test = get_test(uuid)
-    if test is not None and test.model is not None:
-        b = io.BytesIO()
-        test.model.render_whole_graph(b)
-        b.seek(0)
-        return await send_file(b, mimetype="image/png")
-    else:
-        return await send_file("trafficlight/static/no_model.png", mimetype="image/png")
-
-
-@bp.route("/<string:uuid>/files/<string:name>", methods=["GET"])
-async def test_file(uuid: str, name: str):  # type: ignore
-    test = get_test(uuid)
-    logger.info("Getting ${uuid} ${name}")
-    if name in test.model.files:
-        path = test.model.files[name]
+@bp.route("/<string:guid>/files/<string:name>", methods=["GET"])
+async def test_file(guid: str, name: str):  # type: ignore
+    test = get_test_case(guid)
+    logger.info("Getting ${guid} ${name}")
+    if name in test.files:
+        path = test.files[name]
         return await send_file(path)
     else:
         abort(404)
 
 
-@bp.route("/<string:uuid>/suitestatus", methods=["GET"])
-async def testsuite_status(uuid: str):  # type: ignore
+@bp.route("/<string:guid>/suitestatus", methods=["GET"])
+async def testsuite_status(guid: str):  # type: ignore
     refresh = request.args.get("refresh", default=0, type=int)
-    testsuite = get_testsuite(uuid)
+    testsuite = get_testsuite(guid)
     if testsuite is not None:
         return await render_template(
             "status_suite.j2.html", testsuite=testsuite, refresh=refresh
@@ -115,11 +84,11 @@ async def testsuite_status(uuid: str):  # type: ignore
         abort(404)
 
 
-@bp.route("/<string:uuid>/status", methods=["GET"])
-async def testcase_status(uuid: str):  # type: ignore
+@bp.route("/<string:guid>/status", methods=["GET"])
+async def testcase_status(guid: str):  # type: ignore
     refresh = request.args.get("refresh", default=0, type=int)
-    logger.info("Finding test %s", uuid)
-    test = get_test(uuid)
+    logger.info("Finding test %s", guid)
+    test = get_test_case(guid)
     if test is not None:
         return await render_template("status_case.j2.html", test=test, refresh=refresh)
     else:

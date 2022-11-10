@@ -58,14 +58,14 @@ class HomerunnerClient(object):
             "BaseImageURI": base_image_uri,
         }
 
-    async def create(self, model_id: str, images: List[str]) -> List[HomeServer]:
+    async def create(self, test_case_id: str, images: List[str]) -> List[HomeServer]:
         create_url = self.homerunner_url + "/create"
         homeservers = []
         for image in images:
             homeservers.append(self._generate_homeserver(image))
         data = {
             "base_image_uri": "INVALID_NAME",  # uppercase is not a valid docker repository name, so this will cause a complement error.
-            "blueprint": {"Name": model_id, "Homeservers": homeservers},
+            "blueprint": {"Name": test_case_id, "Homeservers": homeservers},
         }
         logger.info(data)
         async with aiohttp.ClientSession() as session:
