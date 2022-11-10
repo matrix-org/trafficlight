@@ -22,7 +22,8 @@ class Test(object):
     """
 
     def __init__(self):
-        self.servers: Dict[str, ServerType] = {}
+        self.server_type: ServerType = None
+        self.server_names: List[str] = []
         self.clients: Dict[str, List[ClientType]] = {}
 
     def __str__(self):
@@ -31,10 +32,11 @@ class Test(object):
     def name(self):
         return self.__class__.__name__
 
-    def _server_under_test(self, name: str, server_type: ServerType):
-        self.servers[name] = server_type
+    def _server_under_test(self, server_type: ServerType, names: List[str]):
+        self.server_type = server_type
+        self.server_names = names
 
-    def _client_under_test(self, name: str, client_types: List[ClientType]):
+    def _client_under_test(self, client_types: List[ClientType], name: str):
         self.clients[name] = client_types
 
     def _network_proxy(self, name: str):
@@ -52,10 +54,6 @@ class Test(object):
 
         client_type_product = list(product(*all_client_types))
 
-        # repeat above for server product, if required
-        if len(self.servers.keys()) > 1:
-            raise Exception("Too many server_types")
-
         for client_types in client_type_product:
 
             guid = str(uuid.uuid4())
@@ -67,7 +65,8 @@ class Test(object):
                 TestCase(
                     guid,
                     self,
-                    self.servers,
+                    self.server_type,
+                    self.server_names,
                     remapped_client_types,
                 )
             )

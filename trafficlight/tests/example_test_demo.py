@@ -32,10 +32,10 @@ class AlternativeTestExample(Test):
 
     def __init__(self):
         super().__init__()
-        self._client_under_test("alice", [ElementWeb(), ElementAndroid()])
-        self._client_under_test("bob", [ElementWeb(), ElementAndroid()])
+        self._client_under_test([ElementWeb(), ElementAndroid()], "alice")
+        self._client_under_test([ElementWeb(), ElementAndroid()], "bob")
         # Nearly there ..
-        self._server_under_test("server", Synapse())
+        self._server_under_test(Synapse(), "server")
 
     async def run(self, alice: Client, bob: Client, server: HomeServer) -> None:
         """

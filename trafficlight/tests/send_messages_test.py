@@ -8,8 +8,8 @@ from trafficlight.server_types import Synapse
 class SendMessagesTest(Test):
     def __init__(self):
         super().__init__()
-        self._client_under_test("client_one", [ElementWeb(), ElementAndroid()])
-        self._server_under_test("server", Synapse())
+        self._client_under_test([ElementWeb(), ElementAndroid()], "client_one")
+        self._server_under_test(Synapse(), "server")
 
     async def run(self, client_one: Client, server: HomeServer) -> None:
 

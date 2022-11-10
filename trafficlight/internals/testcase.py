@@ -15,20 +15,22 @@ class TestCase:
         self,
         guid: str,
         test,
-        server_types: Dict[str, ServerType],
+        server_type: ServerType,
+        server_names: List[str],
         client_types: Dict[str, ClientType],
     ) -> None:
         self.last_exception = None
         self.guid = guid
         self.client_types = client_types
-        self.server_types = server_types
+        self.server_type = server_type
+        self.server_names = server_names
         self.test = test
         self.state = "waiting"
         self.servers: List[HomeServer] = []
         self.files: Dict[str, str] = {}
 
     def __repr__(self):
-        return f"{self.test.name()} ({self.server_types} {self.client_types})"
+        return f"{self.test.name()} ({self.server_type} {self.client_types})"
 
     def allocate_adapters(
         self, available_adapters: List[Adapter]
@@ -59,13 +61,9 @@ class TestCase:
             adapter.set_client(client)
             kwargs[client_var_name] = client
 
-        for (server_var_name, server_type) in self.server_types.items():
-            homeservers = await server_type.create(self.guid, homerunner)
-            if len(homeservers) > 1:
-                raise Exception("Too many homeservers generated (for now)")
-            kwargs[server_var_name] = homeservers[0]
-
-        # create network_proxy if needed # TODO leo not seen this CRAZY SHIT yet
+        homeservers = await self.server_type.create(self.guid, homerunner)
+        for i in range(0, self.server_names):
+            kwargs[self.server_names[i]] = homeservers[i]
 
         # This may well bail out entirely if the configuration of the test is incorrect
         # But this is a badly written test so is actually OK.
