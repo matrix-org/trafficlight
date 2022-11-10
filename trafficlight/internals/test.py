@@ -2,7 +2,7 @@ import uuid
 from itertools import product
 from typing import Dict, List
 
-from trafficlight.client_types import ClientType
+from trafficlight.client_types import ClientType, NetworkProxy
 from trafficlight.internals.testcase import TestCase
 from trafficlight.server_types import ServerType
 
@@ -36,6 +36,9 @@ class Test(object):
 
     def _client_under_test(self, name: str, client_types: List[ClientType]):
         self.clients[name] = client_types
+
+    def _network_proxy(self, name: str):
+        self.clients[name] = List[NetworkProxy()]
 
     def generate_test_cases(self) -> List[TestCase]:
         test_cases: List[TestCase] = []

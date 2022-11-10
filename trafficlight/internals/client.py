@@ -147,3 +147,23 @@ class Client:
         await self._perform_action(
             {"action": "verify_message_in_timeline", "data": {"message": message}}
         )
+
+    async def proxy_to(self, cs_api: str) -> None:
+        await self._perform_action(
+            {"action": "proxy_to", "data": {"proxyToSet": cs_api}}
+        )
+
+    async def wait_until_endpoint_accessed(self, endpoint: str) -> None:
+        await self._perform_action(
+            {"action": "waitUntilEndpointAccessed", "data": {"endpoint": endpoint}}
+        )
+
+    async def enable_endpoint(self, endpoint: str) -> None:
+        await self._perform_action(
+            {"action": "enableEndpoint", "data": {"endpoint": endpoint}}
+        )
+
+    async def disable_endpoint(self, endpoint: str) -> None:
+        await self._perform_action(
+            {"action": "disableEndpoint", "data": {"endpoint": endpoint}}
+        )
