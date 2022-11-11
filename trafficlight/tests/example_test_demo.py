@@ -3,7 +3,7 @@ from typing import List
 
 from trafficlight.client_types import ElementAndroid, ElementWeb
 from trafficlight.homerunner import HomeServer
-from trafficlight.internals.client import Client
+from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
 from trafficlight.server_types import Synapse
 
@@ -37,7 +37,7 @@ class AlternativeTestExample(Test):
         # Nearly there ..
         self._server_under_test(Synapse(), ["server"])
 
-    async def run(self, alice: Client, bob: Client, server: HomeServer) -> None:
+    async def run(self, alice: MatrixClient, bob: MatrixClient, server: HomeServer) -> None:
         """
         Run: called after an adapter is found for each client and a homeserver instance has been created.
         @return:

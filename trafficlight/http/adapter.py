@@ -19,7 +19,7 @@ from quart import Blueprint, current_app, request
 from werkzeug.utils import secure_filename
 
 from trafficlight.homerunner import HomerunnerClient
-from trafficlight.objects.adapter import Adapter
+from trafficlight.internals.adapter import Adapter
 from trafficlight.store import add_adapter, get_adapter, get_adapters, get_tests
 
 # Set transitions' log level to INFO; DEBUG messages will be omitted

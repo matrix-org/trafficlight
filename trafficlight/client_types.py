@@ -1,4 +1,4 @@
-from trafficlight.objects.adapter import Adapter
+from trafficlight.internals.adapter import Adapter
 
 
 class ClientType(object):

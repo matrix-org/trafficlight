@@ -39,7 +39,7 @@ class Test(object):
         self.clients[name] = client_types
 
     def _network_proxy(self, name: str):
-        self.clients[name] = List[NetworkProxy()]
+        self.clients[name] = [NetworkProxy()]
 
     def generate_test_cases(self) -> List[TestCase]:
         test_cases: List[TestCase] = []

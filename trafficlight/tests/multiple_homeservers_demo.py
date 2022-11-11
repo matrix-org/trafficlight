@@ -1,6 +1,8 @@
+import asyncio
+
 from trafficlight.client_types import ElementWeb
 from trafficlight.homerunner import HomeServer
-from trafficlight.internals.client import Client
+from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
 from trafficlight.server_types import MixedFederation
 
@@ -14,18 +16,18 @@ class SendMessagesAcrossFederationTest(Test):
 
     async def run(
         self,
-        client_one: Client,
-        client_two: Client,
+        client_one: MatrixClient,
+        client_two: MatrixClient,
         server: HomeServer,
         second_server: HomeServer,
     ) -> None:
 
-        await client_one.register(server)
+        await asyncio.gather(client_one.register(server),client_two.register(second_server))
+
         await client_one.create_room("little test room")
         await client_one.send_message("hi there!")
-        await client_two.register(second_server)
         await client_one.invite_user(
-            "@" + client_two.localpart + ":" + second_server.server_name
+            client_two.localpart + ":" + second_server.server_name
         )
         await client_two.accept_invite()
         await client_two.verify_message_in_timeline("hi there!")

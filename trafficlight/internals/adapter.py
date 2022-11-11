@@ -20,6 +20,9 @@ class Adapter(object):
         # updates should be passed to.
         self.client: Optional[Client] = None
 
+    def __repr__(self):
+        return f"{self.guid} {self.registration}"
+
     def available(self) -> bool:
         return self.client is None
 

@@ -2,10 +2,10 @@ import hashlib
 import logging
 from typing import Dict, List, Optional
 
-from trafficlight.client_types import ClientType
+from trafficlight.client_types import ClientType, NetworkProxy
 from trafficlight.homerunner import HomerunnerClient, HomeServer
-from trafficlight.internals.client import Client
-from trafficlight.objects.adapter import Adapter
+from trafficlight.internals.client import MatrixClient, NetworkProxyClient
+from trafficlight.internals.adapter import Adapter
 from trafficlight.server_types import ServerType
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,10 @@ class TestCase:
         # turn adapters into clients
         kwargs = {}
         for (client_var_name, adapter) in adapters.items():
-            client = Client(client_var_name, self)
+            if adapter.registration["type"] == "network-proxy":
+                client = NetworkProxyClient(client_var_name, self, adapter.registration)
+            else:
+                client = MatrixClient(client_var_name, self, adapter.registration)
             adapter.set_client(client)
             kwargs[client_var_name] = client
 

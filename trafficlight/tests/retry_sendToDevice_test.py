@@ -2,12 +2,12 @@ import asyncio
 
 from trafficlight.client_types import ElementWeb
 from trafficlight.homerunner import HomeServer
-from trafficlight.internals.client import Client
+from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.test import Test
 from trafficlight.server_types import Synapse
 
 
-class SendMessagesTest(Test):
+class RetrySendToDeviceTest(Test):
     def __init__(self):
         super().__init__()
         self._client_under_test([ElementWeb()], "alice")
@@ -16,10 +16,11 @@ class SendMessagesTest(Test):
         self._network_proxy("proxy")
 
     async def run(
-        self, alice: Client, bob: Client, server: HomeServer, network_proxy: Client
+        self, alice: MatrixClient, bob: MatrixClient, server: HomeServer, network_proxy: NetworkProxyClient
     ) -> None:
-        await network_proxy.proxy_to(server.cs_api)
-        await alice.register(server) # should be proxy
+        await network_proxy.proxy_to(server)
+        await alice.register(network_proxy)
+
         await alice.create_room("little test room")
         await bob.register(server)
         await alice.invite_user("@" + bob.localpart + ":" + server.server_name)

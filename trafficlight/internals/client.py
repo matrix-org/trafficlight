@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from trafficlight.homerunner import HomeServer
 
@@ -19,15 +19,14 @@ class User:
 
 
 class Client:
-    def __init__(self, name: str, test_case):
+    def __init__(self, name: str, test_case, registration: Dict[str, Any]):
         self.name = name
         self.test_case = test_case
-        # Client login details
-        self.localpart = "user_" + name
-        self.password = "pass_bibble_bobble_" + name
+        self.registration = registration
 
         self.current_poll_response = DEFAULT_POLL_RESPONSE
         self.current_poll_future = None
+
 
     def __repr__(self):
         return self.name
@@ -64,9 +63,47 @@ class Client:
         self.current_poll_response = DEFAULT_POLL_RESPONSE
         return rsp
 
-    # exposed to the test to act
-    async def register(self, homeserver: HomeServer) -> None:
 
+class NetworkProxyClient(Client):
+    def __init__(self, name: str, test_case, registration: Dict[str, Any]):
+        super().__init__(name, test_case, registration)
+        self.server: HomeServer = None
+        # save the API endpoint
+        self.cs_api = registration["endpoint"]
+        self.server_name: str = None
+
+    async def proxy_to(self, server: HomeServer) -> None:
+        self.server_name = server.server_name
+        cs_api = server.cs_api
+        await self._perform_action(
+            {"action": "proxyTo", "data": {"proxyToSet": cs_api}}
+        )
+
+    async def wait_until_endpoint_accessed(self, endpoint: str) -> None:
+        await self._perform_action(
+            {"action": "waitUntilEndpointAccessed", "data": {"endpoint": endpoint}}
+        )
+
+    async def enable_endpoint(self, endpoint: str) -> None:
+        await self._perform_action(
+            {"action": "enableEndpoint", "data": {"endpoint": endpoint}}
+        )
+
+    async def disable_endpoint(self, endpoint: str) -> None:
+        await self._perform_action(
+            {"action": "disableEndpoint", "data": {"endpoint": endpoint}}
+        )
+
+
+class MatrixClient(Client):
+    def __init__(self, name: str, test_case, registration: Dict[str, Any]):
+        super().__init__(name, test_case, registration)
+        # Client login details
+        self.localpart = "user_" + name
+        self.password = "pass_bibble_bobble_" + name
+
+    # exposed to the test to act
+    async def register(self, homeserver: Union[HomeServer, NetworkProxyClient]) -> None:
         url = homeserver.cs_api
         docker_api = url.replace("localhost", "10.0.2.2")
 
@@ -84,7 +121,7 @@ class Client:
             }
         )
 
-    async def login(self, homeserver: HomeServer, key_backup_passphrase: str = None) -> None:
+    async def login(self, homeserver: Union[HomeServer, NetworkProxyClient], key_backup_passphrase: str = None) -> None:
         url = homeserver.cs_api
         docker_api = url.replace("localhost", "10.0.2.2")
 
@@ -161,6 +198,11 @@ class Client:
             {"action": "enable_dehydrated_device", "data": {"key_backup_passphrase": key_backup_passphrase}}
         )
 
+    async def enable_key_backup(self, key_backup_passphrase: str) -> None:
+        await self._perform_action(
+            {"action": "enable_key_backup", "data": {"key_backup_passphrase": key_backup_passphrase}}
+        )
+
     async def enter_room(self, room_name: str) -> None:
         await self._perform_action(
             {"action": "enter-room", "data": {"name": room_name}}
@@ -169,24 +211,4 @@ class Client:
     async def advance_clock(self, duration: int) -> None:
         await self._perform_action(
             {"action": "advance_clock", "data": {"milliseconds": duration}}
-        )
-
-    async def proxy_to(self, cs_api: str) -> None:
-        await self._perform_action(
-            {"action": "proxy_to", "data": {"proxyToSet": cs_api}}
-        )
-
-    async def wait_until_endpoint_accessed(self, endpoint: str) -> None:
-        await self._perform_action(
-            {"action": "waitUntilEndpointAccessed", "data": {"endpoint": endpoint}}
-        )
-
-    async def enable_endpoint(self, endpoint: str) -> None:
-        await self._perform_action(
-            {"action": "enableEndpoint", "data": {"endpoint": endpoint}}
-        )
-
-    async def disable_endpoint(self, endpoint: str) -> None:
-        await self._perform_action(
-            {"action": "disableEndpoint", "data": {"endpoint": endpoint}}
         )

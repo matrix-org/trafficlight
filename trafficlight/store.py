@@ -13,28 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from trafficlight.internals.testcase import TestCase
 from trafficlight.internals.testsuite import TestSuite
-from trafficlight.objects.adapter import Adapter
+from trafficlight.internals.adapter import Adapter
 
 logger = logging.getLogger(__name__)
 
 _adapters: List[Adapter] = []
-_testsuites: List[TestSuite] = []
+
+_testsuites: Dict[str, TestSuite] = {}
+
 _testcases: List[TestCase] = []
 
 
 def get_testsuites() -> List[TestSuite]:
-    return _testsuites
+    return _testsuites.values()
 
 
 def get_testsuite(guid: str) -> Optional[TestSuite]:
-    for testsuite in _testsuites:
-        if testsuite.guid == guid:
-            return testsuite
-    return None
+    return _testsuites.get(guid)
 
 
 def get_tests() -> List[TestCase]:
@@ -49,12 +48,21 @@ def get_test_case(guid: str) -> Optional[TestCase]:
 
 
 def add_testsuite(testsuite: TestSuite) -> None:
-    _testsuites.append(testsuite)
+    if testsuite.guid in _testsuites.keys():
+        raise Exception("Unable to add test suite - duplicate GUID")
+
+    _testsuites[testsuite.guid] = testsuite
     _testcases.extend(testsuite.test_cases or [])
 
 
-def get_adapters() -> List[Adapter]:
-    return _adapters
+def get_adapters(completed: bool = None) -> List[Adapter]:
+    if completed is None:
+        return _adapters
+
+    if completed:
+        return filter(lambda x: x.completed, _adapters)
+    else:
+        return filter(lambda x: not x.completed, _adapters)
 
 
 def get_adapter(guid: str) -> Optional[Adapter]:
