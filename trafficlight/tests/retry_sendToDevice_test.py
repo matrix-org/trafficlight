@@ -19,7 +19,7 @@ class SendMessagesTest(Test):
         self, alice: Client, bob: Client, server: HomeServer, network_proxy: Client
     ) -> None:
         await network_proxy.proxy_to(server.cs_api)
-        await alice.register(server)
+        await alice.register(server) # should be proxy
         await alice.create_room("little test room")
         await bob.register(server)
         await alice.invite_user("@" + bob.localpart + ":" + server.server_name)

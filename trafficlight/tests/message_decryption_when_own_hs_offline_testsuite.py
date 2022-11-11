@@ -1,238 +1,40 @@
-from typing import List, Optional
+import asyncio
 
-import trafficlight.tests
-from trafficlight.homerunner import HomeserverConfig
-from trafficlight.objects.client import Client
-from trafficlight.objects.model import Model, ModelState
-from trafficlight.tests.assertions import assertCompleted
+from trafficlight.client_types import ElementAndroid, ElementWeb
+from trafficlight.homerunner import HomeServer
+from trafficlight.internals.client import Client
+from trafficlight.internals.test import Test
+from trafficlight.server_types import Synapse
 
 
-class TestProxyTestSuite(trafficlight.tests.TestSuite):
-    def __init__(self) -> None:
-        super(TestProxyTestSuite, self).__init__()
-        self.clients_needed = 3
-        self.network_proxy_needed = True
-        self.servers_needed = 1
+class DehydratedDeviceTest(Test):
+    def __init__(self):
+        super().__init__()
+        self._client_under_test([ElementWeb()], "alice")
+        self._client_under_test([ElementWeb()], "bob_one")
+        self._client_under_test([ElementWeb()], "bob_two")
+        self._network_proxy("network_proxy")
+        self._server_under_test(Synapse(), ["server"])
 
-    def validate_model(self, model: Model) -> None:
-        # NB: Clients do not handle this yet
-        assertCompleted(model)
+    async def run(self, alice: Client, bob_one: Client, bob_two: Client, network_proxy: Client, server: HomeServer) -> None:
 
-        # NB: Better namespacing should be in place.
+        # Overwrite generated password in bob_two with bob_one
+        bob_two.password = bob_one.password
+        bob_two.localpart = bob_one.localpart
 
-        # NB: Alice and Bob are names, yes, but we don't know them in this test.
-        # Perhaps get client passed in instead.
+        await network_proxy.proxy_to(server.cs_api)
 
-    def generate_model(
-        self,
-        clients: List[Client],
-        servers: List[HomeserverConfig],
-        network_proxy: Optional[Client],
-    ) -> Model:
-        alice = clients[0].name
-        bob_device_1 = clients[1].name
-        bob_device_2 = clients[2].name
+        await alice.register(server) # should be proxy
 
-        homeserver = servers[0]
-
-        # TODO: move into neat user-generation tool
-        import uuid as guid
-
-        docker_api = homeserver.cs_api.replace("localhost", "10.0.2.2")
-
-        # Alice will talk to the hs through the proxy
-        proxy_address = network_proxy.registration["endpoint"]
-        docker_proxy_api = proxy_address.replace("localhost", "10.0.2.2")
-
-        login_data_alice = {
-            "username": "alice" + str(guid.uuid4()),
-            "password": "bubblebobblebabble",
-            "homeserver_url": {
-                "local_docker": docker_proxy_api,  # hmm... todo this...
-                "local": proxy_address,
-            },
-        }
-        login_data_bob = {
-            "username": "bob_" + str(guid.uuid4()),
-            "password": "bubblebobblebabble",
-            "homeserver_url": {
-                "local_docker": docker_api,  # hmm... todo this...
-                "local": homeserver.cs_api,
-            },
-        }
-        network_proxy_name = network_proxy.name
-        # maybe factor out the above, maybe not...
-        model = Model(
-            [
-                ModelState(
-                    "create_proxy",
-                    {
-                        network_proxy_name: {
-                            "action": "proxyTo",
-                            "data": {
-                                "url": homeserver.cs_api,
-                            },
-                            "responses": {"proxyToSet": "register_a"},
-                        },
-                    },
-                ),
-                ModelState(
-                    "register_a",
-                    {
-                        alice: {
-                            "action": "register",
-                            "data": login_data_alice,
-                            "responses": {"registered": "register_b"},
-                        },
-                    },
-                ),
-                ModelState(
-                    "register_b",
-                    {
-                        bob_device_1: {
-                            "action": "register",
-                            "data": login_data_bob,
-                            "responses": {"registered": "create_room"},
-                        },
-                    },
-                ),
-                ModelState(
-                    "create_room",
-                    {
-                        alice: {
-                            "action": "create_room",
-                            "data": {"name": "little test room"},
-                            "responses": {"room_created": "invite_user"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "invite_user",
-                    {
-                        alice: {
-                            "action": "invite_user",
-                            "data": {
-                                "userId": f'{login_data_bob["username"]}:{servers[0].server_name}'
-                            },
-                            "responses": {"invited": "accept_invite"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "accept_invite",
-                    {
-                        bob_device_1: {
-                            "action": "accept_invite",
-                            "responses": {"accepted": "block_endpoint"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "block_endpoint",
-                    {
-                        network_proxy_name: {
-                            "action": "disableEndpoint",
-                            "data": {
-                                "endpoint": "/_matrix/client/r0/sync",
-                            },
-                            "responses": {"endpointDisabled": "bob_login_again"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "bob_login_again",
-                    {
-                        bob_device_2: {
-                            "action": "login",
-                            "data": login_data_bob,
-                            "responses": {"loggedin": "bob_opens_room"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "bob_opens_room",
-                    {
-                        bob_device_2: {
-                            "action": "open-room",
-                            "data": {"name": "little test room"},
-                            "responses": {"room-opened": "send_message"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "send_message",
-                    {
-                        alice: {
-                            "action": "send_message",
-                            "data": {"message": "A random message appears!"},
-                            "responses": {"message_sent": "enable_endpoint"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "enable_endpoint",
-                    {
-                        network_proxy_name: {
-                            "action": "enableEndpoint",
-                            "data": {
-                                "endpoint": "/_matrix/client/r0/sync",
-                            },
-                            "responses": {
-                                "endpointEnabled": "Wait_for_keys_to_come_in"
-                            },
-                        }
-                    },
-                ),
-                ModelState(
-                    "Wait_for_keys_to_come_in",
-                    {
-                        bob_device_2: {
-                            "action": "wait",
-                            "data": {},
-                            "responses": {"wait_over": "verify_message_in_timeline_1"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "verify_message_in_timeline_1",
-                    {
-                        bob_device_1: {
-                            "action": "verify_message_in_timeline",
-                            "data": {"message": "A random message appears!"},
-                            "responses": {"verified": "verify_message_in_timeline_2"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "verify_message_in_timeline_2",
-                    {
-                        bob_device_2: {
-                            "action": "verify_message_in_timeline",
-                            "data": {"message": "A random message appears!"},
-                            "responses": {"verified": "complete"},
-                        }
-                    },
-                ),
-                ModelState(
-                    "complete",
-                    {
-                        alice: {
-                            "action": "exit",
-                            "responses": {},
-                        },
-                        bob_device_1: {
-                            "action": "exit",
-                            "responses": {},
-                        },
-                        bob_device_2: {
-                            "action": "exit",
-                            "responses": {},
-                        },
-                    },
-                ),
-            ],
-            "create_proxy",
-        )
-        model.calculate_transitions()
-
-        return model
+        await bob_one.register(server) # should be server
+        await alice.create_room("little test room")
+        await alice.invite_user(f'@{bob_one.localpart}:{server.server_name}')
+        await bob_one.accept_invite()
+        await network_proxy.disable_endpoint("/_matrix/client/r0/sync")
+        await bob_two.login(server)
+        await bob_two.enter_room("little test room")
+        await alice.send_message("A random message appears!")
+        await network_proxy.enable_endpoint("/_matrix/client/r0/sync")
+        await asyncio.sleep(5000)
+        await asyncio.gather(bob_one.verify_message_in_timeline("A random message appears!"),
+                             bob_two.verify_message_in_timeline("A random message appears!"))

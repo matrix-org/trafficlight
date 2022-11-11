@@ -84,21 +84,21 @@ class Client:
             }
         )
 
-    async def login(self, homeserver: HomeServer) -> None:
+    async def login(self, homeserver: HomeServer, key_backup_passphrase: str = None) -> None:
         url = homeserver.cs_api
         docker_api = url.replace("localhost", "10.0.2.2")
+
+        data = {"username": self.localpart, "password": self.password,
+                "homeserver_url": {"local_docker": docker_api, "local": url}
+                }
+
+        if key_backup_passphrase:
+            data = {**data, "key_backup_passphrase": key_backup_passphrase}
 
         await self._perform_action(
             {
                 "action": "login",
-                "data": {
-                    "username": self.localpart,
-                    "password": self.password,
-                    "homeserver_url": {
-                        "local_docker": docker_api,
-                        "local": url,
-                    },
-                },
+                "data": data
             }
         )
 
@@ -132,6 +132,9 @@ class Client:
     async def reload(self) -> None:
         await self._perform_action({"action": "reload", "data": {}})
 
+    async def logout(self) -> None:
+        await self._perform_action({"action": "logout", "data": {}})
+
     async def clear_idb_storage(self) -> None:
         await self._perform_action({"action": "clear_idb_storage", "data": {}})
 
@@ -146,6 +149,26 @@ class Client:
     async def verify_message_in_timeline(self, message: str) -> None:
         await self._perform_action(
             {"action": "verify_message_in_timeline", "data": {"message": message}}
+        )
+
+    async def verify_last_message_is_trusted(self) -> None:
+        await self._perform_action(
+            {"action": "verify_last_message_is_trusted", "data": {}}
+        )
+
+    async def enable_dehydrated_device(self, key_backup_passphrase: str) -> None:
+        await self._perform_action(
+            {"action": "enable_dehydrated_device", "data": {"key_backup_passphrase": key_backup_passphrase}}
+        )
+
+    async def enter_room(self, room_name: str) -> None:
+        await self._perform_action(
+            {"action": "enter-room", "data": {"name": room_name}}
+        )
+
+    async def advance_clock(self, duration: int) -> None:
+        await self._perform_action(
+            {"action": "advance_clock", "data": {"milliseconds": duration}}
         )
 
     async def proxy_to(self, cs_api: str) -> None:
