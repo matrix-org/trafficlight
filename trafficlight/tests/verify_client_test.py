@@ -14,7 +14,9 @@ class VerifyClientTest(Test):
         self._client_under_test([ElementWeb()], "alice_two")
         self._server_under_test(Synapse(), ["server"])
 
-    async def run(self, alice_one: MatrixClient, alice_two: MatrixClient, server: HomeServer) -> None:
+    async def run(
+        self, alice_one: MatrixClient, alice_two: MatrixClient, server: HomeServer
+    ) -> None:
         await alice_one.register(server)
         alice_two.localpart = alice_one.localpart
         alice_two.password = alice_one.password

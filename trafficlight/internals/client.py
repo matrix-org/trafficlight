@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any, Dict, Union, Optional
+from typing import Any, Dict, Optional, Union
 
 from trafficlight.homerunner import HomeServer
 
@@ -19,15 +19,20 @@ class User:
 
 
 class Client:
-    def __init__(self, name: str, test_case, registration: Dict[str, Any]):
+    def __init__(
+        self,
+        name: str,
+        test_case: Any,
+        registration: Dict[str, Any],
+    ):
         self.name = name
         self.test_case = test_case
         self.registration = registration
 
         self.current_poll_response = DEFAULT_POLL_RESPONSE
-        self.current_poll_future = None
+        self.current_poll_future: Optional[asyncio.Future[Dict[str, Any]]] = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
     # Called by the http client API
@@ -35,7 +40,7 @@ class Client:
         return self.current_poll_response
 
     # Called by the http client API
-    def _give_poll_response(self, data: Dict[str, Any]):
+    def _give_poll_response(self, data: Dict[str, Any]) -> None:
         if self.current_poll_future is not None:
             self.current_poll_future.set_result(data)
         else:
@@ -43,8 +48,11 @@ class Client:
 
         # resolve the promise s.t. register returns
 
-    def _give_poll_exception(self, exception: Exception):
-        self.current_poll_future.set_exception(exception)
+    def _give_poll_exception(self, exception: Exception) -> None:
+        if self.current_poll_future is not None:
+            self.current_poll_future.set_exception(exception)
+        else:
+            raise Exception("Unable to handle exception; not awaiting that.")
 
     # used by named methods from the test
     async def _perform_action(self, question: Dict[str, Any]) -> Dict[str, Any]:
@@ -64,7 +72,7 @@ class Client:
 
 
 class NetworkProxyClient(Client):
-    def __init__(self, name: str, test_case, registration: Dict[str, Any]):
+    def __init__(self, name: str, test_case: Any, registration: Dict[str, Any]):
         super().__init__(name, test_case, registration)
         self.server: Optional[HomeServer] = None
         # save the API endpoint
@@ -100,7 +108,7 @@ class NetworkProxyClient(Client):
 
 
 class MatrixClient(Client):
-    def __init__(self, name: str, test_case, registration: Dict[str, Any]):
+    def __init__(self, name: str, test_case: Any, registration: Dict[str, Any]):
         super().__init__(name, test_case, registration)
         # Client login details
         self.localpart = "user_" + name
@@ -125,26 +133,27 @@ class MatrixClient(Client):
             }
         )
 
-    async def login(self, homeserver: Union[HomeServer, NetworkProxyClient], key_backup_passphrase: str = None) -> None:
+    async def login(
+        self,
+        homeserver: Union[HomeServer, NetworkProxyClient],
+        key_backup_passphrase: str = None,
+    ) -> None:
         url = homeserver.cs_api
         docker_api = url.replace("localhost", "10.0.2.2")
 
-        data = {"username": self.localpart, "password": self.password,
-                "homeserver_url": {"local_docker": docker_api, "local": url}
-                }
+        data = {
+            "username": self.localpart,
+            "password": self.password,
+            "homeserver_url": {"local_docker": docker_api, "local": url},
+        }
 
         if key_backup_passphrase:
             data = {**data, "key_backup_passphrase": key_backup_passphrase}
 
-        await self._perform_action(
-            {
-                "action": "login",
-                "data": data
-            }
-        )
+        await self._perform_action({"action": "login", "data": data})
 
     async def start_crosssign(self, user_id: str = None) -> None:
-        data = {}
+        data: Dict[str, Any] = {}
         if user_id:
             data = {**data, "userId": user_id}
 
@@ -162,9 +171,7 @@ class MatrixClient(Client):
         )
 
     async def create_dm(self, user_id: str) -> None:
-        await self._perform_action(
-            {"action": "create_dm", "data": {"userId": user_id}}
-        )
+        await self._perform_action({"action": "create_dm", "data": {"userId": user_id}})
 
     async def send_message(self, message: str) -> None:
         await self._perform_action(
@@ -207,23 +214,25 @@ class MatrixClient(Client):
         )
 
     async def verify_last_message_is_utd(self) -> None:
-        await self._perform_action(
-            {"action": "verify_last_message_is_utd", "data": {}}
-        )
+        await self._perform_action({"action": "verify_last_message_is_utd", "data": {}})
 
     async def verify_trusted_device(self) -> None:
-        await self._perform_action(
-            {"action": "verify_trusted_device", "data": {}}
-        )
+        await self._perform_action({"action": "verify_trusted_device", "data": {}})
 
     async def enable_dehydrated_device(self, key_backup_passphrase: str) -> None:
         await self._perform_action(
-            {"action": "enable_dehydrated_device", "data": {"key_backup_passphrase": key_backup_passphrase}}
+            {
+                "action": "enable_dehydrated_device",
+                "data": {"key_backup_passphrase": key_backup_passphrase},
+            }
         )
 
     async def enable_key_backup(self, key_backup_passphrase: str) -> None:
         await self._perform_action(
-            {"action": "enable_key_backup", "data": {"key_backup_passphrase": key_backup_passphrase}}
+            {
+                "action": "enable_key_backup",
+                "data": {"key_backup_passphrase": key_backup_passphrase},
+            }
         )
 
     async def enter_room(self, room_name: str) -> None:

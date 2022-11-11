@@ -20,25 +20,25 @@ class Test(object):
     The test will then continue initilization by identifying the test cases required from itself.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.server_type: Optional[ServerType] = None
         self.server_names: List[str] = []
         self.clients: Dict[str, List[ClientType]] = {}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name()}"
 
-    def name(self):
+    def name(self) -> str:
         return self.__class__.__name__
 
-    def _server_under_test(self, server_type: ServerType, names: List[str]):
+    def _server_under_test(self, server_type: ServerType, names: List[str]) -> None:
         self.server_type = server_type
         self.server_names = names
 
-    def _client_under_test(self, client_types: List[ClientType], name: str):
+    def _client_under_test(self, client_types: List[ClientType], name: str) -> None:
         self.clients[name] = client_types
 
-    def _network_proxy(self, name: str):
+    def _network_proxy(self, name: str) -> None:
         self.clients[name] = [NetworkProxy()]
 
     def generate_test_cases(self) -> List[TestCase]:

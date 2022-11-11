@@ -1,11 +1,12 @@
 import hashlib
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomerunnerClient, HomeServer
-from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.adapter import Adapter
+from trafficlight.internals.client import MatrixClient, NetworkProxyClient
+from trafficlight.internals.test import Test
 from trafficlight.server_types import ServerType
 
 logger = logging.getLogger(__name__)
@@ -14,12 +15,12 @@ logger = logging.getLogger(__name__)
 class TestCase:
     def __init__(
         self,
-        test,
+        test: Test,
         server_type: ServerType,
         server_names: List[str],
         client_types: Dict[str, ClientType],
     ) -> None:
-        self.last_exception = None
+        self.last_exception: Optional[Exception] = None
         self.guid = hashlib.md5(
             f"TestCase{test.name()}{server_type.name()}{server_names}{client_types}".encode(
                 "utf-8"
@@ -34,7 +35,7 @@ class TestCase:
         self.files: Dict[str, str] = {}
         self.adapters: Optional[Dict[str, Adapter]] = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.test.name()} ({self.server_type} {self.client_types})"
 
     def description(self) -> str:
@@ -60,12 +61,16 @@ class TestCase:
                 return None
         return used_adapters
 
-    async def run(self, adapters: Dict[str, Adapter], homerunner: HomerunnerClient):
+    async def run(
+        self, adapters: Dict[str, Adapter], homerunner: HomerunnerClient
+    ) -> None:
         self.state = "preparing"
         self.adapters = adapters
         # turn adapters into clients
-        kwargs = {}
+        kwargs: Dict[str, Union[HomeServer, MatrixClient, NetworkProxyClient]] = {}
+
         for (client_var_name, adapter) in adapters.items():
+            client: Union[MatrixClient, NetworkProxyClient]
             if adapter.registration["type"] == "network-proxy":
                 client = NetworkProxyClient(client_var_name, self, adapter.registration)
             else:

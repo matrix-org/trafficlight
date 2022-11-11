@@ -8,20 +8,22 @@ from trafficlight.server_types import MixedFederation
 
 
 class SendMessagesAcrossFederationTest(Test):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._client_under_test([ElementWeb()], "client_one")
         self._client_under_test([ElementWeb()], "client_two")
         self._server_under_test(MixedFederation(), ["server", "second_server"])
 
     async def run(
-            self,
-            client_one: MatrixClient,
-            client_two: MatrixClient,
-            server: HomeServer,
-            second_server: HomeServer,
+        self,
+        client_one: MatrixClient,
+        client_two: MatrixClient,
+        server: HomeServer,
+        second_server: HomeServer,
     ) -> None:
-        await asyncio.gather(client_one.register(server), client_two.register(second_server))
+        await asyncio.gather(
+            client_one.register(server), client_two.register(second_server)
+        )
 
         await client_one.create_room("little test room")
         await client_one.send_message("hi there!")

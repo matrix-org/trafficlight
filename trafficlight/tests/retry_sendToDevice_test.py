@@ -8,7 +8,7 @@ from trafficlight.server_types import Synapse
 
 
 class RetrySendToDeviceTest(Test):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._client_under_test([ElementWeb()], "alice")
         self._client_under_test([ElementWeb()], "bob")
@@ -16,7 +16,11 @@ class RetrySendToDeviceTest(Test):
         self._network_proxy("proxy")
 
     async def run(
-            self, alice: MatrixClient, bob: MatrixClient, server: HomeServer, network_proxy: NetworkProxyClient
+        self,
+        alice: MatrixClient,
+        bob: MatrixClient,
+        server: HomeServer,
+        network_proxy: NetworkProxyClient,
     ) -> None:
         await network_proxy.proxy_to(server)
         await alice.register(network_proxy)

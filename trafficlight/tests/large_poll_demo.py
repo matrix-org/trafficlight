@@ -6,13 +6,15 @@ from trafficlight.server_types import Synapse
 
 
 class LargePollTest(Test):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._client_under_test([ElementWeb(), ElementAndroid()], "alice")
         self._client_under_test([ElementWeb(), ElementAndroid()], "bob")
         self._server_under_test(Synapse(), ["server"])
 
-    async def run(self, alice: MatrixClient, bob: MatrixClient, server: HomeServer) -> None:
+    async def run(
+        self, alice: MatrixClient, bob: MatrixClient, server: HomeServer
+    ) -> None:
         await alice.register(server)
         await alice.create_room("little test room")
         await bob.register(server)

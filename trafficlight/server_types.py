@@ -7,7 +7,7 @@ class ServerType(object):
     def name(self) -> str:
         return type(self).__name__
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name()
 
     async def create(

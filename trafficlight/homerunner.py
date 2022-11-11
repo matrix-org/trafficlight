@@ -37,7 +37,7 @@ class HomeServer(object):
         # TODO: include sufficient data to destroy
         # Might not be needed: homerunner does have a timeout
 
-    def finished(self):
+    def finished(self) -> None:
         pass
 
 

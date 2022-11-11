@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
+from trafficlight.internals.adapter import Adapter
 from trafficlight.internals.testcase import TestCase
 from trafficlight.internals.testsuite import TestSuite
-from trafficlight.internals.adapter import Adapter
 
 logger = logging.getLogger(__name__)
 

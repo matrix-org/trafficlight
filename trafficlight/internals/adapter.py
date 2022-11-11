@@ -20,21 +20,21 @@ class Adapter(object):
         # updates should be passed to.
         self.client: Optional[Client] = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.guid} {self.registration}"
 
     def available(self) -> bool:
         return self.client is None
 
-    def finished(self):
+    def finished(self) -> None:
         self.completed = True
 
     def poll(self, update_last_polled: bool = True) -> Dict[str, Any]:
         if self.completed:
-            action = {"action": "exit", "responses": []}
+            action: Dict[str, Any] = {"action": "exit", "responses": []}
         elif self.client is None:
             # No model has been allocated yet; idle.
-            action = {"action": "idle", "responses": [], "data": {"delay": 30000}}
+            action = {"action": "idle", "responses": [], "data": {"delay": "30000"}}
         else:
             action = self.client._get_poll_data()
 

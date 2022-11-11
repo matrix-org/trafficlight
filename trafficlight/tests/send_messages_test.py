@@ -6,7 +6,7 @@ from trafficlight.server_types import Synapse
 
 
 class SendMessagesTest(Test):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._client_under_test([ElementWeb(), ElementAndroid()], "client_one")
         self._server_under_test(Synapse(), ["server"])
