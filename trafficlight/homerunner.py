@@ -25,7 +25,7 @@ class HomerunnerError(Exception):
         self.homerunnerError = message
 
 
-class HomeserverConfig(object):
+class HomeServer(object):
     """
     The configuration of a created homserver
     """
@@ -36,6 +36,9 @@ class HomeserverConfig(object):
         self.base_image_uri = base_image_uri
         # TODO: include sufficient data to destroy
         # Might not be needed: homerunner does have a timeout
+
+    def finished(self) -> None:
+        pass
 
 
 class HomerunnerClient(object):
@@ -55,14 +58,17 @@ class HomerunnerClient(object):
             "BaseImageURI": base_image_uri,
         }
 
-    async def create(self, model_id: str, images: List[str]) -> List[HomeserverConfig]:
+    async def create(self, test_case_id: str, images: List[str]) -> List[HomeServer]:
         create_url = self.homerunner_url + "/create"
         homeservers = []
         for image in images:
             homeservers.append(self._generate_homeserver(image))
+
+        # uppercase is not a valid docker repository name, so this will cause a complement error if base image is not
+        # specified in each Homeserver entry
         data = {
-            "base_image_uri": "INVALID_NAME",  # uppercase is not a valid docker repository name, so this will cause a complement error.
-            "blueprint": {"Name": model_id, "Homeservers": homeservers},
+            "base_image_uri": "INVALID_NAME",
+            "blueprint": {"Name": test_case_id, "Homeservers": homeservers},
         }
         logger.info(data)
         async with aiohttp.ClientSession() as session:
@@ -82,7 +88,5 @@ class HomerunnerClient(object):
                     base_image_uri = homeserver["BaseImageURI"]
                     # from response
                     cs_api = response[name]["BaseURL"]
-                    homeserver_configs.append(
-                        HomeserverConfig(name, cs_api, base_image_uri)
-                    )
+                    homeserver_configs.append(HomeServer(name, cs_api, base_image_uri))
                 return homeserver_configs

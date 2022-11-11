@@ -9,7 +9,6 @@ set -e
 
 files=(
   "trafficlight"
-  "tests"
 )
 
 # Print out the commands being run

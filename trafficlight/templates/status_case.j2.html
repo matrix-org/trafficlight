@@ -7,35 +7,34 @@ setTimeout(function(){
 }, {{ refresh }});
 </script>
 {% endif %}
-<h3>{{ test.description }}</h3>
+<h3>{{ test.test.name() }}</h3>
   <table class="table table-sm">
       <tbody>
-      <tr><td>Clients</td><td>{% for x in test.client_types  %}{{x.name()}} {% endfor %}</td></tr>
-      <tr><td>Server</td><td>{{ test.server_type.name() }}</td></tr>
-      {% if test.model %}
-      <tr><td>Model Data</td><td><blockquote>{{ test.model.data }}</blockquote></td></tr>
-      {% endif %}
-      <tr><td>Status</td><td>{{ test.status }}</td></tr>
-      {% if test.error %}
+      <tr><td>Clients</td><td>{% for (name, type) in test.client_types.items()  %}{{ name }} ( {{ type }} ) {% endfor %}</td></tr>
+      <tr><td>Server(s)</td><td>{{ test.server_type.name() }}</td></tr>
+      <tr><td>Status</td><td>{{ test.state }}</td></tr>
+      {% if test.state == "error" %}
       <tr><td>Error</td><td><blockquote>{{ test.error }}</blockquote></td></tr>
       {% endif %}
       </tbody>
   </table>
 
-<h4>Clients</h4>
-{% if test.client_list %}
+<h4>Adapters</h4>
+{% if test.adapters %}
 <table class="table table-sm">
     <thead class="thead-dark">
-        <tr><th>UUID</th><th>Action</th><th>Registered</th><th>Last Polled</th><th>Last responded</th></tr>
+        <tr><th>Name</th><th>UUID</th><th>Action</th><th>Last Error</th><th>Registered</th><th>Last Polled</th><th>Last responded</th></tr>
     </thead>
     <tbody>
-    {% for client in test.client_list %}
+    {% for (client_name, adapter) in test.adapters.items() %}
 <   <tr>
-       <td>{{ client.uuid }}</td>
-       <td>{{ client.poll(update_last_polled=False)['action'] }}</td>
-       <td>{{ client.registered | delaytime }}</td>
-       <td>{{ client.last_polled | delaytime }}</td>
-       <td>{{ client.last_responded | delaytime }}</td>
+        <td>{{ client_name }}</td>
+        <td>{{ adapter.guid }}</td>
+        <td>{{ adapter.poll(update_last_polled=False)['action'] }}</td>
+        <td>{{ adapter.last_error }}</td>
+        <td>{{ adapter.registered | delaytime }}</td>
+        <td>{{ adapter.last_polled | delaytime }}</td>
+        <td>{{ adapter.last_responded | delaytime }}</td>
     </tr>
     {% endfor %}
   </tbody>
@@ -47,21 +46,17 @@ setTimeout(function(){
     <tr><th>Name</th><th>Download</th></tr>
     </thead>
     <tbody>
-    {% for file_name in test.model.files.keys() %}
+    {% for file_name in test.files.keys() %}
 <   <tr>
        <td>{{ file_name }}</td>
-       <td><a href="{{ url_for('status.test_file', uuid = test.uuid, name = file_name) }}">Download</a></td>
+       <td><a href="{{ url_for('status.test_file', guid = test.guid, name = file_name) }}">Download</a></td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 
-
-<h4>Model</h4>
-<a href="{{ url_for('status.test_image', uuid = test.uuid) }}"><img src="{{ url_for('status.test_context_image', uuid = test.uuid) }}" id="test_context_image"></a>
-
 {% else %}
-No clients have been allocated to this test yet.
+No adapters have been allocated to this test case yet.
 {% endif %}
 
 {% endblock %}
