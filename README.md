@@ -1,18 +1,23 @@
-# Traffic Light
+# Trafficlight
 
 Trafficlight controller for multiple clients (client-server-server-client) under test.
 
-Shape of server still under development.
-
 ## Concept
 
-The trafficlight server controls various matrix clients in an effort to coordinate them testing in a live system.
+The trafficlight server controls various matrix clients in an effort to coordinate testing in a live system.
 
-Each client identifies itself externally via a UUID; which is mapped to a internal client (normally a colour) when they first connect and are allocated to a test.
+Tests can specify sets of clients and servers under tests, that are created by the system and passed into their `run()` method.
 
-Clients should sit and poll constantly until they receive an action - and then continue to poll until they're told to 'exit'
+TestSuites are setup around each Test, and provide a matrix of TestCases based on the ranges of Clients and Servers that are required for each test.
+For example, one Test which asks servers for synapse or dendrite, and two clients that can be element android or element web, will end up creating and running 8 test cases - the product of two options for each server and two options for each client.
 
-There's a bunch of client management not yet provided by the server; for example handling tidy up of clients with explicit 'exit's if a test fails.
+Servers are managed by complements `homerunner` tool, and are setup on demand as each TestCase starts. We will be able to start tests running against Synapse, Dendrite and other homeservers, so long as they are packaged for Complements' usecase.
+
+Clients are managed by Adapters. Adapters are wrappers around various clients (eg, element-web / element-android / hydrogen ) that perform actions from the trafficlight tests.
+
+Adapters are able to upload files (logs and videos) after a test run to allow us to reflect on the tests after they've completed.
+
+Adapters are managed separately from the trafficlight server, and are managed in a similar style to CI runners - they register and poll the trafficlight server for commands to run. If no test requires the adapter at present they are left idling until they are allocated to a TestCase.
 
 There are three APIs provided for interaction by the server:
 
