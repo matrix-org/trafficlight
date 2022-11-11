@@ -57,10 +57,10 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     # ensure the instance folder exists
     print(f"{app.config}")
 
-    tests = load_tests(
+    loaded_tests = load_tests(
         app.config.get("TEST_PATTERN"),
     )
-    for test in tests:
+    for test in loaded_tests:
         logger.info(f"Generating test cases for {test.name()}")
         test_cases = test.generate_test_cases()
         for test_case in test_cases:

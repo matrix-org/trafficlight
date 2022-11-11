@@ -18,7 +18,7 @@ class LargePollTest(Test):
         await bob.register(server)
         await alice.invite_user("@" + bob.localpart + ":" + server.server_name)
         await bob.accept_invite()
-        await alice.create_poll("Options go here!", ["a", "b", "c"])
+        # await alice.create_poll("Options go here!", ["a", "b", "c"])
 
         # TODO implement this. In the server-side part of the test is fine
         # But make it asyncio-based so it doesn't block the rest of the server's logic.

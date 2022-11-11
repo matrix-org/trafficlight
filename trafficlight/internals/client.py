@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Optional
 
 from trafficlight.homerunner import HomeServer
 
@@ -26,7 +26,6 @@ class Client:
 
         self.current_poll_response = DEFAULT_POLL_RESPONSE
         self.current_poll_future = None
-
 
     def __repr__(self):
         return self.name
@@ -67,10 +66,10 @@ class Client:
 class NetworkProxyClient(Client):
     def __init__(self, name: str, test_case, registration: Dict[str, Any]):
         super().__init__(name, test_case, registration)
-        self.server: HomeServer = None
+        self.server: Optional[HomeServer] = None
         # save the API endpoint
         self.cs_api = registration["endpoint"]
-        self.server_name: str = None
+        self.server_name: Optional[str] = None
 
     async def proxy_to(self, server: HomeServer) -> None:
         self.server_name = server.server_name
@@ -98,6 +97,7 @@ class NetworkProxyClient(Client):
         await self._perform_action(
             {"action": "delayEndpoint", "data": {"endpoint": endpoint, "delay": delay}}
         )
+
 
 class MatrixClient(Client):
     def __init__(self, name: str, test_case, registration: Dict[str, Any]):
@@ -146,7 +146,7 @@ class MatrixClient(Client):
     async def start_crosssign(self, user_id: str = None) -> None:
         data = {}
         if user_id:
-            data = { **data, "userId": user_id }
+            data = {**data, "userId": user_id}
 
         await self._perform_action({"action": "start_crosssign", "data": data})
 
@@ -165,7 +165,6 @@ class MatrixClient(Client):
         await self._perform_action(
             {"action": "create_dm", "data": {"userId": user_id}}
         )
-
 
     async def send_message(self, message: str) -> None:
         await self._perform_action(
@@ -205,6 +204,11 @@ class MatrixClient(Client):
     async def verify_last_message_is_trusted(self) -> None:
         await self._perform_action(
             {"action": "verify_last_message_is_trusted", "data": {}}
+        )
+
+    async def verify_last_message_is_utd(self) -> None:
+        await self._perform_action(
+            {"action": "verify_last_message_is_utd", "data": {}}
         )
 
     async def verify_trusted_device(self) -> None:

@@ -16,8 +16,8 @@ class MessageDecryptionWhenOwnHSOfflineTest(Test):
         self._network_proxy("network_proxy")
         self._server_under_test(Synapse(), ["server"])
 
-    async def run(self, alice: MatrixClient, bob_one: MatrixClient, bob_two: MatrixClient, network_proxy: NetworkProxyClient, server: HomeServer) -> None:
-
+    async def run(self, alice: MatrixClient, bob_one: MatrixClient, bob_two: MatrixClient,
+                  network_proxy: NetworkProxyClient, server: HomeServer) -> None:
         # Overwrite generated password in bob_two with bob_one
         bob_two.password = bob_one.password
         bob_two.localpart = bob_one.localpart

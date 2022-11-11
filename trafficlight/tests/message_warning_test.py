@@ -1,6 +1,6 @@
 import asyncio
 
-from trafficlight.client_types import ElementAndroid, ElementWeb
+from trafficlight.client_types import ElementWeb
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test

@@ -2,7 +2,7 @@ import hashlib
 import logging
 from typing import Dict, List, Optional
 
-from trafficlight.client_types import ClientType, NetworkProxy
+from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomerunnerClient, HomeServer
 from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.adapter import Adapter
@@ -32,7 +32,7 @@ class TestCase:
         self.state = "waiting"
         self.servers: List[HomeServer] = []
         self.files: Dict[str, str] = {}
-        self.adapters: Dict[str, Adapter] = None
+        self.adapters: Optional[Dict[str, Adapter]] = None
 
     def __repr__(self):
         return f"{self.test.name()} ({self.server_type} {self.client_types})"

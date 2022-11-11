@@ -15,7 +15,7 @@ class VerifyClientMultipleDeviceTestSuite(Test):
         self._server_under_test(Synapse(), ["server"])
 
     async def run(self, alice: MatrixClient, bob: MatrixClient, server: HomeServer) -> None:
-        await asyncio.gather(await alice.register(server), await bob.register(server))
+        await asyncio.gather(alice.register(server), bob.register(server))
         await alice.create_dm(f'{bob.localpart}:{server.server_name}')
         await alice.send_message("Send a message to ensure DM is created")
         await bob.accept_invite()

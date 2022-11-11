@@ -12,7 +12,6 @@ class SendMessagesTest(Test):
         self._server_under_test(Synapse(), ["server"])
 
     async def run(self, client_one: MatrixClient, server: HomeServer) -> None:
-
         await client_one.register(server)
         await client_one.create_room("little test room")
         await client_one.send_message("hi there!")

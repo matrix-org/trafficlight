@@ -4,8 +4,10 @@ from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
 from trafficlight.server_types import Synapse
 
+
 # Test Command:
-# CLIENT_COUNT=2 CYPRESS_BASE_URL="https://develop.element.io" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
+# CLIENT_COUNT=2 CYPRESS_BASE_URL="https://develop.element.io"
+# ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
 
 
 class KeyRestoreMarksSessionAsVerifiedTest(Test):

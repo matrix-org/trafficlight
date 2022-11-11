@@ -57,7 +57,7 @@ async def register(adapter_uuid: str):  # type: ignore
 
     existing = get_adapter(adapter_uuid)
     if existing is not None:
-        if existing.model is not None:
+        if existing.client is not None:
             raise Exception("Adapter already in use, cannot re-register")
         else:
             logger.info(

@@ -63,8 +63,11 @@ class HomerunnerClient(object):
         homeservers = []
         for image in images:
             homeservers.append(self._generate_homeserver(image))
+
+        # uppercase is not a valid docker repository name, so this will cause a complement error if base image is not
+        # specified in each Homeserver entry
         data = {
-            "base_image_uri": "INVALID_NAME",  # uppercase is not a valid docker repository name, so this will cause a complement error.
+            "base_image_uri": "INVALID_NAME",
             "blueprint": {"Name": test_case_id, "Homeservers": homeservers},
         }
         logger.info(data)

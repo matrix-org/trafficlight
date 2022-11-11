@@ -1,5 +1,5 @@
 from itertools import product
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from trafficlight.client_types import ClientType, NetworkProxy
 from trafficlight.internals.testcase import TestCase
@@ -14,14 +14,14 @@ class Test(object):
 
     The folow will be:
 
-    __init__(self, configure: TestInit) -> Initial setup of test completes; this locks in the server types and client types defined in the configuration.
-    The result is a Test that knows what it needs before it can run.
+    __init__(self, configure: TestInit) -> Initial setup of test completes; this locks in the server types and client
+    types defined in the configuration. The result is a Test that knows what it needs before it can run.
 
     The test will then continue initilization by identifying the test cases required from itself.
     """
 
     def __init__(self):
-        self.server_type: ServerType = None
+        self.server_type: Optional[ServerType] = None
         self.server_names: List[str] = []
         self.clients: Dict[str, List[ClientType]] = {}
 

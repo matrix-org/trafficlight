@@ -29,7 +29,7 @@ _testcases: List[TestCase] = []
 
 
 def get_testsuites() -> List[TestSuite]:
-    return _testsuites.values()
+    return list(_testsuites.values())
 
 
 def get_testsuite(guid: str) -> Optional[TestSuite]:
@@ -60,9 +60,9 @@ def get_adapters(completed: bool = None) -> List[Adapter]:
         return _adapters
 
     if completed:
-        return filter(lambda x: x.completed, _adapters)
+        return list(filter(lambda x: x.completed, _adapters))
     else:
-        return filter(lambda x: not x.completed, _adapters)
+        return list(filter(lambda x: not x.completed, _adapters))
 
 
 def get_adapter(guid: str) -> Optional[Adapter]:

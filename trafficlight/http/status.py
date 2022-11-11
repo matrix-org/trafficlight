@@ -48,7 +48,7 @@ async def as_junit():  # type: ignore
 
     errors = 0 + sum(suite.errors() for suite in testsuites)
     failures = 0 + sum(suite.failures() for suite in testsuites)
-    skipped = 0 + sum(suite.skipped() for suite in testsuites)
+    skipped = 0 + sum(suite.waiting() for suite in testsuites)
     test_count = 0 + sum(len(suite.test_cases or []) for suite in testsuites)
 
     return await render_template(

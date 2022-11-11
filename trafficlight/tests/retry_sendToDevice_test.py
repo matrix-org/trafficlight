@@ -16,7 +16,7 @@ class RetrySendToDeviceTest(Test):
         self._network_proxy("proxy")
 
     async def run(
-        self, alice: MatrixClient, bob: MatrixClient, server: HomeServer, network_proxy: NetworkProxyClient
+            self, alice: MatrixClient, bob: MatrixClient, server: HomeServer, network_proxy: NetworkProxyClient
     ) -> None:
         await network_proxy.proxy_to(server)
         await alice.register(network_proxy)

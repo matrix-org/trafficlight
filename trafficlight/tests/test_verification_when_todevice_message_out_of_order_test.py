@@ -6,8 +6,10 @@ from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.test import Test
 from trafficlight.server_types import Synapse
 
+
 # Test Script:
-# CLIENT_COUNT=2 REQUIRES_PROXY=true CYPRESS_BASE_URL="https://develop.element.io" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
+# CLIENT_COUNT=2 REQUIRES_PROXY=true CYPRESS_BASE_URL="https://develop.element.io"
+# ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
 
 class VerifyWhenToDeviceMessagesOutOfOrder(Test):
     def __init__(self):
@@ -17,8 +19,8 @@ class VerifyWhenToDeviceMessagesOutOfOrder(Test):
         self._server_under_test(Synapse(), ["server"])
         self._network_proxy("network_proxy")
 
-    async def run(self, alice_one: MatrixClient, alice_two: MatrixClient, server: HomeServer, network_proxy: NetworkProxyClient) -> None:
-
+    async def run(self, alice_one: MatrixClient, alice_two: MatrixClient, server: HomeServer,
+                  network_proxy: NetworkProxyClient) -> None:
         await network_proxy.proxy_to(server)
         await alice_one.register(network_proxy)
         await alice_two.login(network_proxy)
