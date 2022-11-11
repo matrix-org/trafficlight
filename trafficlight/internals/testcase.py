@@ -86,7 +86,7 @@ class TestCase:
         try:
             logger.info(f"Test setup. Beginning run with kwargs {kwargs}")
             self.state = "running"
-            await self.test.run(**kwargs)  # type: ignore
+            await self.test.run(**kwargs)
             self.state = "success"
         except Exception as e:
             self.state = "failed"
