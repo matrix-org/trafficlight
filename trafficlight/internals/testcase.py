@@ -1,12 +1,11 @@
 import hashlib
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 
 from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomerunnerClient, HomeServer
 from trafficlight.internals.adapter import Adapter
 from trafficlight.internals.client import MatrixClient, NetworkProxyClient
-from trafficlight.internals.test import Test
 from trafficlight.server_types import ServerType
 
 logger = logging.getLogger(__name__)
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 class TestCase:
     def __init__(
         self,
-        test: Test,
+        test: Any,
         server_type: ServerType,
         server_names: List[str],
         client_types: Dict[str, ClientType],
