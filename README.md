@@ -73,13 +73,11 @@ Provides compatible junit.xml test output for use in other services / formatting
 
 Tests should be written in the `trafficlight.tests` package.
 
-To be picked up by the autodiscovery system, they should be named `**/*_testsuite.py` and should contain one or more classes that extend `trafficlight.tests.TestSuite`.
+To be picked up by the autodiscovery system, they should be named `**/*_test.py` and should contain classes that extend `trafficlight.internal.Test`.
 
-These suites will then be expanded on startup into a number of test cases, using the list of clients and servers known to trafficlight at present.
+These suites will then be expanded on startup into a number of test cases, using the list of clients and servers specified in the __init__ method of the Test.
 
-The testSuites should implement the two methods, `generate_model` and `validate_model`. THe generator should return a trafficlight.object.Model which represents the state machine the test should go through.
-
-The validator should post-process the model and ensure that all conditions have been successfully applied. `trafficlight.tests.assertions` contains useful `unittest`-style assertXXX() methods that can mark the test as `failed`. Other exceptions will mark the test as `error`.
+The run method is an async method but can block the main http reactor thread so please do not perform synchronous waits in tests. Using a matrix client like matrix-nio is required for any 
 
 Current status of all tests is on the status dashboard.
 
@@ -87,7 +85,7 @@ Current status of all tests is on the status dashboard.
 
 The client controllers should basically poll the server and have a switch block for each action being returned: For each action they should perform it and only respond when complete.
 
-This loop should be simple enough to include in any language.
+This concept of a loop should be simple enough to include in any language, and may be embedded into a client or be a separate process.
 
 ## State machine
 
@@ -99,7 +97,7 @@ Polyjuice has a very similar poll method for getting data to clients but uses ma
 
 ## Installation
 
-As well as python dependencies installed via `pip`, libgraphviz-dev (debian) or graphviz-devel (fedora) is required for the status page graph rendering.
+All python dependencies installed via `pip`.
 
 ## Development
 
@@ -144,9 +142,7 @@ Various options can be used to configure the tests:
 
 | Name          | Default                      | Function |
 | ----          | -------                      | -------- |
-| TEST\_PATTERN | `**/*_testsuite.py`          | Pattern to find tests. `**` for any recursive directory, `*` as normal wildcard |
-| SERVER\_TYPES | `Synapse`                    | Comma-seperated list of server types to generate tests with. Current option is only `Synapse` |
-| CLIENT\_TYPES | `ElementWeb,ElementAndroid`  | Comma-seperated list of client types to generate tests with. Current options are `ElementWeb` and `ElementAndroid` |
+| TEST\_PATTERN | `**/*_test.py`          | Pattern to find tests. `**` for any recursive directory, `*` as normal wildcard |
 
 Set options via environment variables by prefixing with `TRAFFICLIGHT_`, eg: `TRAFFICLIGHT_TEST_PATTERN=only_one_test.py`.
 
