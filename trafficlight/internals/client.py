@@ -94,6 +94,10 @@ class NetworkProxyClient(Client):
             {"action": "disableEndpoint", "data": {"endpoint": endpoint}}
         )
 
+    async def delay_endpoint(self, endpoint: str, delay: int) -> None:
+        await self._perform_action(
+            {"action": "delayEndpoint", "data": {"endpoint": endpoint, "delay": delay}}
+        )
 
 class MatrixClient(Client):
     def __init__(self, name: str, test_case, registration: Dict[str, Any]):
@@ -139,8 +143,12 @@ class MatrixClient(Client):
             }
         )
 
-    async def start_crosssign(self) -> None:
-        await self._perform_action({"action": "start_crosssign", "data": {}})
+    async def start_crosssign(self, user_id: str = None) -> None:
+        data = {}
+        if user_id:
+            data = { **data, "userId": user_id }
+
+        await self._perform_action({"action": "start_crosssign", "data": data})
 
     async def accept_crosssign(self) -> None:
         await self._perform_action({"action": "accept_crosssign", "data": {}})
@@ -152,6 +160,12 @@ class MatrixClient(Client):
         await self._perform_action(
             {"action": "create_room", "data": {"name": room_name}}
         )
+
+    async def create_dm(self, user_id: str) -> None:
+        await self._perform_action(
+            {"action": "create_dm", "data": {"userId": user_id}}
+        )
+
 
     async def send_message(self, message: str) -> None:
         await self._perform_action(
@@ -191,6 +205,11 @@ class MatrixClient(Client):
     async def verify_last_message_is_trusted(self) -> None:
         await self._perform_action(
             {"action": "verify_last_message_is_trusted", "data": {}}
+        )
+
+    async def verify_trusted_device(self) -> None:
+        await self._perform_action(
+            {"action": "verify_trusted_device", "data": {}}
         )
 
     async def enable_dehydrated_device(self, key_backup_passphrase: str) -> None:
