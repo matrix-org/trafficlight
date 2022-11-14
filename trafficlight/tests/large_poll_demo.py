@@ -20,10 +20,19 @@ class LargePollTest(Test):
         await bob.register(server)
         await alice.invite_user("@" + bob.localpart + ":" + server.server_name)
         await bob.accept_invite()
-        # await alice.create_poll("Options go here!", ["a", "b", "c"])
 
-        # TODO implement this. In the server-side part of the test is fine
-        # But make it asyncio-based so it doesn't block the rest of the server's logic.
+        # This would need implementation in the client adapters
+        # and a small method made to marshal the method call into
+        # some appropriate call.
+
+        # await alice.create_poll("Options go here!", ["a", "b", "c"])
+        # For example, instantiate a matrix-nio client and register
+        # join the room, then find the most recent poll and respond to it appropriately.
+        # await that completing
         # await generate_fake_users_and_respond_to_poll(1000)
+
+        # verify_poll should inspect the information in the app and
+        # return something here like {"a": 333, "b": 333", c:"334"}
+        # in the response from the action
         # poll_responses = await alice.verify_poll("Options go here!")
-        # assertEquals(len(poll_responses) == 1000)
+        # Do an assertion on the poll responses.
