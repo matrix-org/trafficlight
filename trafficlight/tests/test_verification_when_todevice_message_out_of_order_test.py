@@ -27,11 +27,12 @@ class VerifyWhenToDeviceMessagesOutOfOrder(Test):
         network_proxy: NetworkProxyClient,
     ) -> None:
         await network_proxy.proxy_to(server)
+        alice_two.localpart = alice_one.localpart
+        alice_two.password = alice_one.password
         await alice_one.register(network_proxy)
         await alice_two.login(network_proxy)
-        await network_proxy.delay_endpoint(
-            "/_matrix/client/r0/sendToDevice/m.key.verification.ready", 30000
-        )
+        await network_proxy.delay_endpoint("/_matrix/client/r0/sendToDevice/m.key.verification.ready", 30000)
         await alice_two.start_crosssign()
         await alice_one.accept_crosssign()
+        await asyncio.sleep(30)
         await asyncio.gather(alice_one.verify_crosssign(), alice_two.verify_crosssign())

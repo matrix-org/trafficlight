@@ -38,7 +38,7 @@ class MessageDecryptionWhenOwnHSOfflineTest(Test):
         await bob_one.accept_invite()
         await network_proxy.disable_endpoint("/_matrix/client/r0/sync")
         await bob_two.login(server)
-        await bob_two.enter_room("little test room")
+        await bob_two.open_room("little test room")
         await alice.send_message("A random message appears!")
         await network_proxy.enable_endpoint("/_matrix/client/r0/sync")
         await asyncio.sleep(5000)

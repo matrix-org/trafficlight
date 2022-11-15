@@ -21,7 +21,7 @@ class KeyRestoreMarksSessionAsVerifiedTest(Test):
     ) -> None:
         # Ensure alice_two logs in the same as alice_one.
         alice_two.localpart = alice_one.localpart
-        alice_two.password = alice_two.localpart
+        alice_two.password = alice_one.password
 
         await alice_one.register(server)
         await alice_one.enable_key_backup("helloworld123helloworld")
