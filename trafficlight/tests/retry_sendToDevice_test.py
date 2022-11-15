@@ -13,7 +13,7 @@ class RetrySendToDeviceTest(Test):
         self._client_under_test([ElementWeb()], "alice")
         self._client_under_test([ElementWeb()], "bob")
         self._server_under_test(Synapse(), ["server"])
-        self._network_proxy("proxy")
+        self._network_proxy("network_proxy")
 
     async def run(
         self,
@@ -27,7 +27,7 @@ class RetrySendToDeviceTest(Test):
 
         await alice.create_room("little test room")
         await bob.register(server)
-        await alice.invite_user("@" + bob.localpart + ":" + server.server_name)
+        await alice.invite_user(bob.localpart + ":" + server.server_name)
         await bob.accept_invite()
         await network_proxy.disable_endpoint("/_matrix/client/r0/sendToDevice")
         await alice.send_message("A random message appears!")

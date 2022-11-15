@@ -82,9 +82,7 @@ class NetworkProxyClient(Client):
     async def proxy_to(self, server: HomeServer) -> None:
         self.server_name = server.server_name
         cs_api = server.cs_api
-        await self._perform_action(
-            {"action": "proxyTo", "data": {"proxyToSet": cs_api}}
-        )
+        await self._perform_action({"action": "proxyTo", "data": {"url": cs_api}})
 
     async def wait_until_endpoint_accessed(self, endpoint: str) -> None:
         await self._perform_action(
@@ -163,7 +161,7 @@ class MatrixClient(Client):
         await self._perform_action({"action": "accept_crosssign", "data": {}})
 
     async def verify_crosssign(self) -> None:
-        await self._perform_action({"action": "verify_crosssign", "data": {}})
+        await self._perform_action({"action": "verify_crosssign_emoji", "data": {}})
 
     async def create_room(self, room_name: str) -> None:
         await self._perform_action(
@@ -235,10 +233,8 @@ class MatrixClient(Client):
             }
         )
 
-    async def enter_room(self, room_name: str) -> None:
-        await self._perform_action(
-            {"action": "enter-room", "data": {"name": room_name}}
-        )
+    async def open_room(self, room_name: str) -> None:
+        await self._perform_action({"action": "open-room", "data": {"name": room_name}})
 
     async def advance_clock(self, duration: int) -> None:
         await self._perform_action(
