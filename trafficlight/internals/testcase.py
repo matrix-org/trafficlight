@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import traceback
 from typing import Any, Dict, List, Optional, Union
 
 from trafficlight.client_types import ClientType
@@ -7,7 +8,7 @@ from trafficlight.homerunner import HomerunnerClient, HomeServer
 from trafficlight.internals.adapter import Adapter
 from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.server_types import ServerType
-
+from trafficlight.internals.exceptions import ActionException, AdapterException
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +20,7 @@ class TestCase:
         server_names: List[str],
         client_types: Dict[str, ClientType],
     ) -> None:
-        self.last_exception: Optional[Exception] = None
+        self.exceptions: List[str] = []
         self.guid = hashlib.md5(
             f"TestCase{test.name()}{server_type.name()}{server_names}{client_types}".encode(
                 "utf-8"
@@ -88,10 +89,22 @@ class TestCase:
             self.state = "running"
             await self.test.run(**kwargs)
             self.state = "success"
-        except Exception as e:
+        except AssertionError as e:
+            # Treating a test that throws an assertionError as a failure
             self.state = "failed"
-            self.last_exception = e
-            logger.exception(e)
+            self.exceptions.append("".join(traceback.format_exception(e)))
+        except ActionException as e:
+            # Treating an adapter that fails to perform an action as a failure
+            self.state = "failed"
+            self.exceptions.append(e.formatted_message)
+        except AdapterException as e:
+            # Treating an adapter that causes another type of exception as an error
+            self.state = "error"
+            self.exceptions.append(e.formatted_message)
+        except Exception as e:
+            # Treating everything else as an error as well... eg compilation failures
+            self.state = "error"
+            self.exceptions.append("".join(traceback.format_exception(e)))
         finally:
             for adapter in adapters.values():
                 adapter.finished()

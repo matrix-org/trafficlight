@@ -13,8 +13,8 @@ setTimeout(function(){
       <tr><td>Clients</td><td>{% for (name, type) in test.client_types.items()  %}{{ name }} ( {{ type }} ) {% endfor %}</td></tr>
       <tr><td>Server(s)</td><td>{{ test.server_type.name() }}</td></tr>
       <tr><td>Status</td><td>{{ test.state }}</td></tr>
-      {% if test.state == "error" %}
-      <tr><td>Error</td><td><blockquote>{{ test.error }}</blockquote></td></tr>
+      {% if test.state == "error" or test.state == "failed" %}
+      <tr><td>Errors</td><td>{% for exception in test.exceptions %}<pre>{{ exception }}</pre>{% endfor %}</td></tr>
       {% endif %}
       </tbody>
   </table>
@@ -27,7 +27,7 @@ setTimeout(function(){
     </thead>
     <tbody>
     {% for (client_name, adapter) in test.adapters.items() %}
-<   <tr>
+    <tr>
         <td>{{ client_name }}</td>
         <td>{{ adapter.guid }}</td>
         <td>{{ adapter.poll(update_last_polled=False)['action'] }}</td>
