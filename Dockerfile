@@ -1,6 +1,7 @@
 FROM python:3-buster
 WORKDIR /app
 COPY . /app
+RUN apt install libolm-dev
 RUN python -m pip install .
 
 EXPOSE 5000
