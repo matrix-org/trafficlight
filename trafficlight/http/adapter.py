@@ -107,7 +107,11 @@ async def error(uuid: str):  # type: ignore
         logger.info("Got error from ${uuid}, unable to route internally\n${response}")
         raise Exception("Unknown adapter raising error")
 
+    if error_json is None:
+        raise Exception("Error request did not include a JSON body")
+
     update = cast(Dict[str, Any], error_json)
+
     # Using the same API format as sentry to capture the error in a reasonable way:
     error_body = update["error"]
 
