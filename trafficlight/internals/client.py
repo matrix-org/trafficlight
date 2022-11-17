@@ -8,8 +8,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_POLL_RESPONSE: Dict[str, Any] = {
     "action": "idle",
-    "responses": [],
-    "data": {"delay": 5000},
+    "data": {"delay": 5000, "reason": "waiting for action from test case"},
 }
 
 
@@ -20,10 +19,10 @@ class User:
 
 class Client:
     def __init__(
-        self,
-        name: str,
-        test_case: Any,
-        registration: Dict[str, Any],
+            self,
+            name: str,
+            test_case: Any,
+            registration: Dict[str, Any],
     ):
         self.name = name
         self.test_case = test_case
@@ -132,9 +131,9 @@ class MatrixClient(Client):
         )
 
     async def login(
-        self,
-        homeserver: Union[HomeServer, NetworkProxyClient],
-        key_backup_passphrase: str = None,
+            self,
+            homeserver: Union[HomeServer, NetworkProxyClient],
+            key_backup_passphrase: str = None,
     ) -> None:
         url = homeserver.cs_api
         docker_api = url.replace("localhost", "10.0.2.2")
@@ -205,6 +204,12 @@ class MatrixClient(Client):
         await self._perform_action(
             {"action": "verify_message_in_timeline", "data": {"message": message}}
         )
+
+    async def get_timeline(self) -> None:
+        response = await self._perform_action(
+            {"action": "get_timeline", "data": {}}
+        )
+        return response['timeline']
 
     async def verify_last_message_is_trusted(self) -> None:
         await self._perform_action(

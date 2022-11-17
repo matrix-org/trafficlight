@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 from typing import Any, Dict, cast
 
@@ -25,8 +26,12 @@ from trafficlight.internals.exceptions import (
     AdapterException,
     RemoteException,
 )
-from trafficlight.store import add_adapter, get_adapter, get_adapters, get_tests
+from trafficlight.store import add_adapter, get_adapter, get_adapters, get_tests, remove_adapter
 
+from datetime import timedelta, datetime
+
+IDLE_ADAPTER_UNRESPONSIVE_DELAY = timedelta(minutes=1)
+ACTIVE_ADAPTER_UNRESPONSIVE_DELAY = timedelta(minutes=3)
 # Set transitions' log level to INFO; DEBUG messages will be omitted
 
 
@@ -34,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 # TODO: change this, but we need to provide versioning for clients :|
 bp = Blueprint("client", __name__, url_prefix="/client")
+
 homerunner = HomerunnerClient("http://localhost:54321")
 
 
@@ -44,7 +50,6 @@ async def check_for_new_tests() -> None:
         if test_case.state == "waiting":
             adapters_required = test_case.allocate_adapters(available_adapters)
             if adapters_required is not None:
-
                 logger.info("Starting test %s", test_case)
                 await test_case.run(adapters_required, homerunner)
                 return
@@ -52,6 +57,51 @@ async def check_for_new_tests() -> None:
         "Not enough client_types to run any test(have %s)",
         [str(item) for item in available_adapters],
     )
+
+
+last_cleanup = datetime.now()
+
+
+
+
+async def cleanup_unresponsive_adapters() -> None:
+    now = datetime.now()
+    for adapter in list(get_adapters()):
+        if adapter.available():
+            # This will remove from the lists and UI pieces; if the adapter does wake up later it will
+            # error and be told to exit and restart.
+            #
+            # This will prevent us from assigning tests to inactive adapters.
+            if now - adapter.last_polled > IDLE_ADAPTER_UNRESPONSIVE_DELAY:
+                logger.warning(
+                    f"Removing adapter {adapter.guid} due to not responding since {adapter.last_polled} (more than {IDLE_ADAPTER_UNRESPONSIVE_DELAY})")
+                remove_adapter(adapter)
+
+            pass  # idle out adapters that haven't contacted in last 60s
+        elif adapter.completed:
+            # Ignore for now... but when we have large numbers of these maybe we should start doing a cleanup
+            # process to remove from UI and hash lookups etc.
+            pass
+        else:
+            # This adapter is in use. This timeout will force tests to fail in the face of an adapter that is unresponsive
+            # so we can at least make some progress
+            # If the adapter ends up responding/polling eventually, it will be told the test has failed and to exit and restart
+            # allowing us to continue with other tests
+            # This won't repeat as side effect of an error is to move to completed.
+            late_poll = now - adapter.last_polled > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
+            late_response = now - adapter.last_responded > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
+
+            if late_poll and late_response:
+                logger.warning(
+                    f"Raising error for adapter {adapter.guid} due to not responding since {adapter.last_responded}, and not polling since {adapter.last_polled} (both more than {ACTIVE_ADAPTER_UNRESPONSIVE_DELAY})")
+                adapter.error({"reason": "timeout", "timeout": f"{ACTIVE_ADAPTER_UNRESPONSIVE_DELAY}"},
+                              update_last_responded=False)
+
+
+async def try_cleanup_unresponsive_adapters() -> None:
+            now = datetime.now()
+            if now - last_cleanup > timedelta(seconds=30):
+                current_app.add_background_task(cleanup_unresponsive_adapters)
 
 
 @bp.route("/<string:adapter_uuid>/register", methods=["POST"])
@@ -80,12 +130,19 @@ async def register(adapter_uuid: str):  # type: ignore
 @bp.route("/<string:uuid>/poll", methods=["GET"])
 async def poll(uuid: str):  # type: ignore
     adapter = get_adapter(uuid)
+    poll_response: Dict[str, Any]
+
     if adapter is None:
         # Very bad situation; client believes it's registered; server has no record
         # do not update server state; tell client to exit and restart with new UUID.
-        return {"action": "exit", "responses": []}
+        poll_response = {"action": "exit", "data": {"reason": "no record of this UUID"}}
+    else:
+        poll_response = adapter.poll()
 
-    return adapter.poll()
+    logger.info(f"Returning {poll_response} to {uuid}")
+
+    await try_cleanup_unresponsive_adapters()
+    return poll_response
 
 
 @bp.route("/<string:uuid>/respond", methods=["POST"])
