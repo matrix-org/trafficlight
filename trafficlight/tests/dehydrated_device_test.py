@@ -25,7 +25,7 @@ class DehydratedDeviceTest(Test):
         await bob.advance_clock(1209600000)
         await bob.send_message("Alice should be able to read this message!")
         await alice.login(server, key_backup_passphrase="helloworld123helloworld")
-        await alice.enter_room("little test room")
+        await alice.open_room("little test room")
         await alice.verify_message_in_timeline(
             "Alice should be able to read this message!"
         )

@@ -23,4 +23,4 @@ class VerifyClientTest(Test):
         await alice_two.login(server)
         await alice_two.start_crosssign()
         await alice_one.accept_crosssign()
-        await asyncio.gather(alice_one.accept_crosssign(), alice_two.accept_crosssign())
+        await asyncio.gather(alice_one.verify_crosssign(), alice_two.verify_crosssign())

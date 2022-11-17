@@ -104,6 +104,8 @@ Polyjuice has a very similar poll method for getting data to clients but uses ma
 
 All python dependencies installed via `pip`.
 
+`libolm` is required for using matrix-nio to interact with clients in e2e rooms.
+
 ## Development
 
 Create a virtual environment with pip ≥ 21.1 and install

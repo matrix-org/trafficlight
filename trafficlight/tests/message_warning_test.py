@@ -25,6 +25,6 @@ class MessageWarningTest(Test):
         await alice.send_message("Bob should be able to read this message!")
         await bob.logout()
         await bob.login(server, "helloworld123helloworld")
-        await bob.enter_room("little test room")
+        await bob.open_room("little test room")
         await bob.verify_message_in_timeline("Bob should be able to read this message!")
         await bob.verify_last_message_is_trusted()
