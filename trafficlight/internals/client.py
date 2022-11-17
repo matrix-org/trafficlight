@@ -240,3 +240,8 @@ class MatrixClient(Client):
         await self._perform_action(
             {"action": "advance_clock", "data": {"milliseconds": duration}}
         )
+
+    async def go_offline(self) -> None:
+        await self._perform_action(
+            {"action": "go_offline", "data": {}}
+        )
