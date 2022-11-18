@@ -1,5 +1,6 @@
 from nio import AsyncClient
-from trafficlight.client_types import HydrogenWeb 
+
+from trafficlight.client_types import HydrogenWeb
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.test import Test
@@ -20,7 +21,9 @@ class HydrogenActionsTest(Test):
         alice_one: MatrixClient,
         server: HomeServer,
     ) -> None:
-        nio_client = AsyncClient(server.cs_api, f"@{alice_one.localpart}:{server.server_name}")
+        nio_client = AsyncClient(
+            server.cs_api, f"@{alice_one.localpart}:{server.server_name}"
+        )
         try:
             await nio_client.register(alice_one.localpart, alice_one.password)
             await alice_one.login(server)
@@ -37,4 +40,3 @@ class HydrogenActionsTest(Test):
             await alice_one.clear_idb_storage()
         finally:
             await nio_client.close()
-
