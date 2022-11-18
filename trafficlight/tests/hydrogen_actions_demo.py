@@ -2,7 +2,7 @@ from nio import AsyncClient
 
 from trafficlight.client_types import HydrogenWeb
 from trafficlight.homerunner import HomeServer
-from trafficlight.internals.client import MatrixClient, NetworkProxyClient
+from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
 from trafficlight.server_types import Synapse
 
