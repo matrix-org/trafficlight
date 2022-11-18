@@ -18,7 +18,7 @@ class ElementWeb(ClientType):
 
 
 class HydrogenWeb(ClientType):
-    def match(self, x: Client) -> bool:
+    def match(self, x: Adapter) -> bool:
         return str(x.registration["type"]) == "hydrogen-web"
 
 
