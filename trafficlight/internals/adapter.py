@@ -3,8 +3,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from trafficlight.internals.client import Client
-from trafficlight.internals.exceptions import AdapterException, ActionException
-from typing import Union
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,7 +15,7 @@ class Adapter(object):
         self.last_responded: Optional[datetime] = None
         self.registered = datetime.now()
         self.completed = False
-        self.last_error: Optional[Dict[str, str]] = None
+        self.last_error: Optional[Exception] = None
         # After allocation to a TestCase, this becomes valid and is where
         # updates should be passed to.
         self.client: Optional[Client] = None
@@ -54,7 +53,11 @@ class Adapter(object):
         if update_last_responded:
             self.last_responded = datetime.now()
 
-    def error(self, error: Union[AdapterException, ActionException], update_last_responded: bool = True) -> None:
+    def error(
+        self,
+        error: Exception,
+        update_last_responded: bool = True,
+    ) -> None:
         # If we error, always mark us as completed
         self.completed = True
         self.last_error = error
@@ -71,7 +74,6 @@ class Adapter(object):
             self.last_responded = datetime.now()
 
         self.client._give_poll_exception(error)
-
 
     def upload(self, name: str, path: str, update_last_responded: bool = True) -> None:
         if self.client is None:
