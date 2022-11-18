@@ -35,7 +35,11 @@ class Test(object):
         self.server_type = server_type
         self.server_names = names
 
-    def _client_under_test(self, client_types: List[ClientType], name: str) -> None:
+    def _client_under_test(
+        self,
+        client_types: List[ClientType],
+        name: str,
+    ) -> None:
         self.clients[name] = client_types
 
     def _network_proxy(self, name: str) -> None:
