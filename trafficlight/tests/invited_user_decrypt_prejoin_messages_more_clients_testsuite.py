@@ -1,6 +1,7 @@
 import asyncio
 
 from nio import AsyncClient
+
 from trafficlight.client_types import ElementWeb, HydrogenWeb
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient
@@ -36,25 +37,43 @@ class InviteUserDecryptPrejoinMessagesMoreUsersTest(Test):
         lucas: MatrixClient,
         isabella: MatrixClient,
         william: MatrixClient,
-        server: HomeServer
+        server: HomeServer,
     ) -> None:
-        hydrogen_adapters = [olivia, liam, charlotte, james, ava, lucas, isabella, william]
+        hydrogen_adapters = [
+            olivia,
+            liam,
+            charlotte,
+            james,
+            ava,
+            lucas,
+            isabella,
+            william,
+        ]
 
         nio_client = AsyncClient(server.cs_api)
         try:
-            await asyncio.gather(*map(lambda h: nio_client.register(h.localpart, h.password), hydrogen_adapters))
+            await asyncio.gather(
+                *map(
+                    lambda h: nio_client.register(h.localpart, h.password),
+                    hydrogen_adapters,
+                )
+            )
             await asyncio.gather(*map(lambda h: h.login(server), hydrogen_adapters))
             await asyncio.gather(alice.register(server), bob.register(server))
 
             await alice.create_room("little test room")
             await alice.change_room_history_visibility("invited")
-            await alice.send_message("Bob should not be able to read this, as he isn't invited yet")
+            await alice.send_message(
+                "Bob should not be able to read this, as he isn't invited yet"
+            )
             await alice.invite_user(bob.localpart + ":" + server.server_name)
             for adapter in hydrogen_adapters:
                 await alice.invite_user(adapter.localpart + ":" + server.server_name)
             await bob.accept_invite()
             await bob.send_message("Everybody should be able to read this message!")
             await asyncio.gather(*map(lambda h: h.accept_invite(), hydrogen_adapters))
-            await asyncio.gather(*map(lambda h: h.verify_last_message_is_utd(), hydrogen_adapters))
+            await asyncio.gather(
+                *map(lambda h: h.verify_last_message_is_utd(), hydrogen_adapters)
+            )
         finally:
             await nio_client.close()
