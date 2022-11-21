@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 from trafficlight.homerunner import HomeServer
 
@@ -10,6 +10,11 @@ DEFAULT_POLL_RESPONSE: Dict[str, Any] = {
     "action": "idle",
     "responses": [],
     "data": {"delay": 5000},
+}
+INITIAL_POLL_RESPONSE: Dict[str, Any] = {
+    "action": "idle",
+    "responses": [],
+    "data": {"delay": 5000, "reason": "awaiting test setup"},
 }
 
 
@@ -29,7 +34,7 @@ class Client:
         self.test_case = test_case
         self.registration = registration
 
-        self.current_poll_response = DEFAULT_POLL_RESPONSE
+        self.current_poll_response = INITIAL_POLL_RESPONSE
         self.current_poll_future: Optional[asyncio.Future[Dict[str, Any]]] = None
 
     def __repr__(self) -> str:
@@ -200,6 +205,12 @@ class MatrixClient(Client):
                 "data": {"historyVisibility": history_visibility},
             }
         )
+
+    async def get_timeline(self) -> List[Dict[str, str]]:
+        rsp = await self._perform_action({"action": "get_timeline", "data": {}})
+        logger.info(rsp)
+        events = cast(List[Dict[str, str]], rsp.get("timeline"))
+        return events
 
     async def verify_message_in_timeline(self, message: str) -> None:
         await self._perform_action(
