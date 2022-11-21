@@ -50,15 +50,16 @@ class InviteUserDecryptPrejoinMessagesMoreUsersTest(Test):
             william,
         ]
 
+        def register(h: MatrixClient) -> None:
+            nio_client.register(h.localpart, h.password)
+
+        def login(h: MatrixClient) -> None:
+            h.login(server)
+
         nio_client = AsyncClient(server.cs_api)
         try:
-            await asyncio.gather(
-                *map(
-                    lambda h: nio_client.register(h.localpart, h.password),
-                    hydrogen_adapters,
-                )
-            )
-            await asyncio.gather(*map(lambda h: h.login(server), hydrogen_adapters))
+            await asyncio.gather(*map(register, hydrogen_adapters))
+            await asyncio.gather(*map(login, hydrogen_adapters))
             await asyncio.gather(alice.register(server), bob.register(server))
 
             await alice.create_room("little test room")
