@@ -23,24 +23,31 @@ class FallbackKeyTest(Test):
         await asyncio.gather(
             alice.register(alice_proxy), bob.register(server)
         )
-        await alice.create_room("fallback test room")
+        # TODO: does alice need to enable fallback keys? 
+        room_id = await alice.create_room("fallback test room")
         await alice.invite_user(f"{bob.localpart}:{server.server_name}")
         await bob.accept_invite()
         # disable sync for alice, so she can't upload more device keys
         await alice_proxy.disable_endpoint("/_matrix/client/r0/sync")
-
-        # for 1...60
-        bob_client_n = AsyncClient(
-            server.cs_api, f"@{bob.localpart}:{server.server_name}"
-        )
-        login_resp = await bob_client_n.login(bob.password)
-
-        # check that we logged in succesfully
-        if isinstance(login_resp, LoginResponse):
-            
-        else:
-            print(f'homeserver = "{homeserver}"; user = "{user_id}"')
-            print(f"Failed to log in: {login_resp}")
-            sys.exit(1)
-
+        for i in range(1, 61):
+            await login_and_send_message_in_room(server, bob, room_id, f"Hello world {i}!")
         await alice_proxy.enable_endpoint("/_matrix/client/r0/sync")
+        # last message would have exhausted the OTKs,
+        # so we should have fallen back to the fallback key
+        await alice.verify_message_in_timeline("Hello world 60!")
+
+async def login_and_send_message_in_room(server: HomeServer, user: MatrixClient, room_id: str, message: str) -> None:
+    # TODO: will this encrypt (and hence track the room and claim keys)??
+    # need to install python-olm and pip install "matrix-nio[e2e]
+    client = AsyncClient(
+        server.cs_api, f"@{user.localpart}:{server.server_name}"
+    )
+    try:
+        await client.login(user.password)
+        await client.room_send(
+            room_id,
+            message_type="m.room.message",
+            content={"msgtype": "m.text", "body": message},
+        )
+    finally:
+        await client.close()
