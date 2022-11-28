@@ -35,13 +35,13 @@ We Should Not name actions passively, or indirectly
 We Should name actions after what they do, not what test they're related to
  * `create_poll` not `pr_52_action` or `msc_1235_action`
 
-We Should avoid naming actions in a client specific way
- * `clear_idb_cache` is not great because it's only available in element web
-
-We Should avoid actions that have implied state
+We Should avoid actions that have implied previous steps
  * `enable_video_calling` not `go_to_configuration` then `toggle_config_option("video_calling")`
 
-Actions should ideally be generic across clients; avoid client-specific behaviour where possible. This allows our test cases to be as generic as possible and avoids requirements for duplication for different clients.
+We try to avoid naming actions in a client specific way unless required for the platform.
+ * `clear_idb_cache` is not great because it doesn't apply to iOS / Android
+
+Actions should ideally be generic across clients; avoid client-specific behaviour where possible. This allows our test cases to be as generic as possible and avoids requirements for duplication for different clients. But if a test does only apply to one platform; be clear in what the action does.
 
 The canonical definition of actions that exist is in the Client code on the main branch of the trafficlight server. This includes the correct naming, potential contents of the `data: {}` block, and any values that may be returned from the action.
 
