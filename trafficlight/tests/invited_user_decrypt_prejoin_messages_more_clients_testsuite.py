@@ -71,10 +71,11 @@ class InviteUserDecryptPrejoinMessagesMoreUsersTest(Test):
             for adapter in hydrogen_adapters:
                 await alice.invite_user(adapter.localpart + ":" + server.server_name)
             await bob.accept_invite()
-            await bob.send_message("Everybody should be able to read this message!")
+            message = "Everybody should be able to read this message!"
+            await bob.send_message(message)
             await asyncio.gather(*map(lambda h: h.accept_invite(), hydrogen_adapters))
             await asyncio.gather(
-                *map(lambda h: h.verify_last_message_is_utd(), hydrogen_adapters)
+                *map(lambda h: h.verify_message_in_timeline(message), hydrogen_adapters)
             )
         finally:
             await nio_client.close()
