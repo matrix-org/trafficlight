@@ -1,6 +1,7 @@
 import asyncio
 
-from nio import AsyncClient
+import logging
+from nio import AsyncClient, AsyncClientConfig, SyncResponse
 from trafficlight.client_types import ElementWeb
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient, NetworkProxyClient
@@ -39,13 +40,27 @@ class FallbackKeyTest(Test):
 async def login_and_send_message_in_room(server: HomeServer, user: MatrixClient, room_id: str, message: str) -> None:
     # TODO: will this encrypt (and hence track the room and claim keys)??
     # need to install python-olm and pip install "matrix-nio[e2e]
+    logging.info(f"trying to login as @{user.localpart}:{server.server_name} with password ${user.password} and send a message in #{room_id}...")
     client = AsyncClient(
-        server.cs_api, f"@{user.localpart}:{server.server_name}"
+        server.cs_api,
+        f"@{user.localpart}:{server.server_name}",
+        config=AsyncClientConfig(encryption_enabled=True)
     )
     try:
         await client.login(user.password)
+        loop = asyncio.get_running_loop()
+        first_room_future = loop.create_future()
+        async def sync_cb(response):
+            rooms = client.rooms.values()
+            room = rooms[0]
+            if room:
+                first_room_future.set_result(room)
+        client.add_response_callback(sync_cb, SyncResponse)
+        client.sync_forever(30000)
+        room = await first_room_future
+        logging.info("got room with id {room.id} {room.room_id}")
         await client.room_send(
-            room_id,
+            room.room_id,
             message_type="m.room.message",
             content={"msgtype": "m.text", "body": message},
         )
