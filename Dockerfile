@@ -1,6 +1,8 @@
-FROM python:3-buster
+FROM python:3-bullseye
 WORKDIR /app
 COPY . /app
+RUN apt update && apt install -y libolm-dev && rm -rf /var/lib/apt/lists/*
+
 RUN python -m pip install .
 
 EXPOSE 5000
