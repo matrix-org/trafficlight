@@ -20,6 +20,11 @@ from werkzeug.utils import secure_filename
 
 from trafficlight.homerunner import HomerunnerClient
 from trafficlight.internals.adapter import Adapter
+from trafficlight.internals.exceptions import (
+    ActionException,
+    AdapterException,
+    RemoteException,
+)
 from trafficlight.store import add_adapter, get_adapter, get_adapters, get_tests
 
 # Set transitions' log level to INFO; DEBUG messages will be omitted
@@ -107,11 +112,36 @@ async def error(uuid: str):  # type: ignore
         logger.info("Got error from ${uuid}, unable to route internally\n${response}")
         raise Exception("Unknown adapter raising error")
 
-    update = cast(Dict[str, Any], error_json)
-    # Using the same API format as sentry to capture the error in a reasonable way:
-    error_body = update["error"]
+    if error_json is None:
+        raise Exception("Error request did not include a JSON body")
 
-    adapter.error(error_body)
+    update = cast(Dict[str, Any], error_json)
+
+    # Using the same API format as sentry to capture the error in a reasonable way:
+    # {
+    #    "error": {
+    #        "type": "unknown" | "action"
+    #        "path": "path/to/error"
+    #        "details": "human/details_go_here"
+    #    }
+    # }
+    error_body = update["error"]
+    exception: RemoteException
+    cause: str
+    if adapter.client:
+        cause = f"Error from adapter for client {adapter.client.name}"
+    else:
+        cause = f"Error from adapter {adapter.guid}"
+    if error_body["type"] == "action":
+        exception = ActionException(
+            cause + "\n" + error_body["details"], error_body["path"]
+        )
+    else:
+        exception = AdapterException(
+            cause + "\n" + error_body["details"], error_body["path"]
+        )
+
+    adapter.error(exception)
 
     return {}
 

@@ -15,7 +15,7 @@ class Adapter(object):
         self.last_responded: Optional[datetime] = None
         self.registered = datetime.now()
         self.completed = False
-        self.last_error: Optional[Dict[str, str]] = None
+        self.last_error: Optional[Exception] = None
         # After allocation to a TestCase, this becomes valid and is where
         # updates should be passed to.
         self.client: Optional[Client] = None
@@ -53,7 +53,11 @@ class Adapter(object):
         if update_last_responded:
             self.last_responded = datetime.now()
 
-    def error(self, error: Dict[str, str], update_last_responded: bool = True) -> None:
+    def error(
+        self,
+        error: Exception,
+        update_last_responded: bool = True,
+    ) -> None:
         # If we error, always mark us as completed
         self.completed = True
         self.last_error = error
@@ -66,11 +70,10 @@ class Adapter(object):
                 self.guid,
             )
             return
-        exception = Exception(f"{error} from adapter")
-        self.client._give_poll_exception(exception)
-
         if update_last_responded:
             self.last_responded = datetime.now()
+
+        self.client._give_poll_exception(error)
 
     def upload(self, name: str, path: str, update_last_responded: bool = True) -> None:
         if self.client is None:

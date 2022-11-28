@@ -30,10 +30,10 @@ class Dendrite(ServerType):
         return await homerunner.create(test_case_id, ["complement-dendrite"])
 
 
-class MixedFederation(ServerType):
+class TwoSynapseFederation(ServerType):
     async def create(
         self, test_case_id: str, homerunner: HomerunnerClient
     ) -> List[HomeServer]:
         return await homerunner.create(
-            test_case_id, ["complement-dendrite", "complement-synapse"]
+            test_case_id, ["complement-synapse", "complement-synapse"]
         )
