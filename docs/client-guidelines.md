@@ -38,8 +38,10 @@ We Should name actions after what they do, not what test they're related to
 We Should avoid actions that have implied previous steps
  * `enable_video_calling` not `go_to_configuration` then `toggle_config_option("video_calling")`
 
-We try to avoid naming actions in a client specific way unless required for the platform.
- * `clear_idb_cache` is not great because it doesn't apply to iOS / Android
+We Should Not name actions in a client specific way unless required for the platform.
+ * `clear_room_notifications` not `swipe_room_right` or `longpress_icon`
+ * `get_event_metadata` not `get_hovering_mouse_over_timestamp_data`
+ * `clear_idb_cache` is acceptable because the behavior of the `idb` cache only applies on web platform, and could be subtly different to `clear_android_storage` or `reinstall_ios_application`.
 
 Actions should ideally be generic across clients; avoid client-specific behaviour where possible. This allows our test cases to be as generic as possible and avoids requirements for duplication for different clients. But if a test does only apply to one platform; be clear in what the action does.
 
