@@ -6,6 +6,7 @@ IFS=$'\n\t'
 #  - complement: a checkout of the complement repo, with homeserver built
 #  - trafficlight: a checkout of this repo
 #  - trafficlight-adapter-element-web: a checkout of https://github.com/matrix-org/trafficlight-adapter-element-web
+#  - trafficlight-adapter-hydrogen-web: a checkout of https://github.com/vector-im/trafficlight-adapter-hydrogen-web
 #  - trafficlight-proxy: a checkout of https://github.com/vector-im/trafficlight-proxy/
 
 
