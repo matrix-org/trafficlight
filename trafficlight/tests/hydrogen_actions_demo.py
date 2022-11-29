@@ -13,30 +13,30 @@ from trafficlight.server_types import Synapse
 class HydrogenActionsTest(Test):
     def __init__(self) -> None:
         super().__init__()
-        self._client_under_test([HydrogenWeb()], "alice_one")
+        self._client_under_test([HydrogenWeb()], "alice")
         self._server_under_test(Synapse(), ["server"])
 
     async def run(
         self,
-        alice_one: MatrixClient,
+        alice: MatrixClient,
         server: HomeServer,
     ) -> None:
         nio_client = AsyncClient(
-            server.cs_api, f"@{alice_one.localpart}:{server.server_name}"
+            server.cs_api, f"@{alice.localpart}:{server.server_name}"
         )
         try:
-            await nio_client.register(alice_one.localpart, alice_one.password)
-            await alice_one.login(server)
-            await alice_one.create_room("Test Room 1")
-            await alice_one.send_message("Hello world!")
-            await alice_one.create_room("Test Room 2")
-            await alice_one.open_room("Test Room 1")
-            await alice_one.reload()
-            await alice_one.verify_message_in_timeline("Hello world!")
-            await alice_one.logout()
-            await alice_one.login(server)
-            await alice_one.open_room("Test Room 1")
-            await alice_one.verify_last_message_is_utd()
-            await alice_one.clear_idb_storage()
+            await nio_client.register(alice.localpart, alice.password)
+            await alice.login(server)
+            await alice.create_room("Test Room 1")
+            await alice.send_message("Hello world!")
+            await alice.create_room("Test Room 2")
+            await alice.open_room("Test Room 1")
+            await alice.reload()
+            await alice.verify_message_in_timeline("Hello world!")
+            await alice.logout()
+            await alice.login(server)
+            await alice.open_room("Test Room 1")
+            await alice.verify_last_message_is_utd()
+            await alice.clear_idb_storage()
         finally:
             await nio_client.close()
