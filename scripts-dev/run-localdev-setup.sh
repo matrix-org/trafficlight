@@ -58,10 +58,18 @@ if [[ $REQUIRES_PROXY == "true" ]]; then
 fi
 
 
-REQUIRES_HYDROGEN=${REQUIRES_HYDROGEN:-false}
-if [[ $REQUIRES_HYDROGEN == "true" ]]; then
-	tmux split-pane -v -c ./trafficlight-adapter-hydrogen-web
+
+HYDROGEN_COUNT=${HYDROGEN_COUNT:-0}
+for i in $(seq 1 $HYDROGEN_COUNT)
+do
+	if [ "$i" -eq "1" ]; then
+		tmux new-window -n adapters-hydrogen -c ./trafficlight-adapter-hydrogen-web
+	else
+		tmux split-pane -c ./trafficlight-adapter-hydrogen-web
+	fi
 	tmux send-keys -t $session 'while [[ "$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' $HYDROGEN_APP_URL)" != "200" ]]; do sleep 1; done' Enter
 	tmux send-keys -t $session 'yarn test:trafficlight' Enter
-fi
+	tmux select-layout tiled
+done
+
 tmux attach-session -t $session
