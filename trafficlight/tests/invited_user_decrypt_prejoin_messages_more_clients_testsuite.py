@@ -50,11 +50,11 @@ class InviteUserDecryptPrejoinMessagesMoreUsersTest(Test):
             william,
         ]
 
-        def register(h: MatrixClient) -> None:
-            nio_client.register(h.localpart, h.password)
+        async def register(h: MatrixClient) -> None:
+            await nio_client.register(h.localpart, h.password)
 
-        def login(h: MatrixClient) -> None:
-            h.login(server)
+        async def login(h: MatrixClient) -> None:
+            await h.login(server)
 
         nio_client = AsyncClient(server.cs_api)
         try:
