@@ -6,6 +6,7 @@ IFS=$'\n\t'
 #  - complement: a checkout of the complement repo, with homeserver built
 #  - trafficlight: a checkout of this repo
 #  - trafficlight-adapter-element-web: a checkout of https://github.com/matrix-org/trafficlight-adapter-element-web
+#  - trafficlight-adapter-hydrogen-web: a checkout of https://github.com/vector-im/trafficlight-adapter-hydrogen-web
 #  - trafficlight-proxy: a checkout of https://github.com/vector-im/trafficlight-proxy/
 
 
@@ -20,7 +21,10 @@ if [ $IS_DOCKER_RUNNING -ne "0" ]; then
 	exit
 fi
 
-echo "Using CYPRESS_BASE_URL $CYPRESS_BASE_URL"
+if [[ -n "${CYPRESS_BASE_URL:-}" ]]; then
+	echo "Using CYPRESS_BASE_URL $CYPRESS_BASE_URL"
+fi
+
 session="trafficlight"
 
 tmux new-session -d -s $session -c ./complement
@@ -53,4 +57,11 @@ if [[ $REQUIRES_PROXY == "true" ]]; then
 	tmux send-keys -t $session 'yarn start' Enter
 fi
 
+
+REQUIRES_HYDROGEN=${REQUIRES_HYDROGEN:-false}
+if [[ $REQUIRES_HYDROGEN == "true" ]]; then
+	tmux split-pane -v -c ./trafficlight-adapter-hydrogen-web
+	tmux send-keys -t $session 'while [[ "$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' $HYDROGEN_APP_URL)" != "200" ]]; do sleep 1; done' Enter
+	tmux send-keys -t $session 'yarn test:trafficlight' Enter
+fi
 tmux attach-session -t $session

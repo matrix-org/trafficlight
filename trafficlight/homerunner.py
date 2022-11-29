@@ -48,7 +48,7 @@ class HomerunnerClient(object):
 
     def _generate_homeserver(self, base_image_uri: str) -> Dict[str, Any]:
         """
-        For now, we don't require any Users or Rooms to be created automatically
+        We don't need to create rooms/users from homerunner, we can use matrix-nio for that!
         """
         self.hsid = self.hsid + 1
         return {
