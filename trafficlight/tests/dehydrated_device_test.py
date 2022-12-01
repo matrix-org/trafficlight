@@ -9,8 +9,8 @@ class DehydratedDeviceTest(Test):
     def __init__(self) -> None:
         super().__init__()
         self._client_under_test([ElementWebStable()], "alice")
-        self._client_under_test([ElementWeb()], "bob")
-        self._server_under_test(Synapse(), ["server"])
+        self._client_under_test([ElementWebStable()], "bob")
+        self._server_under_test(SynapseStable(), ["server"])
 
     async def run(
         self, alice: MatrixClient, bob: MatrixClient, server: HomeServer
