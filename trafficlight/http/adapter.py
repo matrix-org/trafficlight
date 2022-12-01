@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, cast
@@ -64,6 +65,7 @@ async def check_for_new_tests() -> None:
 
 
 last_cleanup = datetime.now()
+stop_background_tasks = False
 
 
 async def cleanup_unresponsive_adapters() -> None:
@@ -93,7 +95,7 @@ async def cleanup_unresponsive_adapters() -> None:
             # This won't repeat as side effect of an error is to move to completed.
             late_poll = now - adapter.last_polled > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
             late_response = (
-                now - adapter.last_responded > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
+                    now - adapter.last_responded > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
             )
 
             if late_poll and late_response:
@@ -109,11 +111,20 @@ async def cleanup_unresponsive_adapters() -> None:
                 )
 
 
-async def try_cleanup_unresponsive_adapters() -> None:
-    now = datetime.now()
-    if now - last_cleanup > timedelta(seconds=30):
-        current_app.add_background_task(cleanup_unresponsive_adapters)
+async def loop_cleanup_unresponsive_adapters() -> None:
+    while not stop_background_tasks:
+        logging.info("Running sweep for idle adapters")
+        await cleanup_unresponsive_adapters()
+        await asyncio.sleep(30)
 
+    logging.info("Finished sweep task")
+
+async def loop_check_for_new_tests() -> None:
+    while not stop_background_tasks:
+        logging.info("Running sweep for new tests")
+        await check_for_new_tests()
+        await asyncio.sleep(30)
+    logging.info("Finished new test task")
 
 @bp.route("/<string:adapter_uuid>/register", methods=["POST"])
 async def register(adapter_uuid: str):  # type: ignore
@@ -132,9 +143,6 @@ async def register(adapter_uuid: str):  # type: ignore
             return {}
     adapter = Adapter(adapter_uuid, registration)
     add_adapter(adapter)
-
-    current_app.add_background_task(check_for_new_tests)
-
     return {}
 
 
@@ -152,7 +160,6 @@ async def poll(uuid: str):  # type: ignore
 
     logger.info(f"Returning {poll_response} to {uuid}")
 
-    await try_cleanup_unresponsive_adapters()
     return poll_response
 
 

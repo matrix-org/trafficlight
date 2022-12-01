@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
@@ -76,5 +77,14 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     app.register_blueprint(root.bp)
 
     app.jinja_env.filters["delaytime"] = format_delaytime
+
+    @app.before_serving
+    async def start_background_tasks() -> None:
+        app.add_background_task(http.adapter.loop_cleanup_unresponsive_adapters)
+        app.add_background_task(http.adapter.loop_check_for_new_tests)
+
+    @app.after_serving
+    async def stop_background_tasks() -> None:
+        http.adapter.stop_background_tasks = True
 
     return app
