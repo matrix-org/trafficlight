@@ -2,18 +2,18 @@ import asyncio
 
 from nio import AsyncClient
 
-from trafficlight.client_types import ElementWeb, HydrogenWeb
+from trafficlight.client_types import ElementWebStable, HydrogenWeb
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
-from trafficlight.server_types import Synapse
+from trafficlight.server_types import SynapseStable
 
 
 class InviteUserDecryptPrejoinMessagesMoreUsersTest(Test):
     def __init__(self) -> None:
         super().__init__()
-        self._client_under_test([ElementWeb()], "alice")
-        self._client_under_test([ElementWeb()], "bob")
+        self._client_under_test([ElementWebStable()], "alice")
+        self._client_under_test([ElementWebStable()], "bob")
 
         self._client_under_test([HydrogenWeb()], "olivia")
         self._client_under_test([HydrogenWeb()], "liam")
@@ -23,7 +23,7 @@ class InviteUserDecryptPrejoinMessagesMoreUsersTest(Test):
         self._client_under_test([HydrogenWeb()], "lucas")
         self._client_under_test([HydrogenWeb()], "isabella")
         self._client_under_test([HydrogenWeb()], "william")
-        self._server_under_test(Synapse(), ["server"])
+        self._server_under_test(SynapseStable(), ["server"])
 
     async def run(
         self,

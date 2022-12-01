@@ -1,16 +1,16 @@
-from trafficlight.client_types import ElementWeb
+from trafficlight.client_types import ElementWebStable
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
-from trafficlight.server_types import Synapse
+from trafficlight.server_types import SynapseStable
 
 
 class DehydratedDeviceTest(Test):
     def __init__(self) -> None:
         super().__init__()
-        self._client_under_test([ElementWeb()], "alice")
-        self._client_under_test([ElementWeb()], "bob")
-        self._server_under_test(Synapse(), ["server"])
+        self._client_under_test([ElementWebStable()], "alice")
+        self._client_under_test([ElementWebStable()], "bob")
+        self._server_under_test(SynapseStable(), ["server"])
 
     async def run(
         self, alice: MatrixClient, bob: MatrixClient, server: HomeServer

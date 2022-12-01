@@ -1,10 +1,10 @@
 import asyncio
 
-from trafficlight.client_types import ElementWeb
+from trafficlight.client_types import ElementWebStable
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.test import Test
-from trafficlight.server_types import Synapse
+from trafficlight.server_types import SynapseStable
 
 # Test Script:
 # CLIENT_COUNT=2 REQUIRES_PROXY=true CYPRESS_BASE_URL="https://develop.element.io"
@@ -14,9 +14,9 @@ from trafficlight.server_types import Synapse
 class VerifyWhenToDeviceMessagesOutOfOrder(Test):
     def __init__(self) -> None:
         super().__init__()
-        self._client_under_test([ElementWeb()], "alice_one")
-        self._client_under_test([ElementWeb()], "alice_two")
-        self._server_under_test(Synapse(), ["server"])
+        self._client_under_test([ElementWebStable()], "alice_one")
+        self._client_under_test([ElementWebStable()], "alice_two")
+        self._server_under_test(SynapseStable(), ["server"])
         self._network_proxy("network_proxy")
 
     async def run(

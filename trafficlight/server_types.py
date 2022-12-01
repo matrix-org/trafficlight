@@ -16,11 +16,22 @@ class ServerType(object):
         pass
 
 
-class Synapse(ServerType):
+class SynapseStable(ServerType):
     async def create(
         self, test_case_id: str, homerunner: HomerunnerClient
     ) -> List[HomeServer]:
-        return await homerunner.create(test_case_id, ["complement-synapse"])
+        return await homerunner.create(
+            test_case_id, ["ghcr.io/matrix-org/synapse/complement-synapse:master"]
+        )
+
+
+class SynapseDevelop(ServerType):
+    async def create(
+        self, test_case_id: str, homerunner: HomerunnerClient
+    ) -> List[HomeServer]:
+        return await homerunner.create(
+            test_case_id, ["ghcr.io/matrix-org/synapse/complement-synapse:develop"]
+        )
 
 
 class Dendrite(ServerType):
@@ -35,5 +46,9 @@ class TwoSynapseFederation(ServerType):
         self, test_case_id: str, homerunner: HomerunnerClient
     ) -> List[HomeServer]:
         return await homerunner.create(
-            test_case_id, ["complement-synapse", "complement-synapse"]
+            test_case_id,
+            [
+                "ghcr.io/matrix-org/synapse/complement-synapse:develop",
+                "ghcr.io/matrix-org/synapse/complement-synapse:develop",
+            ],
         )

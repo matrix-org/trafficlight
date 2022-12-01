@@ -1,6 +1,6 @@
 import asyncio
 
-from trafficlight.client_types import ElementWeb
+from trafficlight.client_types import ElementWebStable
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
@@ -10,8 +10,8 @@ from trafficlight.server_types import TwoSynapseFederation
 class SendMessagesAcrossFederationTest(Test):
     def __init__(self) -> None:
         super().__init__()
-        self._client_under_test([ElementWeb()], "alice")
-        self._client_under_test([ElementWeb()], "bob")
+        self._client_under_test([ElementWebStable()], "alice")
+        self._client_under_test([ElementWebStable()], "bob")
         self._server_under_test(TwoSynapseFederation(), ["alice_server", "bob_server"])
 
     async def run(
