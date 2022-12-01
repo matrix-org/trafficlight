@@ -25,7 +25,9 @@ from trafficlight.internals.adapter import Adapter
 from trafficlight.internals.exceptions import (
     ActionException,
     AdapterException,
+    PollTimeoutException,
     RemoteException,
+    ShutdownException,
 )
 from trafficlight.store import (
     add_adapter,
@@ -56,7 +58,11 @@ async def check_for_new_tests() -> None:
             adapters_required = test_case.allocate_adapters(available_adapters)
             if adapters_required is not None:
                 logger.info("Starting test %s", test_case)
-                await test_case.run(adapters_required, homerunner)
+
+                async def run() -> None:
+                    await test_case.run(adapters_required, homerunner)
+
+                current_app.add_background_task(run)
                 return
     logger.debug(
         "Not enough client_types to run any test(have %s)",
@@ -95,7 +101,7 @@ async def cleanup_unresponsive_adapters() -> None:
             # This won't repeat as side effect of an error is to move to completed.
             late_poll = now - adapter.last_polled > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
             late_response = (
-                    now - adapter.last_responded > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
+                now - adapter.last_responded > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
             )
 
             if late_poll and late_response:
@@ -103,10 +109,9 @@ async def cleanup_unresponsive_adapters() -> None:
                     f"Raising error for adapter {adapter.guid} due to not responding since {adapter.last_responded}, and not polling since {adapter.last_polled} (both more than {ACTIVE_ADAPTER_UNRESPONSIVE_DELAY})"
                 )
                 adapter.error(
-                    {
-                        "reason": "timeout",
-                        "timeout": f"{ACTIVE_ADAPTER_UNRESPONSIVE_DELAY}",
-                    },
+                    PollTimeoutException(
+                        f"Timed out adapter after {ACTIVE_ADAPTER_UNRESPONSIVE_DELAY}"
+                    ),
                     update_last_responded=False,
                 )
 
@@ -119,12 +124,19 @@ async def loop_cleanup_unresponsive_adapters() -> None:
 
     logging.info("Finished sweep task")
 
+
 async def loop_check_for_new_tests() -> None:
     while not stop_background_tasks:
         logging.info("Running sweep for new tests")
         await check_for_new_tests()
         await asyncio.sleep(30)
     logging.info("Finished new test task")
+
+
+async def adapter_shutdown() -> None:
+    for adapter in get_adapters():
+        adapter.error(ShutdownException("Shutting down trafficlight"))
+
 
 @bp.route("/<string:adapter_uuid>/register", methods=["POST"])
 async def register(adapter_uuid: str):  # type: ignore

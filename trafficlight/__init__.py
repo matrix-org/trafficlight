@@ -12,13 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from quart import Quart
 
+import trafficlight
+from trafficlight.http.adapter import (
+    adapter_shutdown,
+    loop_check_for_new_tests,
+    loop_cleanup_unresponsive_adapters,
+)
 from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import add_testsuite
 from trafficlight.tests import load_tests
@@ -65,7 +70,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
         logger.info(f"Generating test cases for {test.name()}")
         test_cases = test.generate_test_cases()
         for test_case in test_cases:
-            logger.info(f" - { test_case }")
+            logger.info(f" - {test_case}")
 
         test_suite = TestSuite(test, test_cases)
         add_testsuite(test_suite)
@@ -79,12 +84,13 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     app.jinja_env.filters["delaytime"] = format_delaytime
 
     @app.before_serving
-    async def start_background_tasks() -> None:
-        app.add_background_task(http.adapter.loop_cleanup_unresponsive_adapters)
-        app.add_background_task(http.adapter.loop_check_for_new_tests)
+    async def startup() -> None:
+        app.add_background_task(loop_cleanup_unresponsive_adapters)
+        app.add_background_task(loop_check_for_new_tests)
 
     @app.after_serving
-    async def stop_background_tasks() -> None:
-        http.adapter.stop_background_tasks = True
+    async def shutdown() -> None:
+        trafficlight.http.adapter.stop_background_tasks = True
+        await adapter_shutdown()
 
     return app

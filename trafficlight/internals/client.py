@@ -31,6 +31,9 @@ class Client:
         self.current_poll_response = DEFAULT_POLL_RESPONSE
         self.current_poll_future: Optional[asyncio.Future[Dict[str, Any]]] = None
 
+        # Store an exception if if comes in while we're not awaiting something
+        self.next_exception: Exception = None
+
     def __repr__(self) -> str:
         return self.name
 
@@ -51,7 +54,8 @@ class Client:
         if self.current_poll_future is not None:
             self.current_poll_future.set_exception(exception)
         else:
-            raise Exception("Unable to handle exception; not awaiting that.")
+            # Store exception for next time we perform an action.
+            self.next_exception = exception
 
     # used by named methods from the test
     async def _perform_action(self, question: Dict[str, Any]) -> Dict[str, Any]:
@@ -61,12 +65,20 @@ class Client:
                 + str(self.current_poll_response)
             )
 
+        if self.next_exception is not None:
+            exception = self.next_exception
+            self.next_exception = None
+            raise exception
+
         self.current_poll_response = question
         self.current_poll_future = asyncio.get_running_loop().create_future()
 
-        rsp = await self.current_poll_future
-        self.current_poll_future = None
-        self.current_poll_response = DEFAULT_POLL_RESPONSE
+        try:
+            rsp = await self.current_poll_future
+        finally:
+            self.current_poll_future = None
+            self.current_poll_response = DEFAULT_POLL_RESPONSE
+
         return rsp
 
 
@@ -205,7 +217,7 @@ class MatrixClient(Client):
             {"action": "verify_message_in_timeline", "data": {"message": message}}
         )
 
-    async def get_timeline(self) -> None:
+    async def get_timeline(self) -> Any:
         response = await self._perform_action({"action": "get_timeline", "data": {}})
         return response["timeline"]
 
