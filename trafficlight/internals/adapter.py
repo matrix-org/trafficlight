@@ -1,10 +1,11 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from trafficlight.internals.client import Client
 
 logger = logging.getLogger(__name__)
+
 
 class Adapter(object):
     def __init__(self, guid: str, registration: Dict[str, Any]) -> None:
@@ -31,10 +32,16 @@ class Adapter(object):
 
     def poll(self, update_last_polled: bool = True) -> Dict[str, Any]:
         if self.completed:
-            action: Dict[str, Any] = {"action": "exit", "data": { "reason": "test has completed"}}
+            action: Dict[str, Any] = {
+                "action": "exit",
+                "data": {"reason": "test has completed"},
+            }
         elif self.client is None:
             # No model has been allocated yet; idle.
-            action = {"action": "idle", "data": {"delay": "30000", "reason": "waiting for testcase"}}
+            action = {
+                "action": "idle",
+                "data": {"delay": "30000", "reason": "waiting for testcase"},
+            }
         else:
             action = self.client._get_poll_data()
 

@@ -12,8 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import asyncio
 import logging
+from datetime import datetime, timedelta
 from typing import Any, Dict, cast
 
 from quart import Blueprint, current_app, request
@@ -26,9 +26,13 @@ from trafficlight.internals.exceptions import (
     AdapterException,
     RemoteException,
 )
-from trafficlight.store import add_adapter, get_adapter, get_adapters, get_tests, remove_adapter
-
-from datetime import timedelta, datetime
+from trafficlight.store import (
+    add_adapter,
+    get_adapter,
+    get_adapters,
+    get_tests,
+    remove_adapter,
+)
 
 IDLE_ADAPTER_UNRESPONSIVE_DELAY = timedelta(minutes=1)
 ACTIVE_ADAPTER_UNRESPONSIVE_DELAY = timedelta(minutes=3)
@@ -62,8 +66,6 @@ async def check_for_new_tests() -> None:
 last_cleanup = datetime.now()
 
 
-
-
 async def cleanup_unresponsive_adapters() -> None:
     now = datetime.now()
     for adapter in list(get_adapters()):
@@ -74,7 +76,8 @@ async def cleanup_unresponsive_adapters() -> None:
             # This will prevent us from assigning tests to inactive adapters.
             if now - adapter.last_polled > IDLE_ADAPTER_UNRESPONSIVE_DELAY:
                 logger.warning(
-                    f"Removing adapter {adapter.guid} due to not responding since {adapter.last_polled} (more than {IDLE_ADAPTER_UNRESPONSIVE_DELAY})")
+                    f"Removing adapter {adapter.guid} due to not responding since {adapter.last_polled} (more than {IDLE_ADAPTER_UNRESPONSIVE_DELAY})"
+                )
                 remove_adapter(adapter)
 
             pass  # idle out adapters that haven't contacted in last 60s
@@ -89,19 +92,27 @@ async def cleanup_unresponsive_adapters() -> None:
             # allowing us to continue with other tests
             # This won't repeat as side effect of an error is to move to completed.
             late_poll = now - adapter.last_polled > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
-            late_response = now - adapter.last_responded > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
+            late_response = (
+                now - adapter.last_responded > ACTIVE_ADAPTER_UNRESPONSIVE_DELAY
+            )
 
             if late_poll and late_response:
                 logger.warning(
-                    f"Raising error for adapter {adapter.guid} due to not responding since {adapter.last_responded}, and not polling since {adapter.last_polled} (both more than {ACTIVE_ADAPTER_UNRESPONSIVE_DELAY})")
-                adapter.error({"reason": "timeout", "timeout": f"{ACTIVE_ADAPTER_UNRESPONSIVE_DELAY}"},
-                              update_last_responded=False)
+                    f"Raising error for adapter {adapter.guid} due to not responding since {adapter.last_responded}, and not polling since {adapter.last_polled} (both more than {ACTIVE_ADAPTER_UNRESPONSIVE_DELAY})"
+                )
+                adapter.error(
+                    {
+                        "reason": "timeout",
+                        "timeout": f"{ACTIVE_ADAPTER_UNRESPONSIVE_DELAY}",
+                    },
+                    update_last_responded=False,
+                )
 
 
 async def try_cleanup_unresponsive_adapters() -> None:
-            now = datetime.now()
-            if now - last_cleanup > timedelta(seconds=30):
-                current_app.add_background_task(cleanup_unresponsive_adapters)
+    now = datetime.now()
+    if now - last_cleanup > timedelta(seconds=30):
+        current_app.add_background_task(cleanup_unresponsive_adapters)
 
 
 @bp.route("/<string:adapter_uuid>/register", methods=["POST"])

@@ -8,6 +8,7 @@ from trafficlight.server_types import Synapse
 
 logger = logging.getLogger(__name__)
 
+
 class SendMessagesTest(Test):
     def __init__(self) -> None:
         super().__init__()
