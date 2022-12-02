@@ -47,7 +47,7 @@ do
 	# so the tests don't fail because of this
 	tmux send-keys -t $session "sleep 5" Enter
 	tmux send-keys -t $session 'while [[ "$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' $CYPRESS_BASE_URL)" != "200" ]]; do sleep 1; done' Enter
-	tmux send-keys -t $session "XDG_CONFIG_HOME=\"/tmp/cypress-home-$i\" yarn test:trafficlight" Enter
+	tmux send-keys -t $session "while sleep 1; do XDG_CONFIG_HOME=\"/tmp/cypress-home-$i\" yarn test:trafficlight; done" Enter
 	tmux select-layout tiled
 done
 
