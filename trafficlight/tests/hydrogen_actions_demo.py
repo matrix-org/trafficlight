@@ -4,7 +4,7 @@ from trafficlight.client_types import HydrogenWeb
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
-from trafficlight.server_types import SynapseStable
+from trafficlight.server_types import SynapseDevelop
 
 # Test Script:
 # CLIENT_COUNT=0 REQUIRES_HYDROGEN=true HYDROGEN_APP_URL="http://localhost:3000" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
@@ -14,7 +14,7 @@ class HydrogenActionsTest(Test):
     def __init__(self) -> None:
         super().__init__()
         self._client_under_test([HydrogenWeb()], "alice")
-        self._server_under_test(SynapseStable(), ["server"])
+        self._server_under_test(SynapseDevelop(), ["server"])
 
     async def run(
         self,

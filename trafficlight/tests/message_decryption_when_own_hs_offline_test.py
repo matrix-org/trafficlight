@@ -4,7 +4,7 @@ from trafficlight.client_types import ElementWebStable
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.test import Test
-from trafficlight.server_types import SynapseStable
+from trafficlight.server_types import SynapseDevelop
 
 
 class MessageDecryptionWhenOwnHSOfflineTest(Test):
@@ -14,7 +14,7 @@ class MessageDecryptionWhenOwnHSOfflineTest(Test):
         self._client_under_test([ElementWebStable()], "bob_one")
         self._client_under_test([ElementWebStable()], "bob_two")
         self._network_proxy("network_proxy")
-        self._server_under_test(SynapseStable(), ["server"])
+        self._server_under_test(SynapseDevelop(), ["server"])
 
     async def run(
         self,
