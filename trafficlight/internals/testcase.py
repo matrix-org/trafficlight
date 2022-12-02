@@ -111,3 +111,5 @@ class TestCase:
                 adapter.finished()
             for server in self.servers:
                 server.finished()
+            # IF current_app().has_testrail:
+            #   testrail.add_test_result(self)
