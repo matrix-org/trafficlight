@@ -74,3 +74,7 @@ def get_adapter(guid: str) -> Optional[Adapter]:
 
 def add_adapter(adapter: Adapter) -> None:
     _adapters.append(adapter)
+
+
+def remove_adapter(adapter: Adapter) -> None:
+    _adapters.remove(adapter)

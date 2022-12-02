@@ -35,7 +35,8 @@ bp = Blueprint("status", __name__, url_prefix="/status")
 async def index():  # type: ignore
     return await render_template(
         "status_index.j2.html",
-        adapters=get_adapters(),
+        completed_adapters=get_adapters(True),
+        inprogress_adapters=get_adapters(False),
         tests=get_tests(),
         test_suites=get_testsuites(),
     )
