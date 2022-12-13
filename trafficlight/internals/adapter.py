@@ -11,9 +11,10 @@ class Adapter(object):
     def __init__(self, guid: str, registration: Dict[str, Any]) -> None:
         self.guid = guid
         self.registration = registration
-        self.last_polled: Optional[datetime] = None
-        self.last_responded: Optional[datetime] = None
-        self.registered = datetime.now()
+        now = datetime.now()
+        self.last_polled = now
+        self.last_responded = now
+        self.registered = now
         self.completed = False
         self.last_error: Optional[Exception] = None
         # After allocation to a TestCase, this becomes valid and is where
@@ -31,16 +32,22 @@ class Adapter(object):
 
     def poll(self, update_last_polled: bool = True) -> Dict[str, Any]:
         if self.completed:
-            action: Dict[str, Any] = {"action": "exit", "responses": []}
+            action: Dict[str, Any] = {
+                "action": "exit",
+                "data": {"reason": "test has completed"},
+            }
         elif self.client is None:
             # No model has been allocated yet; idle.
-            action = {"action": "idle", "responses": [], "data": {"delay": "30000"}}
+            action = {
+                "action": "idle",
+                "data": {"delay": "30000", "reason": "waiting for testcase"},
+            }
         else:
             action = self.client._get_poll_data()
 
         if update_last_polled:
             self.last_polled = datetime.now()
-        logger.info(f"Returning {action} in response to poll")
+
         return action
 
     def respond(

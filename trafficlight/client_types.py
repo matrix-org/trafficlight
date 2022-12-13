@@ -12,9 +12,19 @@ class ClientType(object):
         return self.name()
 
 
-class ElementWeb(ClientType):
+class ElementWebStable(ClientType):
     def match(self, x: Adapter) -> bool:
         return str(x.registration["type"]) == "element-web"
+
+
+class ElementWebDevelop(ClientType):
+    def match(self, x: Adapter) -> bool:
+        return str(x.registration["type"]) == "element-web"
+
+
+class HydrogenWeb(ClientType):
+    def match(self, x: Adapter) -> bool:
+        return str(x.registration["type"]) == "hydrogen-web"
 
 
 class ElementAndroid(ClientType):

@@ -22,3 +22,23 @@ class AdapterException(RemoteException):
     """
 
     pass
+
+
+class PollTimeoutException(Exception):
+    """
+    Raised when the adapter hasn't contacted the server recently.
+
+    Generated internally if no response is done fast enough.
+    """
+
+    pass
+
+
+class ShutdownException(Exception):
+    """
+    Raised when the server is shutdown.
+
+    Generated only on server shutdown.
+    """
+
+    pass

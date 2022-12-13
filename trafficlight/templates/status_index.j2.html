@@ -19,7 +19,17 @@
     <thead class="thead-dark">
     <tr><th>UUID</th><th>State</th><th>Last Polled</th><th>data</th></tr>
     </thead>
-    {% for adapter in adapters %}
+    {% for adapter in inprogress_adapters %}
+    <tr><td>{{ adapter.guid }}</td><td>{% if adapter.client %}<a href='{{ url_for("status.testcase_status", guid = adapter.client.test_case.guid )}}'>{{ adapter.poll(False) }}</a>{% elif adapter.last_error %}Error: {{ adapter.last_error.details }}{% else %}Unallocated{% endif %}<td>{{ adapter.last_polled }}</td><td>{{ adapter.registration }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+<div>
+  <table class="table">
+    <thead class="thead-dark">
+    <tr><th>UUID</th><th>State</th><th>Last Polled</th><th>data</th></tr>
+    </thead>
+    {% for adapter in completed_adapters %}
     <tr><td>{{ adapter.guid }}</td><td>{% if adapter.client %}<a href='{{ url_for("status.testcase_status", guid = adapter.client.test_case.guid )}}'>{{ adapter.poll(False) }}</a>{% elif adapter.last_error %}Error: {{ adapter.last_error.details }}{% else %}Unallocated{% endif %}<td>{{ adapter.last_polled }}</td><td>{{ adapter.registration }}</td></tr>
     {% endfor %}
   </table>

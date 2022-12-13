@@ -18,6 +18,12 @@ from typing import Any, Dict, Optional
 
 from quart import Quart
 
+import trafficlight
+from trafficlight.http.adapter import (
+    adapter_shutdown,
+    loop_check_for_new_tests,
+    loop_cleanup_unresponsive_adapters,
+)
 from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import add_testsuite
 from trafficlight.tests import load_tests
@@ -64,7 +70,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
         logger.info(f"Generating test cases for {test.name()}")
         test_cases = test.generate_test_cases()
         for test_case in test_cases:
-            logger.info(f" - { test_case }")
+            logger.info(f" - {test_case}")
 
         test_suite = TestSuite(test, test_cases)
         add_testsuite(test_suite)
@@ -76,5 +82,20 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     app.register_blueprint(root.bp)
 
     app.jinja_env.filters["delaytime"] = format_delaytime
+
+    @app.before_serving
+    async def startup() -> None:
+        app.add_background_task(loop_cleanup_unresponsive_adapters)
+        app.add_background_task(loop_check_for_new_tests)
+        # if app.has_testrail():
+        #     app.testrail.add_run()
+        #     app.testrail.cache_mappings()
+
+    @app.after_serving
+    async def shutdown() -> None:
+        trafficlight.http.adapter.stop_background_tasks = True
+        # if app.has_testrail():
+        #     app.testrail.close_run()
+        await adapter_shutdown()
 
     return app

@@ -6,6 +6,7 @@ IFS=$'\n\t'
 #  - complement: a checkout of the complement repo, with homeserver built
 #  - trafficlight: a checkout of this repo
 #  - trafficlight-adapter-element-web: a checkout of https://github.com/matrix-org/trafficlight-adapter-element-web
+#  - trafficlight-adapter-hydrogen-web: a checkout of https://github.com/vector-im/trafficlight-adapter-hydrogen-web
 #  - trafficlight-proxy: a checkout of https://github.com/vector-im/trafficlight-proxy/
 
 
@@ -20,7 +21,10 @@ if [ $IS_DOCKER_RUNNING -ne "0" ]; then
 	exit
 fi
 
-echo "Using CYPRESS_BASE_URL $CYPRESS_BASE_URL"
+if [[ -n "${CYPRESS_BASE_URL:-}" ]]; then
+	echo "Using CYPRESS_BASE_URL $CYPRESS_BASE_URL"
+fi
+
 session="trafficlight"
 
 tmux new-session -d -s $session -c ./complement
@@ -43,7 +47,7 @@ do
 	# so the tests don't fail because of this
 	tmux send-keys -t $session "sleep 5" Enter
 	tmux send-keys -t $session 'while [[ "$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' $CYPRESS_BASE_URL)" != "200" ]]; do sleep 1; done' Enter
-	tmux send-keys -t $session "XDG_CONFIG_HOME=\"/tmp/cypress-home-$i\" yarn test:trafficlight" Enter
+	tmux send-keys -t $session "while sleep 1; do XDG_CONFIG_HOME=\"/tmp/cypress-home-$i\" yarn test:trafficlight; done" Enter
 	tmux select-layout tiled
 done
 
@@ -52,5 +56,20 @@ if [[ $REQUIRES_PROXY == "true" ]]; then
 	tmux split-pane -v -c ./trafficlight-proxy
 	tmux send-keys -t $session 'yarn start' Enter
 fi
+
+
+
+HYDROGEN_COUNT=${HYDROGEN_COUNT:-0}
+for i in $(seq 1 $HYDROGEN_COUNT)
+do
+	if [ "$i" -eq "1" ]; then
+		tmux new-window -n adapters-hydrogen -c ./trafficlight-adapter-hydrogen-web
+	else
+		tmux split-pane -c ./trafficlight-adapter-hydrogen-web
+	fi
+	tmux send-keys -t $session 'while [[ "$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' $HYDROGEN_APP_URL)" != "200" ]]; do sleep 1; done' Enter
+	tmux send-keys -t $session 'yarn test:trafficlight' Enter
+	tmux select-layout tiled
+done
 
 tmux attach-session -t $session

@@ -9,6 +9,7 @@ The trafficlight server controls various matrix clients in an effort to coordina
 Tests can specify sets of clients and servers under tests, that are created by the system and passed into their `run()` method.
 
 TestSuites are setup around each Test, and provide a matrix of TestCases based on the ranges of Clients and Servers that are required for each test.
+
 For example, one Test which asks servers for synapse or dendrite, and two clients that can be element android or element web, will end up creating and running 8 test cases - the product of two options for each server and two options for each client.
 
 Servers are managed by complements `homerunner` tool, and are setup on demand as each TestCase starts. We will be able to start tests running against Synapse, Dendrite and other homeservers, so long as they are packaged for Complements' usecase.
@@ -19,33 +20,31 @@ Adapters are able to upload files (logs and videos) after a test run to allow us
 
 Adapters are managed separately from the trafficlight server, and are managed in a similar style to CI runners - they register and poll the trafficlight server for commands to run. If no test requires the adapter at present they are left idling until they are allocated to a TestCase.
 
-There are three APIs provided for interaction by the server:
+There are some APIs provided for interaction by the server:
 
-`/client/<uuid>/register`
+`POST /client/<uuid>/register`
 
 Register a new client with the server. Provide data about the client so the server can allocate to tests efficiently.
 
 NB: at present this may block for an extended period as servers and the test model are created. This should be moved to a background/worker task, but has not yet been done.
 
-`/client/<uuid>/poll`
+`GET /client/<uuid>/poll`
 
-Poll is used by clients to retrieve the next action. It's just some JSON.
+Poll is used by clients to retrieve the next action. No data is required in It's just some JSON.
 
 TODO: A dictionary of all actions that clients should support and how they should respond.
 
-`/client/<uuid>/report`
+`POST /client/<uuid>/respond`
 
 Report is used by clients to advance the state machine when they've finished their current action.
 
-Inside the server is a state machine that handles actions by different clients; typically they're referred to by colour. When a real client 
-
-`/client/<uuid>/error`
+`POST /client/<uuid>/error`
 
 ```
 {
   "error": { 
-     "type": "unknown_error",
-     "path": "/path_to_file/file.name",
+     "type": "adapter",
+     "path": "/path_to_file/file.name#125",
      "details": "arbitrary long message for humans to read about the error"
   }
 }
@@ -53,7 +52,7 @@ Inside the server is a state machine that handles actions by different clients; 
 
 Error is used by clients to indicate an issue with the test client - for instance a timeout waiting for action or in some other way that the client has stopped functioning.
 
-`/client/<uuid>/upload`
+`POST /client/<uuid>/upload`
 
 Mime-multipart upload of an arbitrary set of files related to the client.
 
@@ -61,28 +60,30 @@ Used for uploading videos, audio files, log files.
 
 Additionally:
 
-`/status`
+`GET /status`
 
 Provides html for human-readable information about which clients are registered and what state they're in. Useful for debugging why a certain test has not yet run.
 
-`/status/junit.xml`
+`GET /status/junit.xml`
 
 Provides compatible junit.xml test output for use in other services / formatting / etc.
 
- * Tests that have not started (not found enough clients to run) are `skipped`
- * Tests that have started and completed are successes
- * Tests that have started and explicitly fail are `failures`
- * Tests that have started but are in any other state are `errors`
+ * Tests that have not started (not found enough clients to run) are `waiting`
+ * Tests that have found enough clients to run but are setting up are `preparing`
+ * Tests that have finished preparing and are running are `running`
+ * Tests that have started and completed are `success`
+ * Tests that have started and explicitly fail are `failure`
+ * Tests that have started but fail for another reason are `error`
 
 ## Writing tests
 
 Tests should be written in the `trafficlight.tests` package.
 
-To be picked up by the autodiscovery system, they should be named `**/*_test.py` and should contain classes that extend `trafficlight.internal.Test`.
+To be picked up by the autodiscovery system, they should be named `**/*_test.py` and should contain a class that extend `trafficlight.internal.Test`.
 
 These suites will then be expanded on startup into a number of test cases, using the list of clients and servers specified in the __init__ method of the Test.
 
-The run method is an async method but can block the main http reactor thread so please do not perform synchronous waits in tests. Using a matrix client like matrix-nio is required for any 
+The run method is an async method but can block the main http reactor thread so please do not perform synchronous waits in tests. Using a matrix client like matrix-nio is required for any other client behaviour.
 
 Current status of all tests is on the status dashboard.
 
@@ -92,9 +93,7 @@ The client controllers should basically poll the server and have a switch block 
 
 This concept of a loop should be simple enough to include in any language, and may be embedded into a client or be a separate process.
 
-## State machine
-
-The state machine should aim to have states that are the equivalent of steps in a business use case, and at the highest level, eg: "Send message X in already joined room Y" not "Switch UI to room Y" then "Send message X in current room". This may need some creative thought and bending of the rules for things that are modal in clients.
+See [docs/client.md] for more details
 
 ## See Also
 
@@ -103,6 +102,8 @@ Polyjuice has a very similar poll method for getting data to clients but uses ma
 ## Installation
 
 All python dependencies installed via `pip`.
+
+`libolm` is required for using matrix-nio to interact with clients in e2e rooms.
 
 ## Development
 
@@ -120,11 +121,13 @@ To run the linters and `mypy` type checker, use `./scripts-dev/lint.sh`.
 
 ## Starting
 
-This requires a homerunner instance running (ideally on localhost:54321 which is the default) to start and stop server instances as required.
+See [docs/local-dev.md] for information on running all components locally.
 
-You may need to create the complement-synapse image by checking out synapse and running:
+Trafficlight requires a homerunner instance running (ideally on localhost:54321 which is the default) to start and stop server instances as required.
 
-`scripts-dev/complement.sh --build-only`
+You may need to create the complement-synapse image by checking out `matrix-org/synapse` and running:
+
+`synapse> scripts-dev/complement.sh --build-only`
 
 Use this to start the test server:
 ```shell
@@ -149,7 +152,7 @@ Various options can be used to configure the tests:
 | ----          | -------                      | -------- |
 | TEST\_PATTERN | `**/*_test.py`          | Pattern to find tests. `**` for any recursive directory, `*` as normal wildcard |
 
-Set options via environment variables by prefixing with `TRAFFICLIGHT_`, eg: `TRAFFICLIGHT_TEST_PATTERN=only_one_test.py`.
+Set these options via environment variables by prefixing with `TRAFFICLIGHT_`, eg: `TRAFFICLIGHT_TEST_PATTERN=only_one_test.py`.
 
 ## Releasing
 
