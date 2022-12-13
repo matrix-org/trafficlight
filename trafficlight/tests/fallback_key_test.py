@@ -2,20 +2,20 @@ import asyncio
 
 import logging
 from nio import AsyncClient, AsyncClientConfig, SyncResponse
-from trafficlight.client_types import ElementWeb
+from trafficlight.client_types import ElementWebStable
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.test import Test
-from trafficlight.server_types import Synapse
+from trafficlight.server_types import SynapseDevelop
 
 
 class FallbackKeyTest(Test):
     def __init__(self) -> None:
         super().__init__()
-        self._client_under_test([ElementWeb()], "alice")
-        self._client_under_test([ElementWeb()], "bob")
+        self._client_under_test([ElementWebStable()], "alice")
+        self._client_under_test([ElementWebStable()], "bob")
         self._network_proxy("alice_proxy")
-        self._server_under_test(Synapse(), ["server"])
+        self._server_under_test(SynapseDevelop(), ["server"])
 
     async def run(
         self, alice: MatrixClient, bob: MatrixClient, server: HomeServer, alice_proxy: NetworkProxyClient
