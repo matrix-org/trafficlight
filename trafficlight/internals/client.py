@@ -175,9 +175,10 @@ class MatrixClient(Client):
         await self._perform_action({"action": "verify_crosssign_emoji", "data": {}})
 
     async def create_room(self, room_name: str) -> None:
-        await self._perform_action(
+        response = await self._perform_action(
             {"action": "create_room", "data": {"name": room_name}}
         )
+        return response["response"]
 
     async def create_dm(self, user_id: str) -> None:
         await self._perform_action({"action": "create_dm", "data": {"userId": user_id}})
@@ -257,6 +258,4 @@ class MatrixClient(Client):
         )
 
     async def go_offline(self) -> None:
-        await self._perform_action(
-            {"action": "go_offline", "data": {}}
-        )
+        await self._perform_action({"action": "go_offline", "data": {}})
