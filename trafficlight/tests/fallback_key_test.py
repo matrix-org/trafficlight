@@ -79,7 +79,5 @@ async def login_and_send_message_in_room(
         # sync_forever must be used for encryption to work
         task = asyncio.create_task(client.sync_forever(timeout=30000))
         await task
-    except Exception as e:
-        logging.exception(str(e))
     finally:
         await client.close()
