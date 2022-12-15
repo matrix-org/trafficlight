@@ -9,6 +9,7 @@ from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.test import Test
 from trafficlight.server_types import SynapseDevelop
 
+
 # CLIENT_COUNT=2  REQUIRES_PROXY=true CYPRESS_BASE_URL="https://app.element.io" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
 # Passing Test
 class FallbackKeyTest(Test):
@@ -61,7 +62,7 @@ async def login_and_send_message_in_room(
     )
 
     # This method will be called after each sync
-    async def handle_sync(response):
+    async def handle_sync(response) -> None:
         # Send the message after initial sync
         await client.room_send(
             room_id,
