@@ -174,7 +174,7 @@ class MatrixClient(Client):
     async def verify_crosssign(self) -> None:
         await self._perform_action({"action": "verify_crosssign_emoji", "data": {}})
 
-    async def create_room(self, room_name: str) -> None:
+    async def create_room(self, room_name: str) -> str:
         response = await self._perform_action(
             {"action": "create_room", "data": {"name": room_name}}
         )
