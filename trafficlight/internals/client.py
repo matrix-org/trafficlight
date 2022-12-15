@@ -178,7 +178,7 @@ class MatrixClient(Client):
         response = await self._perform_action(
             {"action": "create_room", "data": {"name": room_name}}
         )
-        return cast(str, response["response"])
+        return cast(str, response["roomId"])
 
     async def create_dm(self, user_id: str) -> None:
         await self._perform_action({"action": "create_dm", "data": {"userId": user_id}})
