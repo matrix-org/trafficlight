@@ -62,7 +62,7 @@ async def login_and_send_message_in_room(
     )
 
     # This method will be called after each sync
-    async def handle_sync(response) -> None:
+    async def handle_sync(_) -> None:
         # Send the message after initial sync
         await client.room_send(
             room_id,

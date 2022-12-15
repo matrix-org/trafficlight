@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 from trafficlight.homerunner import HomeServer
 
@@ -178,7 +178,7 @@ class MatrixClient(Client):
         response = await self._perform_action(
             {"action": "create_room", "data": {"name": room_name}}
         )
-        return response["response"]
+        return cast(str, response["response"])
 
     async def create_dm(self, user_id: str) -> None:
         await self._perform_action({"action": "create_dm", "data": {"userId": user_id}})
