@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import hashlib
 import logging
 import traceback
 from typing import Any, Dict, List, Optional, Union
 
+from trafficlight import testrail
 from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomerunnerClient, HomeServer
 from trafficlight.internals.adapter import Adapter
@@ -107,6 +110,11 @@ class TestCase:
             self.state = "error"
             self.exceptions.append("".join(traceback.format_exc()))
         finally:
+            if testrail.client:
+                try:
+                    await testrail.client.add_test_result(self)
+                except Exception as e:
+                    logger.exception(e)
             for adapter in adapters.values():
                 adapter.finished()
             for server in self.servers:

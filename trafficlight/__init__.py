@@ -19,13 +19,14 @@ from typing import Any, Dict, Optional
 from quart import Quart
 
 import trafficlight
+from trafficlight import testrail
 from trafficlight.http.adapter import (
     adapter_shutdown,
     loop_check_for_new_tests,
     loop_cleanup_unresponsive_adapters,
 )
 from trafficlight.internals.testsuite import TestSuite
-from trafficlight.store import add_testsuite
+from trafficlight.store import add_testsuite, get_testsuites
 from trafficlight.tests import load_tests
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,8 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     loaded_tests = load_tests(
         app.config.get("TEST_PATTERN"),
     )
+    testrail.init_testrail(app.config)
+
     for test in loaded_tests:
         logger.info(f"Generating test cases for {test.name()}")
         test_cases = test.generate_test_cases()
@@ -87,10 +90,16 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     async def startup() -> None:
         app.add_background_task(loop_cleanup_unresponsive_adapters)
         app.add_background_task(loop_check_for_new_tests)
+        if testrail.client:
+            await testrail.client.build_mappings()
+            await testrail.client.prepare_sections_and_cases(get_testsuites())
+            await testrail.client.start_run()
 
     @app.after_serving
     async def shutdown() -> None:
         trafficlight.http.adapter.stop_background_tasks = True
         await adapter_shutdown()
+        if testrail.client:
+            await testrail.client.end_run()
 
     return app

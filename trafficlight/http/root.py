@@ -14,7 +14,7 @@
 # limitations under the License.
 import logging
 
-from quart import Blueprint, redirect, url_for
+from quart import Blueprint, current_app, redirect, url_for
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -26,3 +26,8 @@ bp = Blueprint("root", __name__, url_prefix="/")
 @bp.route("/", methods=["GET"])
 async def redirect_status():  # type: ignore
     return redirect(url_for("status.index"))
+
+
+@bp.route("/shutdown", methods=["POST"])
+async def shutdown():  # type: ignore
+    await current_app.shutdown()
