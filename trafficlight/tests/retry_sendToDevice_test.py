@@ -6,7 +6,8 @@ from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.test import Test
 from trafficlight.server_types import SynapseDevelop
 
-
+# CLIENT_COUNT=2  REQUIRES_PROXY=true CYPRESS_BASE_URL="https://app.element.io" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server      
+# TEST STATUS: PASSING
 class RetrySendToDeviceTest(Test):
     def __init__(self) -> None:
         super().__init__()
@@ -23,10 +24,9 @@ class RetrySendToDeviceTest(Test):
         network_proxy: NetworkProxyClient,
     ) -> None:
         await network_proxy.proxy_to(server)
-        await alice.register(network_proxy)
+        await asyncio.gather(alice.register(network_proxy), bob.register(server))
 
         await alice.create_room("little test room")
-        await bob.register(server)
         await alice.invite_user(bob.localpart + ":" + server.server_name)
         await bob.accept_invite()
         await network_proxy.disable_endpoint("/_matrix/client/r0/sendToDevice")
@@ -39,5 +39,5 @@ class RetrySendToDeviceTest(Test):
         await network_proxy.wait_until_endpoint_accessed(
             "/_matrix/client/r0/sendToDevice"
         )
-        await asyncio.sleep(5000)
+        await asyncio.sleep(5)
         await bob.verify_message_in_timeline("A random message appears!")
