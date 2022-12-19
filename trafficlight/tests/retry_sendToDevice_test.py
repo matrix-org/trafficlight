@@ -6,7 +6,8 @@ from trafficlight.internals.client import MatrixClient, NetworkProxyClient
 from trafficlight.internals.test import Test
 from trafficlight.server_types import SynapseDevelop
 
-# CLIENT_COUNT=2  REQUIRES_PROXY=true CYPRESS_BASE_URL="https://app.element.io" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server      
+
+# CLIENT_COUNT=2  REQUIRES_PROXY=true CYPRESS_BASE_URL="https://app.element.io" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
 # TEST STATUS: PASSING
 class RetrySendToDeviceTest(Test):
     def __init__(self) -> None:
