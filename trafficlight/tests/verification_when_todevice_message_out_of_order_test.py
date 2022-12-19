@@ -7,9 +7,9 @@ from trafficlight.internals.test import Test
 from trafficlight.server_types import SynapseDevelop
 
 # Test Script:
-# CLIENT_COUNT=2 REQUIRES_PROXY=true CYPRESS_BASE_URL="https://develop.element.io"
-# ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
+# CLIENT_COUNT=2 REQUIRES_PROXY=true CYPRESS_BASE_URL="https://develop.element.io" ./trafficlight/scripts-dev/run-localdev-setup.sh && tmux kill-server
 
+# Test Status: Passing
 
 class VerifyWhenToDeviceMessagesOutOfOrder(Test):
     def __init__(self) -> None:
