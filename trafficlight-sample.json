@@ -1,0 +1,31 @@
+{
+  "TEST_PATTERN": "/**/*_test.py",
+  "UPLOAD_FOLDER": "/tmp",
+  "SERVER_OVERRIDES": {
+      "SynapseStable":
+         [{
+            "server_name": "hs1",
+            "cs_api": "http://localhost/"
+         }],
+      "SynapseDevelop":
+         [{
+            "server_name": "hs1",
+            "cs_api": "http://localhost/"
+         }],
+      "Dendrite": 
+         [{
+            "server_name": "hs1",
+            "cs_api": "http://localhost/"
+         }],
+      "TwoSynapseFederation":
+
+         [{
+            "server_name": "hs1",
+            "cs_api": "http://localhost/"
+         }, 
+         {  
+            "server_name": "hs2",
+            "cs_api": "http://localhost"
+         }]
+  }
+}
