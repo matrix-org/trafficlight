@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
@@ -46,22 +47,26 @@ def format_delaytime(value: datetime) -> str:
 
 def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     app = Quart(__name__, instance_relative_config=True)
+
     # Defaults here:
     app.config.update(
         {
             "TEST_PATTERN": "/**/*_test.py",
             "UPLOAD_FOLDER": "/tmp/",
+            "SERVER_OVERRIDES": {},
         }
     )
 
-    # Allows override via env var: TRAFFICLIGHT_<key>;
-    app.config.from_prefixed_env(prefix="TRAFFICLIGHT")
+    # Load configuration from JSON file
+    app.config.from_file("trafficlight.json", json.load)
 
     # TODO: ensure uploads folder is available
     # can i create README.md in there with a comment, for instance...
 
     # ensure the instance folder exists
-    print(f"{app.config}")
+    print(f"Test Pattern: {app.config.get('TEST_PATTERN')}")
+    print(f"Upload Folder: {app.config.get('UPLOAD_FOLDER')}")
+    print(f"Overrides: {app.config.get('SERVER_OVERRIDES')}")
 
     loaded_tests = load_tests(
         app.config.get("TEST_PATTERN"),

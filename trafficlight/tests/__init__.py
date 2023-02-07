@@ -68,7 +68,6 @@ def load_tests_from_module(module_name: str) -> List[Test]:
     tests: List[Test] = []
     for name in dir(module):
         obj = getattr(module, name)
-        logger.info(obj)
         if isinstance(obj, type) and issubclass(obj, Test) and not obj == Test:
             logger.info(f"Found Test {obj}")
             test = obj()
