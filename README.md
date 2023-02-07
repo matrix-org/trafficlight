@@ -146,13 +146,13 @@ Passing in envvars below will forward them to the application as expected.
 
 ## Configuring
 
-Various options can be used to configure the tests:
+Various options can be used to configure the tests, these can be managed via JSON config file.
 
-| Name          | Default                      | Function |
-| ----          | -------                      | -------- |
-| TEST\_PATTERN | `**/*_test.py`          | Pattern to find tests. `**` for any recursive directory, `*` as normal wildcard |
+Place a copy of trafficlight-sample.json in instance/trafficlight.json [not in source control] to configure the application.
 
-Set these options via environment variables by prefixing with `TRAFFICLIGHT_`, eg: `TRAFFICLIGHT_TEST_PATTERN=only_one_test.py`.
+Rather than starting a synapse each time, and to reduce moving parts in some situations, we can override the use of complement to create homeservers and instead use static servers.
+
+These are best configured as referenced in the trafficlight-sample.json file.
 
 ## Releasing
 
