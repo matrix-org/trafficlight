@@ -20,6 +20,7 @@ from typing import Any, Dict, Optional
 from quart import Quart
 
 import trafficlight
+from trafficlight.homerunner import HomerunnerClient
 from trafficlight.http.adapter import (
     adapter_shutdown,
     loop_check_for_new_tests,
@@ -53,6 +54,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
         {
             "TEST_PATTERN": "/**/*_test.py",
             "UPLOAD_FOLDER": "/tmp/",
+            "HOMERUNNER_URL": "http://localhost:4090",
             "SERVER_OVERRIDES": {},
         }
     )
@@ -86,6 +88,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     app.register_blueprint(status.bp)
     app.register_blueprint(root.bp)
 
+    app.config["homerunner"] = HomerunnerClient(app.config["HOMERUNNER_URL"], app.config["SERVER_OVERRIDES"])
     app.jinja_env.filters["delaytime"] = format_delaytime
 
     @app.before_serving

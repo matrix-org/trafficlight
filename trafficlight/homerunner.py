@@ -17,6 +17,8 @@ from typing import Any, Dict, List
 
 import aiohttp
 
+from trafficlight.server_types import ServerType
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,10 +32,9 @@ class HomeServer(object):
     The configuration of a created homserver
     """
 
-    def __init__(self, server_name: str, cs_api: str, base_image_uri: str):
+    def __init__(self, server_name: str, cs_api: str):
         self.cs_api = cs_api
         self.server_name = server_name
-        self.base_image_uri = base_image_uri
         # TODO: include sufficient data to destroy
         # Might not be needed: homerunner does have a timeout
 
@@ -42,9 +43,10 @@ class HomeServer(object):
 
 
 class HomerunnerClient(object):
-    def __init__(self, homerunner_url: str) -> None:
+    def __init__(self, homerunner_url: str, server_overrides: Dict[str, Any]) -> None:
         self.homerunner_url = homerunner_url
         self.hsid = 0
+        self.server_overrides = server_overrides
 
     def _generate_homeserver(self, base_image_uri: str) -> Dict[str, Any]:
         """
@@ -58,7 +60,17 @@ class HomerunnerClient(object):
             "BaseImageURI": base_image_uri,
         }
 
-    async def create(self, test_case_id: str, images: List[str]) -> List[HomeServer]:
+    async def create(self, test_case_id: str, server_type: ServerType) -> List[HomeServer]:
+        if server_type.name() in self.server_overrides:
+            override = self.server_overrides[server_type.name()]
+            homeserver_configs = []
+            for item in override:
+                homeserver_configs.append(HomeServer(server_name=item["server_name"], cs_api=item["cs_api"]))
+            return homeserver_configs
+        else:
+            return await self._create_complement(test_case_id, server_type.complement_types())
+
+    async def _create_complement(self, test_case_id: str, images: List[str]) -> List[HomeServer]:
         create_url = self.homerunner_url + "/create"
         homeservers = []
         for image in images:
@@ -85,8 +97,7 @@ class HomerunnerClient(object):
                 for homeserver in homeservers:
                     # from our request
                     name = homeserver["Name"]
-                    base_image_uri = homeserver["BaseImageURI"]
                     # from response
                     cs_api = response[name]["BaseURL"]
-                    homeserver_configs.append(HomeServer(name, cs_api, base_image_uri))
+                    homeserver_configs.append(HomeServer(name, cs_api))
                 return homeserver_configs

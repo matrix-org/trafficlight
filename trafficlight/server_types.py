@@ -1,54 +1,35 @@
 from typing import List
 
-from trafficlight.homerunner import HomerunnerClient, HomeServer
-
 
 class ServerType(object):
     def name(self) -> str:
         return type(self).__name__
 
+    def complement_types(self) -> List[str]:
+        pass
+
     def __repr__(self) -> str:
         return self.name()
 
-    async def create(
-        self, test_case_id: str, homerunner: HomerunnerClient
-    ) -> List[HomeServer]:
-        pass
-
 
 class SynapseStable(ServerType):
-    async def create(
-        self, test_case_id: str, homerunner: HomerunnerClient
-    ) -> List[HomeServer]:
-        return await homerunner.create(
-            test_case_id, ["ghcr.io/matrix-org/synapse/complement-synapse:master"]
-        )
+    def complement_types(self) -> List[str]:
+        return ["ghcr.io/matrix-org/synapse/complement-synapse:master"]
 
 
 class SynapseDevelop(ServerType):
-    async def create(
-        self, test_case_id: str, homerunner: HomerunnerClient
-    ) -> List[HomeServer]:
-        return await homerunner.create(
-            test_case_id, ["ghcr.io/matrix-org/synapse/complement-synapse:develop"]
-        )
+    def complement_types(self) -> List[str]:
+        return ["ghcr.io/matrix-org/synapse/complement-synapse:develop"]
 
 
 class Dendrite(ServerType):
-    async def create(
-        self, test_case_id: str, homerunner: HomerunnerClient
-    ) -> List[HomeServer]:
-        return await homerunner.create(test_case_id, ["complement-dendrite"])
+    def complement_types(self) -> List[str]:
+        return ["complement-dendrite"]
 
 
 class TwoSynapseFederation(ServerType):
-    async def create(
-        self, test_case_id: str, homerunner: HomerunnerClient
-    ) -> List[HomeServer]:
-        return await homerunner.create(
-            test_case_id,
-            [
-                "ghcr.io/matrix-org/synapse/complement-synapse:develop",
-                "ghcr.io/matrix-org/synapse/complement-synapse:develop",
-            ],
-        )
+    def complement_types(self) -> List[str]:
+        return [
+            "ghcr.io/matrix-org/synapse/complement-synapse:develop",
+            "ghcr.io/matrix-org/synapse/complement-synapse:develop",
+        ]
