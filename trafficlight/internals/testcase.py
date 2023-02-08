@@ -79,7 +79,7 @@ class TestCase:
             adapter.set_client(client)
             kwargs[client_var_name] = client
 
-        homeservers = await self.server_type.create(self.guid, homerunner)
+        homeservers = await homerunner.create(self.guid, self.server_type)
         for i in range(0, len(self.server_names)):
             kwargs[self.server_names[i]] = homeservers[i]
 

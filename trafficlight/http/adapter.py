@@ -47,7 +47,6 @@ logger = logging.getLogger(__name__)
 # TODO: change this, but we need to provide versioning for clients :|
 bp = Blueprint("client", __name__, url_prefix="/client")
 
-homerunner = HomerunnerClient("http://localhost:54321")
 
 
 async def check_for_new_tests() -> None:
@@ -59,6 +58,7 @@ async def check_for_new_tests() -> None:
             if adapters_required is not None:
                 logger.info("Starting test %s", test_case)
 
+                homerunner = current_app.config["homerunner"]
                 async def run() -> None:
                     await test_case.run(adapters_required, homerunner)
 
