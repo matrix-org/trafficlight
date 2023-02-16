@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import Any, Dict, Optional, Union
 import time
+from nio import AsyncClient
 
 from trafficlight.homerunner import HomeServer
 
@@ -129,6 +130,21 @@ class MatrixClient(Client):
         url = homeserver.cs_api
         docker_api = url.replace("localhost", "10.0.2.2")
 
+        # Vicious Hack.
+        # We're migrating away from "registration" in the client in favour of OIDC based
+        # signup. This means we won't have the registration flow visible in EIX / EAX.
+
+        # Rather than refactoring away from registration flows in element-web and others
+        # we choose to emulate registration flow on the client by performing a registration
+        # via API, removing that device and then passing those credentials as a login request.
+
+        if self.registration['type'] == "element-android" or self.registration['type'] == "element-ios":
+            # do nio based registration and logout
+            await self._direct_registration(homeserver)
+            # Then login with same credentials
+            await self.login(homeserver, None)
+            return
+
         await self._perform_action(
             {
                 "action": "register",
@@ -142,6 +158,14 @@ class MatrixClient(Client):
                 },
             }
         )
+
+
+    async def _direct_registration(self, homeserver: Union[HomeServer, NetworkProxyClient]):
+        nio_client = AsyncClient(homeserver.cs_api)
+        response = await nio_client.register(self.localpart, self.password, device_name="TLRegisterHack")
+        logger.info(response)
+        response = await nio_client.logout()
+        logger.info(response)
 
     async def login(
         self,
@@ -161,6 +185,7 @@ class MatrixClient(Client):
             data = {**data, "key_backup_passphrase": key_backup_passphrase}
 
         await self._perform_action({"action": "login", "data": data})
+
 
     async def start_crosssign(self, user_id: str = None) -> None:
         data: Dict[str, Any] = {}

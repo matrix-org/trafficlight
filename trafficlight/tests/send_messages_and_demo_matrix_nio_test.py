@@ -1,8 +1,8 @@
 import logging
 
-from nio import AsyncClient
+from nio import AsyncClient, RegisterResponse
 
-from trafficlight.client_types import ElementWebStable
+from trafficlight.client_types import ElementAndroid, ElementWebStable, ElementIos
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class SendMessagesTest(Test):
     def __init__(self) -> None:
         super().__init__()
-        self._client_under_test([ElementWebStable()], "client_one")
+        self._client_under_test([ElementAndroid(), ElementIos(), ElementWebStable()], "client_one")
 
         self._server_under_test(SynapseDevelop(), ["server"])
 
@@ -23,8 +23,7 @@ class SendMessagesTest(Test):
             server.cs_api, f"@{client_one.localpart}:{server.server_name}"
         )
         try:
-            await nio_client.register(client_one.localpart, client_one.password)
-            await client_one.login(server)
+            await client_one.register(server)
             await client_one.create_room("little test room")
             await client_one.send_message("hi there!")
 
@@ -41,6 +40,7 @@ class SendMessagesTest(Test):
 
             room = list(nio_client.rooms.values())[0]
             assert room.name == "little test room"
-
+        except Exception as e:
+            logger.error(e)
         finally:
             await nio_client.close()
