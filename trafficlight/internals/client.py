@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from typing import Any, Dict, Optional, Union
+import time
 
 from trafficlight.homerunner import HomeServer
 
@@ -120,7 +121,7 @@ class MatrixClient(Client):
     def __init__(self, name: str, test_case: Any, registration: Dict[str, Any]):
         super().__init__(name, test_case, registration)
         # Client login details
-        self.localpart = "user_" + name
+        self.localpart = "user_" + name + "_" + str(round(time.time()))
         self.password = "pass_bibble_bobble_" + name
 
     # exposed to the test to act
