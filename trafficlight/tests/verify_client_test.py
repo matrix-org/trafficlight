@@ -1,6 +1,6 @@
 import asyncio
 
-from trafficlight.client_types import ElementAndroid, ElementWebStable
+from trafficlight.client_types import ElementAndroid, ElementWebStable, ElementIos
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
@@ -11,7 +11,7 @@ class VerifyClientTest(Test):
     def __init__(self) -> None:
         super().__init__()
         self._client_under_test([ElementWebStable()], "alice_one")
-        self._client_under_test([ElementWebStable(), ElementAndroid()], "alice_two")
+        self._client_under_test([ElementWebStable(), ElementAndroid(), ElementIos()], "alice_two")
         self._server_under_test(SynapseDevelop(), ["server"])
 
     async def run(
