@@ -88,7 +88,9 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     app.register_blueprint(status.bp)
     app.register_blueprint(root.bp)
 
-    app.config["homerunner"] = HomerunnerClient(app.config["HOMERUNNER_URL"], app.config["SERVER_OVERRIDES"])
+    app.config["homerunner"] = HomerunnerClient(
+        app.config["HOMERUNNER_URL"], app.config["SERVER_OVERRIDES"]
+    )
     app.jinja_env.filters["delaytime"] = format_delaytime
 
     @app.before_serving

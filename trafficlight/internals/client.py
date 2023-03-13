@@ -1,7 +1,8 @@
 import asyncio
 import logging
-from typing import Any, Dict, Optional, Union
 import time
+from typing import Any, Dict, Optional, Union
+
 from nio import AsyncClient
 
 from trafficlight.homerunner import HomeServer
@@ -138,7 +139,10 @@ class MatrixClient(Client):
         # we choose to emulate registration flow on the client by performing a registration
         # via API, removing that device and then passing those credentials as a login request.
 
-        if self.registration['type'] == "element-android" or self.registration['type'] == "element-ios":
+        if (
+            self.registration["type"] == "element-android"
+            or self.registration["type"] == "element-ios"
+        ):
             # do nio based registration and logout
             await self._direct_registration(homeserver)
             # Then login with same credentials
@@ -159,10 +163,13 @@ class MatrixClient(Client):
             }
         )
 
-
-    async def _direct_registration(self, homeserver: Union[HomeServer, NetworkProxyClient]):
+    async def _direct_registration(
+        self, homeserver: Union[HomeServer, NetworkProxyClient]
+    ) -> None:
         nio_client = AsyncClient(homeserver.cs_api)
-        response = await nio_client.register(self.localpart, self.password, device_name="TLRegisterHack")
+        response = await nio_client.register(
+            self.localpart, self.password, device_name="TLRegisterHack"
+        )
         logger.info(response)
         response = await nio_client.logout()
         logger.info(response)
@@ -185,7 +192,6 @@ class MatrixClient(Client):
             data = {**data, "key_backup_passphrase": key_backup_passphrase}
 
         await self._perform_action({"action": "login", "data": data})
-
 
     async def start_crosssign(self, user_id: str = None) -> None:
         data: Dict[str, Any] = {}
