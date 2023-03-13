@@ -1,8 +1,8 @@
 import logging
 
-from nio import AsyncClient, RegisterResponse
+from nio import AsyncClient
 
-from trafficlight.client_types import ElementAndroid, ElementWebStable, ElementIos
+from trafficlight.client_types import ElementAndroid, ElementIos, ElementWebStable
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.client import MatrixClient
 from trafficlight.internals.test import Test
@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 class SendMessagesTest(Test):
     def __init__(self) -> None:
         super().__init__()
-        self._client_under_test([ElementAndroid(), ElementIos(), ElementWebStable()], "client_one")
+        self._client_under_test(
+            [ElementAndroid(), ElementIos(), ElementWebStable()], "client_one"
+        )
 
         self._server_under_test(SynapseDevelop(), ["server"])
 

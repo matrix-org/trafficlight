@@ -20,7 +20,6 @@ from typing import Any, Dict, cast
 from quart import Blueprint, current_app, request
 from werkzeug.utils import secure_filename
 
-from trafficlight.homerunner import HomerunnerClient
 from trafficlight.internals.adapter import Adapter
 from trafficlight.internals.exceptions import (
     ActionException,
@@ -48,7 +47,6 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("client", __name__, url_prefix="/client")
 
 
-
 async def check_for_new_tests() -> None:
     test_cases = get_tests()
     available_adapters = list(filter(lambda x: x.available(), get_adapters()))
@@ -59,6 +57,7 @@ async def check_for_new_tests() -> None:
                 logger.info("Starting test %s", test_case)
 
                 homerunner = current_app.config["homerunner"]
+
                 async def run() -> None:
                     await test_case.run(adapters_required, homerunner)
 
