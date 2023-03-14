@@ -19,7 +19,7 @@ class DehydratedDeviceTest(Test):
         await bob.register(server)
         await alice.enable_dehydrated_device("helloworld123helloworld")
         await bob.create_room("little test room")
-        await bob.invite_user(f"@{alice.localpart}:{server.server_name}")
+        await bob.invite_user(f"{alice.localpart}:{server.server_name}")
         await alice.accept_invite()
         await alice.logout()
         await bob.advance_clock(1209600000)
