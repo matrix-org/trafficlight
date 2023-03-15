@@ -3,6 +3,8 @@ import logging
 import traceback
 from typing import Any, Dict, List, Optional, Union
 
+from quart import current_app
+
 from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomerunnerClient, HomeServer
 from trafficlight.internals.adapter import Adapter
@@ -111,5 +113,6 @@ class TestCase:
                 adapter.finished()
             for server in self.servers:
                 server.finished()
-            # IF current_app().has_testrail:
-            #   testrail.add_test_result(self)
+            if current_app().kiwi_client:
+                current_app().kiwi_client.
+
