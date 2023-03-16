@@ -3,8 +3,7 @@ import logging
 import traceback
 from typing import Any, Dict, List, Optional, Union
 
-from quart import current_app
-
+import trafficlight.kiwi as kiwi
 from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomerunnerClient, HomeServer
 from trafficlight.internals.adapter import Adapter
@@ -113,6 +112,5 @@ class TestCase:
                 adapter.finished()
             for server in self.servers:
                 server.finished()
-            if current_app().kiwi_client:
-                current_app().kiwi_client.
-
+            if kiwi.kiwi_client:
+                await kiwi.kiwi_client.report_status(self)
