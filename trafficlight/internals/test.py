@@ -58,7 +58,6 @@ class Test(object):
         client_type_product = list(product(*all_client_types))
 
         for client_types in client_type_product:
-
             remapped_client_types = {}
             for i in range(0, len(client_var_names)):
                 remapped_client_types[client_var_names[i]] = client_types[i]
