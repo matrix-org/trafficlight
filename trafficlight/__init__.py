@@ -14,12 +14,15 @@
 # limitations under the License.
 import json
 import logging
+import os
+import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from quart import Quart
 
 import trafficlight
+import trafficlight.kiwi as kiwi
 from trafficlight.homerunner import HomerunnerClient
 from trafficlight.http.adapter import (
     adapter_shutdown,
@@ -56,6 +59,8 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
             "UPLOAD_FOLDER": "/tmp/",
             "HOMERUNNER_URL": "http://localhost:4090",
             "SERVER_OVERRIDES": {},
+            "KIWI_REPORT": False,
+            "KIWI_VERBOSE": True,
         }
     )
 
@@ -69,6 +74,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     print(f"Test Pattern: {app.config.get('TEST_PATTERN')}")
     print(f"Upload Folder: {app.config.get('UPLOAD_FOLDER')}")
     print(f"Overrides: {app.config.get('SERVER_OVERRIDES')}")
+    print(f"Kiwi: {app.config.get('KIWI_REPORT')}, Verbose: {app.config.get('KIWI_VERBOSE')}, Product Name: {app.config.get('KIWI_PRODUCT_NAME')}, Product Version: {app.config.get('KIWI_PRODUCT_VERSION')}")
 
     loaded_tests = load_tests(
         app.config.get("TEST_PATTERN"),
@@ -81,6 +87,15 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
 
         test_suite = TestSuite(test, test_cases)
         add_testsuite(test_suite)
+
+    if app.config.get('KIWI_REPORT'):
+        kiwi.kiwi_client = kiwi.KiwiClient(app.config.get('KIWI_VERBOSE'))
+        # Screaming quietly for now; i don't want to have more ways to set config options
+        # so avoiding env vars coming in from the environment and overriding them from the app configuration.
+        # Potentially this is a sign we're not using this API correctly.
+        os.environ['TCMS_PRODUCT'] = app.config.get('KIWI_PRODUCT_NAME')
+        os.environ['TCMS_PRODUCT_VERSION'] = app.config.get('KIWI_PRODUCT_VERSION')
+        os.environ['TCMS_BUILD'] = str(uuid.uuid4())
 
     from trafficlight.http import adapter, root, status
 
@@ -97,15 +112,14 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     async def startup() -> None:
         app.add_background_task(loop_cleanup_unresponsive_adapters)
         app.add_background_task(loop_check_for_new_tests)
-        if app.kiwi_client:
-             app.kiwi_client.start_run()
-
+        if kiwi.kiwi_client:
+            await kiwi.kiwi_client.start_run()
 
     @app.after_serving
     async def shutdown() -> None:
         trafficlight.http.adapter.stop_background_tasks = True
-        if app.kiwi_client:
-            app.kiwi_client.end_run()
+        if kiwi.kiwi_client:
+            await kiwi.kiwi_client.end_run()
         await adapter_shutdown()
 
     return app
