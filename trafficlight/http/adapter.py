@@ -139,7 +139,6 @@ async def adapter_shutdown() -> None:
 
 @bp.route("/<string:adapter_uuid>/register", methods=["POST"])
 async def register(adapter_uuid: str):  # type: ignore
-
     registration = cast(Dict[str, Any], await request.json)
     logger.info("%s (    ) registered: %s", adapter_uuid, registration)
 

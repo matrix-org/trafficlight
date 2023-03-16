@@ -67,7 +67,6 @@ class KiwiClient(object):
         await asyncio.to_thread(self._start_run_sync, test_cases)
 
     def _start_run_sync(self, test_cases: List[TestCase]) -> None:
-
         # Create test execution etc...
         self.backend.configure()
         self._status_map = {
@@ -81,7 +80,9 @@ class KiwiClient(object):
             kiwi_test_case, _ = self.backend.test_case_get_or_create(
                 summarize_test_case(tl_test_case)
             )
-            self.backend.add_test_case_to_plan(kiwi_test_case["id"], self.backend.plan_id)
+            self.backend.add_test_case_to_plan(
+                kiwi_test_case["id"], self.backend.plan_id
+            )
 
     async def report_status(self, tl_test_case: TestCase) -> None:
         await asyncio.to_thread(self._report_status, tl_test_case)

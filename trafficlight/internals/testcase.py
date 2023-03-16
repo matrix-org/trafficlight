@@ -53,7 +53,7 @@ class TestCase:
         """
         remaining_adapters = list(available_adapters)
         used_adapters: Dict[str, Adapter] = {}
-        for (client_var_name, client_type) in self.client_types.items():
+        for client_var_name, client_type in self.client_types.items():
             for adapter in remaining_adapters:
                 if client_type.match(adapter):
                     remaining_adapters.remove(adapter)
@@ -71,7 +71,7 @@ class TestCase:
         # turn adapters into clients
         kwargs: Dict[str, Union[HomeServer, MatrixClient, NetworkProxyClient]] = {}
 
-        for (client_var_name, adapter) in adapters.items():
+        for client_var_name, adapter in adapters.items():
             client: Union[MatrixClient, NetworkProxyClient]
             if adapter.registration["type"] == "network-proxy":
                 client = NetworkProxyClient(client_var_name, self, adapter.registration)

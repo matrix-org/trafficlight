@@ -74,7 +74,9 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     print(f"Test Pattern: {app.config.get('TEST_PATTERN')}")
     print(f"Upload Folder: {app.config.get('UPLOAD_FOLDER')}")
     print(f"Overrides: {app.config.get('SERVER_OVERRIDES')}")
-    print(f"Kiwi: {app.config.get('KIWI_REPORT')}, Verbose: {app.config.get('KIWI_VERBOSE')}, Product Name: {app.config.get('KIWI_PRODUCT_NAME')}, Product Version: {app.config.get('KIWI_PRODUCT_VERSION')}")
+    print(
+        f"Kiwi: {app.config.get('KIWI_REPORT')}, Verbose: {app.config.get('KIWI_VERBOSE')}, Product Name: {app.config.get('KIWI_PRODUCT_NAME')}, Product Version: {app.config.get('KIWI_PRODUCT_VERSION')}"
+    )
 
     loaded_tests = load_tests(
         app.config.get("TEST_PATTERN"),
@@ -88,14 +90,14 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
         test_suite = TestSuite(test, test_cases)
         add_testsuite(test_suite)
 
-    if app.config.get('KIWI_REPORT'):
-        kiwi.kiwi_client = kiwi.KiwiClient(app.config.get('KIWI_VERBOSE'))
+    if app.config.get("KIWI_REPORT"):
+        kiwi.kiwi_client = kiwi.KiwiClient(app.config.get("KIWI_VERBOSE"))
         # Screaming quietly for now; i don't want to have more ways to set config options
         # so avoiding env vars coming in from the environment and overriding them from the app configuration.
         # Potentially this is a sign we're not using this API correctly.
-        os.environ['TCMS_PRODUCT'] = app.config.get('KIWI_PRODUCT_NAME')
-        os.environ['TCMS_PRODUCT_VERSION'] = app.config.get('KIWI_PRODUCT_VERSION')
-        os.environ['TCMS_BUILD'] = str(uuid.uuid4())
+        os.environ["TCMS_PRODUCT"] = app.config.get("KIWI_PRODUCT_NAME")
+        os.environ["TCMS_PRODUCT_VERSION"] = app.config.get("KIWI_PRODUCT_VERSION")
+        os.environ["TCMS_BUILD"] = str(uuid.uuid4())
 
     from trafficlight.http import adapter, root, status
 

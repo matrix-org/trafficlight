@@ -21,7 +21,6 @@ class SendMessagesAcrossFederationTest(Test):
         alice_server: HomeServer,
         bob_server: HomeServer,
     ) -> None:
-
         await asyncio.gather(alice.register(alice_server), bob.register(bob_server))
         await alice.create_room("little test room")
         await alice.send_message("hi there!")
