@@ -58,9 +58,6 @@ class KiwiClient(object):
     def __init__(self, verbose: bool) -> None:
         self.backend = Backend(prefix="[trafficlight]", verbose=verbose)
         self.verbose = verbose
-        self.status_error = 0
-        self.status_failed = 0
-        self.status_success = 0
 
     async def start_run(self) -> None:
         test_cases = trafficlight.store.get_tests()
@@ -83,6 +80,7 @@ class KiwiClient(object):
             self.backend.add_test_case_to_plan(
                 kiwi_test_case["id"], self.backend.plan_id
             )
+            self.backend.add_test_case_to_run(kiwi_test_case["id"], self.backend.run_id)
 
     async def report_status(self, tl_test_case: TestCase) -> None:
         await asyncio.to_thread(self._report_status, tl_test_case)
