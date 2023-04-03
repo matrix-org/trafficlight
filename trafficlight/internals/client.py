@@ -281,7 +281,7 @@ class MatrixClient(Client):
         )
 
     async def open_room(self, room_name: str) -> None:
-        await self._perform_action({"action": "open-room", "data": {"name": room_name}})
+        await self._perform_action({"action": "open_room", "data": {"name": room_name}})
 
     async def advance_clock(self, duration: int) -> None:
         await self._perform_action(
