@@ -85,6 +85,20 @@ class Client:
         return rsp
 
 
+class ElementCallClient(Client):
+    def __init__(self, name: str, test_case: Any, registration: Dict[str, Any]):
+        super().__init__(name, test_case, registration)
+
+    async def create_or_join(self, call_name: str, display_name: str) -> bool:
+        data = await self._perform_action({"action": "create_or_join", "data": {"callName": call_name, "displayName": display_name})
+        return data[existing]
+
+    async def lobby_join(self) -> bool:
+        return await self._perform_action({"action": "lobby_join", "data": {})
+
+    async def get_call_data(self) -> Dict[str, Any]:
+        return await self._perform_action({"action": "get_call_data", "data": {})['data']
+
 class NetworkProxyClient(Client):
     def __init__(self, name: str, test_case: Any, registration: Dict[str, Any]):
         super().__init__(name, test_case, registration)
