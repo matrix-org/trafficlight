@@ -7,7 +7,7 @@ import trafficlight.kiwi as kiwi
 from trafficlight.client_types import ClientType
 from trafficlight.homerunner import HomerunnerClient, HomeServer
 from trafficlight.internals.adapter import Adapter
-from trafficlight.internals.client import MatrixClient, NetworkProxyClient
+from trafficlight.internals.client import MatrixClient, NetworkProxyClient, ElementCallClient
 from trafficlight.internals.exceptions import ActionException, AdapterException
 from trafficlight.server_types import ServerType
 
@@ -72,9 +72,11 @@ class TestCase:
         kwargs: Dict[str, Union[HomeServer, MatrixClient, NetworkProxyClient]] = {}
 
         for client_var_name, adapter in adapters.items():
-            client: Union[MatrixClient, NetworkProxyClient]
+            client: Union[MatrixClient, NetworkProxyClient, ElementCallClient]
             if adapter.registration["type"] == "network-proxy":
                 client = NetworkProxyClient(client_var_name, self, adapter.registration)
+            elif adapter.registration["type"] == "element-call":
+                client = ElementCallClient(client_var_name, self, adapter.registration)
             else:
                 client = MatrixClient(client_var_name, self, adapter.registration)
             adapter.set_client(client)

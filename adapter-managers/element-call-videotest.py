@@ -30,8 +30,7 @@ async def poll(uuid: str):
             return {
                 "action": "create_or_join",
                 "data": {
-                    #"callName": "trafficlight_" + str(datetime.now().timestamp()),
-                    "callName": "trafficlight_asdf",
+                    "callName": "trafficlight_" + str(datetime.now().timestamp()),
                     "displayName": "user_"+str(datetime.now().timestamp())
                  }
             }
@@ -43,11 +42,34 @@ async def poll(uuid: str):
         case 2: 
             return {
                 "action": "start_screenshare",
-                "data": { }
+                "data": {}
             }
         case 3: 
             return {
+                "action": "set_video",
+                "data": {"image": "blue" }
+            }
+        case 4: 
+            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
+            return {
                 "action": "idle",
+                "data": { }
+            }
+        case 5: 
+            uuid_response_count[uuid] = 1
+            return {
+                "action": "set_video",
+                "data": {"image": "red" }
+            }
+        case 8: 
+            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
+            return {
+                "action": "idle",
+                "data": { }
+            }
+        case 9: 
+            return {
+                "action": "exit",
                 "data": { }
             }
     
