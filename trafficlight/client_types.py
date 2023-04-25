@@ -36,6 +36,9 @@ class ElementIos(ClientType):
     def match(self, x: Adapter) -> bool:
         return str(x.registration["type"]) == "element-ios"
 
+class ElementCall(ClientType):
+    def match(self, x: Adapter) -> bool:
+        return str(x.registration["type"]) == "element-call"
 
 class NetworkProxy(ClientType):
     def match(self, x: Adapter) -> bool:
