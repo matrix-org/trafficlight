@@ -1,8 +1,10 @@
 import asyncio
+import dataclasses
 import logging
 import time
-from typing import Any, Dict, Optional, Union
-
+from enum import StrEnum
+from typing import Any, Dict, Optional, Union, Set
+from dataclasses import dataclass
 from nio import AsyncClient
 
 from trafficlight.homerunner import HomeServer
@@ -22,10 +24,10 @@ class User:
 
 class Client:
     def __init__(
-        self,
-        name: str,
-        test_case: Any,
-        registration: Dict[str, Any],
+            self,
+            name: str,
+            test_case: Any,
+            registration: Dict[str, Any],
     ):
         self.name = name
         self.test_case = test_case
@@ -85,20 +87,56 @@ class Client:
         return rsp
 
 
+class VideoImage(StrEnum):
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
+
+
+@dataclass
+class VideoTile:
+    caption: str
+    muted: bool
+    screenshare: bool
+    snapshot_file: str
+
+
+@dataclass
+class CallData:
+    video_tiles: Set[VideoTile]
+    muted: bool
+    screenshare: bool
+    video_muted: bool
+
+
 class ElementCallClient(Client):
     def __init__(self, name: str, test_case: Any, registration: Dict[str, Any]):
         super().__init__(name, test_case, registration)
 
     async def create_or_join(self, call_name: str, display_name: str) -> bool:
-        data = await self._perform_action({"action": "create_or_join", "data": {"callName": call_name, "displayName": display_name}})
-        return data["existing"]
+        data = await self._perform_action(
+            {"action": "create_or_join", "data": {"callName": call_name, "displayName": display_name}})
+        existing = str(data["existing"])
+        return "true" == existing
 
-    async def lobby_join(self) -> bool:
-        return await self._perform_action({"action": "lobby_join", "data": {}})
+    async def lobby_join(self) -> None:
+        await self._perform_action({"action": "lobby_join", "data": {}})
 
-    async def get_call_data(self) -> Dict[str, Any]:
-        data = await self._perform_action({"action": "get_call_data", "data": {}})
-        return data['data']
+    async def get_call_data(self) -> CallData:
+        response = await self._perform_action({"action": "get_call_data", "data": {}})
+        # TODO marshall properly
+        return CallData(set(), False, False, False)
+
+    async def set_video_image(self, image: VideoImage) -> None:
+        await self._perform_action({"action": "set_video_image", "data": {"image": str(image)}})
+
+    async def set_mute(self, audio_mute: bool, video_mute: bool) -> None:
+        await self._perform_action(
+            {"action": "set_mute", "data": {"audio_mute": audio_mute, "video_mute": video_mute}})
+
+    async def set_screenshare(self, screenshare: bool) -> None:
+        await self._perform_action({"action": "set_screenshare", "data": {"screenshare": screenshare}})
+
 
 class NetworkProxyClient(Client):
     def __init__(self, name: str, test_case: Any, registration: Dict[str, Any]):
@@ -155,8 +193,8 @@ class MatrixClient(Client):
         # via API, removing that device and then passing those credentials as a login request.
 
         if (
-            self.registration["type"] == "element-android"
-            or self.registration["type"] == "element-ios"
+                self.registration["type"] == "element-android"
+                or self.registration["type"] == "element-ios"
         ):
             # do nio based registration and logout
             await self._direct_registration(homeserver)
@@ -179,7 +217,7 @@ class MatrixClient(Client):
         )
 
     async def _direct_registration(
-        self, homeserver: Union[HomeServer, NetworkProxyClient]
+            self, homeserver: Union[HomeServer, NetworkProxyClient]
     ) -> None:
         nio_client = AsyncClient(homeserver.cs_api)
         response = await nio_client.register(
@@ -190,9 +228,9 @@ class MatrixClient(Client):
         logger.info(response)
 
     async def login(
-        self,
-        homeserver: Union[HomeServer, NetworkProxyClient],
-        key_backup_passphrase: str = None,
+            self,
+            homeserver: Union[HomeServer, NetworkProxyClient],
+            key_backup_passphrase: str = None,
     ) -> None:
         url = homeserver.cs_api
         docker_api = url.replace("localhost", "10.0.2.2")

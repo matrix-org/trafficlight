@@ -18,7 +18,7 @@ class TestCase:
     def __init__(
         self,
         test: Any,
-        server_type: ServerType,
+        server_type: Optional[ServerType],
         server_names: List[str],
         client_types: Dict[str, ClientType],
     ) -> None:
@@ -69,7 +69,7 @@ class TestCase:
         self.state = "preparing"
         self.adapters = adapters
         # turn adapters into clients
-        kwargs: Dict[str, Union[HomeServer, MatrixClient, NetworkProxyClient]] = {}
+        kwargs: Dict[str, Union[HomeServer, MatrixClient, NetworkProxyClient, ElementCallClient]] = {}
 
         for client_var_name, adapter in adapters.items():
             client: Union[MatrixClient, NetworkProxyClient, ElementCallClient]
@@ -81,10 +81,10 @@ class TestCase:
                 client = MatrixClient(client_var_name, self, adapter.registration)
             adapter.set_client(client)
             kwargs[client_var_name] = client
-
-        homeservers = await homerunner.create(self.guid, self.server_type)
-        for i in range(0, len(self.server_names)):
-            kwargs[self.server_names[i]] = homeservers[i]
+        if self.server_type:
+            homeservers = await homerunner.create(self.guid, self.server_type)
+            for i in range(0, len(self.server_names)):
+                kwargs[self.server_names[i]] = homeservers[i]
 
         # This may well bail out entirely if the configuration of the test is incorrect
         # But this is a badly written test so is actually OK.
