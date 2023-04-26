@@ -1,5 +1,4 @@
 import asyncio
-import dataclasses
 import logging
 import time
 from enum import StrEnum
@@ -124,6 +123,7 @@ class ElementCallClient(Client):
 
     async def get_call_data(self) -> CallData:
         response = await self._perform_action({"action": "get_call_data", "data": {}})
+        print(response)
         # TODO marshall properly
         return CallData(set(), False, False, False)
 
