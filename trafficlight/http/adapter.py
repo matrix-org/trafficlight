@@ -241,7 +241,7 @@ async def upload(uuid: str):  # type: ignore
         logger.info("Got upload from ${uuid}, unable to route internally")
         raise Exception("Unknown adapter raising error")
 
-    for name, file in (await request.files).items():
+    for name, file in (await request.files).items():  # type: ignore
         filename = secure_filename(file.filename)
         target = str(current_app.config.get("UPLOAD_FOLDER")) + uuid + filename
         logger.info(f"Uploading file {name} to {target}")
