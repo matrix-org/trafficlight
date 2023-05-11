@@ -8,6 +8,11 @@ def run() -> None:
 
 uuid_response_count = {}
 
+@app.post("/client/<uuid>/upload")
+async def upload(uuid:str):
+    print("File uploaded...")
+    return {}
+
 @app.post("/client/<uuid>/register")
 async def register(uuid: str):
     print("registered")
