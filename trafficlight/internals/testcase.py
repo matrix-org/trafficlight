@@ -24,7 +24,7 @@ class TestCase:
     ) -> None:
         self.exceptions: List[str] = []
         self.guid = hashlib.md5(
-            f"TestCase{test.name()}{server_type.name()}{server_names}{client_types}".encode(
+            f"TestCase{test.name()}{server_type.name() if server_type else None}{server_names}{client_types}".encode(
                 "utf-8"
             )
         ).hexdigest()
