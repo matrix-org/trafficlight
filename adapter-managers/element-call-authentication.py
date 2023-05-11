@@ -33,52 +33,34 @@ async def poll(uuid: str):
     match count:
         case 0: 
             return {
-                "action": "create_or_join",
+                "action": "register",
                 "data": {
-                    "callName": "trafficlight_asdf",
-                    "displayName": "user_"+str(datetime.now().timestamp())
+                    "localpart": "testuser_"+uuid,
+                    "password": uuid
                  }
             }
         case 1: 
             return {
-                "action": "lobby_join",
-                "data": { }
+                "action": "set_display_name",
+                "data": {
+                    "display_name": "TestUser",
+                 }
             }
         case 2: 
-            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
             return {
-                "action": "idle",
-                "data": { }
+                "action": "logout",
+                "data": {
+                 }
             }
         case 3: 
             return {
-                "action": "set_video_image",
-                "data": {"image": "blue" }
+                "action": "login",
+                "data": {
+                    "localpart": "testuser_"+uuid,
+                    "password": uuid
+                 }
             }
         case 4: 
-            return {
-                "action": "get_call_data",
-                "data": { }
-            }
-        case 5: 
-            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
-            return {
-                "action": "idle",
-                "data": { }
-            }
-        case 6: 
-            uuid_response_count[uuid] = 1
-            return {
-                "action": "set_video_image",
-                "data": {"image": "red" }
-            }
-        case 8: 
-            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
-            return {
-                "action": "idle",
-                "data": { }
-            }
-        case 9: 
             return {
                 "action": "exit",
                 "data": { }
