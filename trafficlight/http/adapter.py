@@ -179,9 +179,18 @@ async def respond(uuid: str):  # type: ignore
     if adapter is None:
         # Again, bad situation; client is doing something and no-one knows why
         raise Exception("Unknown adapter performing update")
+
+    files = {}
+    for name, file in (await request.files).items():  # type: ignore
+        filename = secure_filename(file.filename)
+        target = str(current_app.config.get("UPLOAD_FOLDER")) + uuid + filename
+        logger.info(f"Uploading file {name} to {target}")
+        files[name] = target
+        await file.save(target)
+
     response = await request.json
     update = cast(Dict[str, Any], response)
-    adapter.respond(update)
+    adapter.respond(update, files)
 
     return {}
 

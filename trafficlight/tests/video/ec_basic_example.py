@@ -49,15 +49,10 @@ class ElementCallTest(Test):
 
         await alice.set_video_image(VideoImage.BLUE)
         await alice.set_mute(True, False)
-        await alice.set_screenshare(True)
 
         bob_data = await bob.get_call_data()
-        alice_from_bob = list(filter(lambda x: x.caption == "alice", bob_data.video_tiles))[0]
-        assert alice_from_bob.caption == "alice"
-        assert alice_from_bob.muted
-        # assert alice_screenshare_from_bob.snapshot_file compared_to blue_image
 
-        # Find the screenshare somehow and then match...
-        # alice_screenshare_from_bob = list(filter(lambda x: x.caption == "alice_screenshare", bob_data.video_tiles))[0]
+        assert len(bob_data.video_tiles) == 2
 
-        # assert alice_screenshare_from_bob.snapshot_file compared_to alice_screenshare_image == True
+        alice_tile = bob_data.get_video_tile_by_caption(alice.display_name)
+        assert alice_tile.video_image_is(VideoImage.BLUE)

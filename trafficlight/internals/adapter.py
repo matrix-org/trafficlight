@@ -51,11 +51,11 @@ class Adapter(object):
         return action
 
     def respond(
-        self, update: Dict[str, Any], update_last_responded: bool = True
+        self, update: Dict[str, Any], files: Dict[str, str], update_last_responded: bool = True
     ) -> None:
         if self.client is None:
             raise Exception("Adapter %s has not been assigned a client yet", self.guid)
-
+        update["_files"] = files
         self.client._give_poll_response(update)
         if update_last_responded:
             self.last_responded = datetime.now()
