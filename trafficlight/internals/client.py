@@ -95,6 +95,8 @@ class VideoImage(StrEnum):
     RED = "red"
     GREEN = "green"
     BLUE = "blue"
+    INITIAL = "initial"
+    CONNECTING = "connecting"
 
 
 @dataclass
@@ -104,7 +106,7 @@ class VideoTile:
     screenshare: bool
     snapshot_file: str
 
-    def video_image_is(self, colour: VideoImage) -> bool:
+    def video_image_colour(self) -> VideoImage:
         with Image.open(self.snapshot_file) as im:
             width = im.width
             height = im.height
@@ -112,15 +114,27 @@ class VideoTile:
                 (int(width / 2), int(height / 2))
             )  #
             # Pixel is R,G,B,A tuple (A = alpha)
-            match colour:
-                case VideoImage.RED:
-                    return pixel == (255, 0, 0, 0)
-                case VideoImage.GREEN:
-                    return pixel == (0, 255, 0, 0)
-                case VideoImage.BLUE:
-                    return pixel == (0, 0, 255, 0)
+            # We match the source 255 as "higher than 247" because the video codec reduces the detail on the exact hue.
 
-            return False
+            # These capture the expected values for the RED GREEN and BLUE images
+            if pixel[0] > 247 and pixel[1] < 10 and pixel[2] < 10 and pixel[3] == 255:
+                return VideoImage.RED
+            if pixel[0] < 10 and pixel[1] > 247 and pixel[2] < 10 and pixel[3] == 255:
+                return VideoImage.GREEN
+            if pixel[0] < 10 and pixel[1] == 0 and pixel[2] > 247 and pixel[3] == 255:
+                return VideoImage.BLUE
+
+            # This captures video streams that have frozen on the initial state
+            if 120 < pixel[0] < 136 and 120 < pixel[1] < 136 and 120 < pixel[2] < 136 and pixel[3] == 255:
+                return VideoImage.INITIAL
+
+            # This is aiming to capture "connecting" type colouration
+            if pixel[0] == 68 and pixel[1] == 68 and pixel[2] == 68 and pixel[3] == 255:
+                return VideoImage.CONNECTING
+
+
+            raise ActionException(f"Unable to identify colour, got {pixel}", self.snapshot_file)
+
 
 
 @dataclass
@@ -210,6 +224,11 @@ class ElementCallClient(Client):
             self.display_name = self.name
         await self._perform_action(
             {"action": "set_display_name", "data": {"display_name": self.display_name}}
+        )
+
+    async def leave_call(self) -> None:
+        await self._perform_action(
+            {"action": "leave_call", "data": {}}
         )
 
     async def logout(self) -> None:
@@ -320,6 +339,9 @@ class ElementCallClient(Client):
         return call_data
 
     async def set_video_image(self, image: VideoImage) -> None:
+        if image == VideoImage.INITIAL or image == VideoImage.CONNECTING:
+            raise ActionException(f"Unable to set image to {image}, it's only for checking results", "client.py")
+
         await self._perform_action(
             {"action": "set_video_image", "data": {"image": str(image)}}
         )

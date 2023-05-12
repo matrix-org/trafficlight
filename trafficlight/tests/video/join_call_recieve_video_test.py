@@ -5,6 +5,8 @@ from trafficlight.client_types import ElementCall
 from trafficlight.internals.client import ElementCallClient, VideoImage
 from trafficlight.internals.test import Test
 
+from assertpy import assert_that
+
 # Tests
 
 
@@ -39,13 +41,14 @@ class JoinCallReceiveVideoTest(Test):
         assert len(bob_data.video_tiles) == 2
 
         bob_tile = alice_data.get_video_tile_by_caption(bob.display_name)
-        assert bob_tile.video_image_is(VideoImage.RED)
+        assert_that(bob_tile.video_image_colour()).is_equal_to(VideoImage.RED)
 
         alice_tile = bob_data.get_video_tile_by_caption(alice.display_name)
-        assert alice_tile.video_image_is(VideoImage.BLUE)
+        assert_that(alice_tile.video_image_colour()).is_equal_to(VideoImage.BLUE)
 
         await alice.set_video_image(VideoImage.GREEN)
+        await asyncio.sleep(2)
         bob_data = await bob.get_call_data()
 
         alice_tile = bob_data.get_video_tile_by_caption(alice.display_name)
-        assert alice_tile.video_image_is(VideoImage.GREEN)
+        assert_that(alice_tile.video_image_colour()).is_equal_to(VideoImage.GREEN)
