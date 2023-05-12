@@ -1,13 +1,12 @@
-from trafficlight.client_types import ElementCall
-from trafficlight.internals.client import ElementCallClient, VideoImage, VideoTile
-from trafficlight.internals.test import Test
-
-
 import asyncio
 from datetime import datetime
 
+from trafficlight.client_types import ElementCall
+from trafficlight.internals.client import ElementCallClient, VideoImage
+from trafficlight.internals.test import Test
 
 # Tests
+
 
 class JoinCallReceiveVideoTest(Test):
     def __init__(self) -> None:
@@ -15,21 +14,23 @@ class JoinCallReceiveVideoTest(Test):
         self._client_under_test([ElementCall()], "alice")
         self._client_under_test([ElementCall()], "bob")
 
-    async def run(
-            self, alice: ElementCallClient, bob: ElementCallClient
-    ) -> None:
+    async def run(self, alice: ElementCallClient, bob: ElementCallClient) -> None:
         await asyncio.gather(alice.register(), bob.register())
 
         await asyncio.gather(alice.set_display_name(), bob.set_display_name())
 
         room_name = "tl_chat_" + str(datetime.now().timestamp())
 
-        await asyncio.gather(alice.create_or_join(room_name), bob.create_or_join(room_name))
+        await asyncio.gather(
+            alice.create_or_join(room_name), bob.create_or_join(room_name)
+        )
         # lobby screen
         await asyncio.gather(alice.lobby_join(), bob.lobby_join())
         await asyncio.sleep(5)
 
-        await asyncio.gather(alice.set_video_image(VideoImage.BLUE), bob.set_video_image(VideoImage.RED))
+        await asyncio.gather(
+            alice.set_video_image(VideoImage.BLUE), bob.set_video_image(VideoImage.RED)
+        )
 
         alice_data = await alice.get_call_data()
         bob_data = await bob.get_call_data()

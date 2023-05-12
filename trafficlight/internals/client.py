@@ -5,10 +5,10 @@ import string
 import time
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Dict, Optional, Union, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from PIL import Image  # type: ignore
 from nio import AsyncClient
+from PIL import Image  # type: ignore
 
 from trafficlight.homerunner import HomeServer
 from trafficlight.internals.exceptions import ActionException
@@ -28,10 +28,10 @@ class User:
 
 class Client:
     def __init__(
-            self,
-            name: str,
-            test_case: Any,
-            registration: Dict[str, Any],
+        self,
+        name: str,
+        test_case: Any,
+        registration: Dict[str, Any],
     ):
         self.name = name
         self.test_case = test_case
@@ -108,7 +108,9 @@ class VideoTile:
         with Image.open(self.snapshot_file) as im:
             width = im.width
             height = im.height
-            pixel: Tuple[int,int,int,int] = im.getpixel((int(width / 2), int(height / 2))) #
+            pixel: Tuple[int, int, int, int] = im.getpixel(
+                (int(width / 2), int(height / 2))
+            )  #
             # Pixel is R,G,B,A tuple (A = alpha)
             match colour:
                 case VideoImage.RED:
@@ -169,7 +171,10 @@ class ElementCallClient(Client):
         self.localpart = localpart
         self.password = password
         await self._perform_action(
-            {"action": "login", "data": {"localpart": self.localpart, "password": self.password}}
+            {
+                "action": "login",
+                "data": {"localpart": self.localpart, "password": self.password},
+            }
         )
 
     async def login_as(self, other_client: "ElementCallClient") -> None:
@@ -177,11 +182,21 @@ class ElementCallClient(Client):
 
     async def register(self) -> None:
         self.type = self._REGISTERED_USER
-        self.localpart = "user_" + self._random_letter + "_" + self.name + "_" + str(round(time.time()))
+        self.localpart = (
+            "user_"
+            + self._random_letter
+            + "_"
+            + self.name
+            + "_"
+            + str(round(time.time()))
+        )
         self.password = "pass_bibble_bobble_" + self.name
 
         await self._perform_action(
-            {"action": "register", "data": {"localpart": self.localpart, "password": self.password}}
+            {
+                "action": "register",
+                "data": {"localpart": self.localpart, "password": self.password},
+            }
         )
 
     async def guest_user(self) -> None:
@@ -195,12 +210,12 @@ class ElementCallClient(Client):
         )
 
     async def logout(self) -> None:
-        await self._perform_action(
-            {"action": "logout", "data": {}}
-        )
+        await self._perform_action({"action": "logout", "data": {}})
 
     async def recreate(self, unload_hooks: bool = False) -> None:
-        await self._perform_action({"action": "recreate", "data": {"unload_hooks": unload_hooks}})
+        await self._perform_action(
+            {"action": "recreate", "data": {"unload_hooks": unload_hooks}}
+        )
 
     async def reload(self) -> None:
         await self._perform_action({"action": "reload", "data": {}})
@@ -208,12 +223,20 @@ class ElementCallClient(Client):
     async def create_or_join(self, call_name: str) -> bool:
         if self.type == self._GUEST_USER:
             data = await self._perform_action(
-                {"action": "create_or_join", "data": {"call_name": call_name, "display_name": self.display_name}})
+                {
+                    "action": "create_or_join",
+                    "data": {"call_name": call_name, "display_name": self.display_name},
+                }
+            )
         elif self.type == self._REGISTERED_USER:
             data = await self._perform_action(
-                {"action": "create_or_join", "data": {"call_name": call_name}})
+                {"action": "create_or_join", "data": {"call_name": call_name}}
+            )
         else:
-            raise ActionException("User unspecified; login(), register() or guest_user() first", "client.py")
+            raise ActionException(
+                "User unspecified; login(), register() or guest_user() first",
+                "client.py",
+            )
 
         if "existing" in data:
             return "true" == data["existing"]  # type: ignore
@@ -223,22 +246,37 @@ class ElementCallClient(Client):
     async def join_by_url(self, call_url: str) -> None:
         if self.type == self._GUEST_USER:
             await self._perform_action(
-                {"action": "join_by_url", "data": {"call_url": call_url, "display_name": self.display_name}})
+                {
+                    "action": "join_by_url",
+                    "data": {"call_url": call_url, "display_name": self.display_name},
+                }
+            )
         elif self.type == self._REGISTERED_USER:
-            await self._perform_action({"action": "join_by_url", "data": {"call_url": call_url}})
+            await self._perform_action(
+                {"action": "join_by_url", "data": {"call_url": call_url}}
+            )
         else:
-            raise ActionException("User unspecified; login(), register() or guest_user() first", "client.py")
+            raise ActionException(
+                "User unspecified; login(), register() or guest_user() first",
+                "client.py",
+            )
 
     async def get_lobby_data(self) -> LobbyData:
         response = await self._perform_action({"action": "get_lobby_data", "data": {}})
 
-        data = response['data']
-        snapshot_file = self.test_case.files[self.name + "_" + data['snapshot']]
-        invite_url = response['data']['invite_url']
-        page_url = response['data']['page_url']
-        call_name = response['data']['call_name']
-        lobby_data = LobbyData(video_muted=False, muted=False, snapshot_file=snapshot_file, page_url=page_url,
-                               invite_url=invite_url, call_name=call_name)
+        data = response["data"]
+        snapshot_file = self.test_case.files[self.name + "_" + data["snapshot"]]
+        invite_url = response["data"]["invite_url"]
+        page_url = response["data"]["page_url"]
+        call_name = response["data"]["call_name"]
+        lobby_data = LobbyData(
+            video_muted=False,
+            muted=False,
+            snapshot_file=snapshot_file,
+            page_url=page_url,
+            invite_url=invite_url,
+            call_name=call_name,
+        )
         return lobby_data
 
     async def lobby_join(self) -> None:
@@ -249,31 +287,52 @@ class ElementCallClient(Client):
 
         # TODO marshall properly, because this is rubbish.
         print(response)
-        videos = response['data']['videos']
+        videos = response["data"]["videos"]
         tiles: List[VideoTile] = []
         for video in videos:
             # convert from adapter naming to our naming.
-            snapshot_file = self.test_case.files[self.name + "_" + video['snapshot']]
-            tiles.append(VideoTile(caption=video['caption'], muted=video['muted'], screenshare=False,
-                                   snapshot_file=snapshot_file))
+            snapshot_file = self.test_case.files[self.name + "_" + video["snapshot"]]
+            tiles.append(
+                VideoTile(
+                    caption=video["caption"],
+                    muted=video["muted"],
+                    screenshare=False,
+                    snapshot_file=snapshot_file,
+                )
+            )
 
-        invite_url = response['data']['invite_url']
-        page_url = response['data']['page_url']
-        call_name = response['data']['call_name']
-        call_data = CallData(screenshare=False, video_muted=False, muted=False, video_tiles=tiles, page_url=page_url,
-                             invite_url=invite_url, call_name=call_name)
+        invite_url = response["data"]["invite_url"]
+        page_url = response["data"]["page_url"]
+        call_name = response["data"]["call_name"]
+        call_data = CallData(
+            screenshare=False,
+            video_muted=False,
+            muted=False,
+            video_tiles=tiles,
+            page_url=page_url,
+            invite_url=invite_url,
+            call_name=call_name,
+        )
 
         return call_data
 
     async def set_video_image(self, image: VideoImage) -> None:
-        await self._perform_action({"action": "set_video_image", "data": {"image": str(image)}})
+        await self._perform_action(
+            {"action": "set_video_image", "data": {"image": str(image)}}
+        )
 
     async def set_mute(self, audio_mute: bool, video_mute: bool) -> None:
         await self._perform_action(
-            {"action": "set_mute", "data": {"audio_mute": audio_mute, "video_mute": video_mute}})
+            {
+                "action": "set_mute",
+                "data": {"audio_mute": audio_mute, "video_mute": video_mute},
+            }
+        )
 
     async def set_screenshare(self, screenshare: bool) -> None:
-        await self._perform_action({"action": "set_screenshare", "data": {"screenshare": screenshare}})
+        await self._perform_action(
+            {"action": "set_screenshare", "data": {"screenshare": screenshare}}
+        )
 
 
 class NetworkProxyClient(Client):
@@ -331,8 +390,8 @@ class MatrixClient(Client):
         # via API, removing that device and then passing those credentials as a login request.
 
         if (
-                self.registration["type"] == "element-android"
-                or self.registration["type"] == "element-ios"
+            self.registration["type"] == "element-android"
+            or self.registration["type"] == "element-ios"
         ):
             # do nio based registration and logout
             await self._direct_registration(homeserver)
@@ -355,7 +414,7 @@ class MatrixClient(Client):
         )
 
     async def _direct_registration(
-            self, homeserver: Union[HomeServer, NetworkProxyClient]
+        self, homeserver: Union[HomeServer, NetworkProxyClient]
     ) -> None:
         nio_client = AsyncClient(homeserver.cs_api)
         response = await nio_client.register(
@@ -366,9 +425,9 @@ class MatrixClient(Client):
         logger.info(response)
 
     async def login(
-            self,
-            homeserver: Union[HomeServer, NetworkProxyClient],
-            key_backup_passphrase: str = None,
+        self,
+        homeserver: Union[HomeServer, NetworkProxyClient],
+        key_backup_passphrase: str = None,
     ) -> None:
         url = homeserver.cs_api
         docker_api = url.replace("localhost", "10.0.2.2")

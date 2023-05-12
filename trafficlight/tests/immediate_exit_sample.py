@@ -15,10 +15,10 @@ class ExitImmediately(Test):
         self._network_proxy("network_proxy")
 
     async def run(
-            self,
-            alice: MatrixClient,
-            server: HomeServer,
-            network_proxy: NetworkProxyClient,
+        self,
+        alice: MatrixClient,
+        server: HomeServer,
+        network_proxy: NetworkProxyClient,
     ) -> None:
         # All we do is exit the client immediately
         # Used for manual testing that clients will restart correctly

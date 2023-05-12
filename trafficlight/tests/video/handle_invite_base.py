@@ -6,7 +6,9 @@ from trafficlight.internals.client import ElementCallClient
 
 
 class InviteLinksMixin:
-    async def _run_test(self, creator: ElementCallClient, joiner: ElementCallClient) -> None:
+    async def _run_test(
+        self, creator: ElementCallClient, joiner: ElementCallClient
+    ) -> None:
         room_name = "tl_chat_" + str(datetime.now().timestamp())
 
         await creator.create_or_join(room_name)
@@ -23,7 +25,9 @@ class InviteLinksMixin:
         # Check bob sees the same things as alice
         assert_that(joiner_lobby_data.call_name).is_equal_to(room_name)
         assert_that(joiner_lobby_data.page_url).is_equal_to(creator_lobby_data.page_url)
-        assert_that(joiner_lobby_data.invite_url).is_equal_to(creator_lobby_data.invite_url)
+        assert_that(joiner_lobby_data.invite_url).is_equal_to(
+            creator_lobby_data.invite_url
+        )
 
         # Now join bob to the call before alice joins the call via invite_url
 
