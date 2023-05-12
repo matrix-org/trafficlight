@@ -3,35 +3,76 @@
 {% block content %}
 <div>
     <table class="table">
-    <thead class="thead-dark">
-    <tr><th>Suite</th><th>Waiting</th><th>Running</th><th>Success</th><th>Fail</th><th>Err</th></tr>
-    </thead>
-    <tbody>
-    {% for testsuite in test_suites %}
-    <tr><td class="w-100"><a href='{{ url_for("status.testsuite_status", guid = testsuite.guid) }}'>{{ testsuite.name() }}</a></td><td>{{ testsuite.waiting() }}</td><td>{{ testsuite.running() }}</td><td>{{ testsuite.successes() }}</td><td>{{ testsuite.failures() }}</td><td>{{ testsuite.errors() }}</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
+        <thead class="thead-dark">
+        <tr>
+            <th>Suite</th>
+            <th>Waiting</th>
+            <th>Running</th>
+            <th>Success</th>
+            <th>Fail</th>
+            <th>Err</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for testsuite in test_suites %}
+        <tr>
+            <td class="w-100"><a href='{{ url_for("status.testsuite_status", guid = testsuite.guid) }}'>{{
+                testsuite.name() }}</a></td>
+            <td>{{ testsuite.waiting() }}</td>
+            <td>{{ testsuite.running() }}</td>
+            <td>{{ testsuite.successes() }}</td>
+            <td>{{ testsuite.failures() }}</td>
+            <td>{{ testsuite.errors() }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 
 </div>
 <div>
-  <table class="table">
-    <thead class="thead-dark">
-    <tr><th>UUID</th><th>State</th><th>Last Polled</th><th>data</th></tr>
-    </thead>
-    {% for adapter in inprogress_adapters %}
-    <tr><td>{{ adapter.guid }}</td><td>{% if adapter.client %}<a href='{{ url_for("status.testcase_status", guid = adapter.client.test_case.guid )}}'>{{ adapter.poll(False) }}</a>{% elif adapter.last_error %}Error: {{ adapter.last_error.details }}{% else %}Unallocated{% endif %}<td>{{ adapter.last_polled }}</td><td>{{ adapter.registration }}</td></tr>
-    {% endfor %}
-  </table>
+    <table class="table">
+        <thead class="thead-dark">
+        <tr>
+            <th>UUID</th>
+            <th>State</th>
+            <th>Last Polled</th>
+            <th>data</th>
+        </tr>
+        </thead>
+        {% for adapter in inprogress_adapters %}
+        <tr>
+            <td>{{ adapter.guid }}</td>
+            <td>{% if adapter.client %}<a
+                    href='{{ url_for("status.testcase_status", guid = adapter.client.test_case.guid )}}'>{{
+                adapter.poll(False) }}</a>{% elif adapter.last_error %}Error: {{ adapter.last_error.details }}{% else
+                %}Unallocated{% endif %}
+            <td>{{ adapter.last_polled }}</td>
+            <td>{{ adapter.registration }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 </div>
 <div>
-  <table class="table">
-    <thead class="thead-dark">
-    <tr><th>UUID</th><th>State</th><th>Last Polled</th><th>data</th></tr>
-    </thead>
-    {% for adapter in completed_adapters %}
-    <tr><td>{{ adapter.guid }}</td><td>{% if adapter.client %}<a href='{{ url_for("status.testcase_status", guid = adapter.client.test_case.guid )}}'>{{ adapter.poll(False) }}</a>{% elif adapter.last_error %}Error: {{ adapter.last_error.details }}{% else %}Unallocated{% endif %}<td>{{ adapter.last_polled }}</td><td>{{ adapter.registration }}</td></tr>
-    {% endfor %}
-  </table>
+    <table class="table">
+        <thead class="thead-dark">
+        <tr>
+            <th>UUID</th>
+            <th>State</th>
+            <th>Last Polled</th>
+            <th>data</th>
+        </tr>
+        </thead>
+        {% for adapter in completed_adapters %}
+        <tr>
+            <td>{{ adapter.guid }}</td>
+            <td>{% if adapter.client %}<a
+                    href='{{ url_for("status.testcase_status", guid = adapter.client.test_case.guid )}}'>{{
+                adapter.poll(False) }}</a>{% elif adapter.last_error %}Error: {{ adapter.last_error.details }}{% else
+                %}Unallocated{% endif %}
+            <td>{{ adapter.last_polled }}</td>
+            <td>{{ adapter.registration }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 </div>
 {% endblock %}

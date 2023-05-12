@@ -1,9 +1,9 @@
+import asyncio
+from datetime import datetime
+
 from trafficlight.client_types import ElementCall
 from trafficlight.internals.client import ElementCallClient, VideoImage
 from trafficlight.internals.test import Test
-
-import asyncio
-from datetime import datetime
 
 
 class ElementCallTest(Test):
@@ -12,12 +12,11 @@ class ElementCallTest(Test):
         self._client_under_test([ElementCall()], "alice")
         self._client_under_test([ElementCall()], "bob")
 
-    async def run(
-            self, alice: ElementCallClient, bob: ElementCallClient
-    ) -> None:
+    async def run(self, alice: ElementCallClient, bob: ElementCallClient) -> None:
         room_name = "tl_chat_" + str(datetime.now().timestamp())
-        (alice_joined, bob_joined) = await asyncio.gather(alice.create_or_join(room_name),
-                                                          bob.create_or_join(room_name))
+        (alice_joined, bob_joined) = await asyncio.gather(
+            alice.create_or_join(room_name), bob.create_or_join(room_name)
+        )
 
         # Check only one of alice or bob joined the room (the other created it)
         # between two single-bit booleans, this is xor
@@ -33,7 +32,7 @@ class ElementCallTest(Test):
         print(alice_data)
         print(bob_data)
 
-        ## Fricking TODO: get a matcher library in here somehow.
+        # Fricking TODO: get a matcher library in here somehow.
         assert any(map(lambda x: x.caption == "alice", alice_data.video_tiles))
         assert any(map(lambda x: x.caption == "bob", alice_data.video_tiles))
         assert any(map(lambda x: x.caption == "alice", bob_data.video_tiles))

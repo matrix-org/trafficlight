@@ -1,14 +1,12 @@
-from trafficlight.client_types import ElementCall
-from trafficlight.internals.client import ElementCallClient, VideoImage, VideoTile
-from trafficlight.internals.test import Test
-
 import asyncio
 from datetime import datetime
 
-from typing import cast
-
+from trafficlight.client_types import ElementCall
+from trafficlight.internals.client import ElementCallClient
+from trafficlight.internals.test import Test
 
 # Known-broken at the moment.
+
 
 class SpotlightTest(Test):
     def __init__(self) -> None:
@@ -16,21 +14,18 @@ class SpotlightTest(Test):
         self._client_under_test([ElementCall()], "alice")
         self._client_under_test([ElementCall()], "bob")
 
-    async def run(
-            self, alice: ElementCallClient, bob: ElementCallClient
-    ) -> None:
-
-
+    async def run(self, alice: ElementCallClient, bob: ElementCallClient) -> None:
         await asyncio.gather(alice.register(), bob.register())
 
         room_name = "tl_chat_" + str(datetime.now().timestamp())
 
-        await asyncio.gather(alice.create_or_join(room_name), bob.create_or_join(room_name))
+        await asyncio.gather(
+            alice.create_or_join(room_name), bob.create_or_join(room_name)
+        )
 
         # lobby screen
         await asyncio.gather(alice.lobby_join(), bob.lobby_join())
         await asyncio.sleep(5)
-
 
         # Soundcard use is not available yet.
 
@@ -39,7 +34,6 @@ class SpotlightTest(Test):
 
         #
         # bob_data = await bob.get_call_data()
-
 
         # alice_tile = cast(VideoTile, bob_data.video_tiles.getByCaption("alice"))
         #
@@ -53,4 +47,3 @@ class SpotlightTest(Test):
         # await alice.set_video_image(VideoImage.GREEN)
         # bob_data = await bob.get_call_data()
         # assert rgb(0,0,255) == get_predomininant_colour(bob_tile.snapshot_file)
-        

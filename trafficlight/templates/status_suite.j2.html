@@ -6,25 +6,48 @@
 setTimeout(function(){
    window.location.reload(1);
 }, {{ refresh }});
+
 </script>
 {% endif %}
-  <table class="table">
+<table class="table">
     <thead class="thead-dark">
-    <tr><th>Suite</th><th>Waiting</th><th>Running</th><th>Success</th><th>Fail</th><th>Err</th></tr>
+    <tr>
+        <th>Suite</th>
+        <th>Waiting</th>
+        <th>Running</th>
+        <th>Success</th>
+        <th>Fail</th>
+        <th>Err</th>
+    </tr>
     </thead>
     <tbody>
-    <tr><td class="w-100">{{ testsuite.name() }}</td><td>{{ testsuite.waiting() }}</td><td>{{ testsuite.running() }}</td><td>{{ testsuite.successes() }}</td><td>{{ testsuite.failures() }}</td><td>{{ testsuite.errors() }}</td></tr>
+    <tr>
+        <td class="w-100">{{ testsuite.name() }}</td>
+        <td>{{ testsuite.waiting() }}</td>
+        <td>{{ testsuite.running() }}</td>
+        <td>{{ testsuite.successes() }}</td>
+        <td>{{ testsuite.failures() }}</td>
+        <td>{{ testsuite.errors() }}</td>
+    </tr>
     </tbody>
-  </table>
+</table>
 
-      <table class="table table-sm">
-        <thead class="thead-light">
-        <tr><th>Case</th><th>GUID</th><th>Running</th></tr>
-        </thead>
-        <tbody>
-        {% for test in testsuite.test_cases %}
-          <tr> <td><a href='{{ url_for("status.testcase_status", guid = test.guid) }}'>{{ test.description() }}</a></td><td>{{ test.guid }}</td><td>{{ test.state }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
+<table class="table table-sm">
+    <thead class="thead-light">
+    <tr>
+        <th>Case</th>
+        <th>GUID</th>
+        <th>Running</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for test in testsuite.test_cases %}
+    <tr>
+        <td><a href='{{ url_for("status.testcase_status", guid = test.guid) }}'>{{ test.description() }}</a></td>
+        <td>{{ test.guid }}</td>
+        <td>{{ test.state }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
 {% endblock %}
