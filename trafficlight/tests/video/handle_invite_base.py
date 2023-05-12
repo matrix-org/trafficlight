@@ -7,7 +7,7 @@ from trafficlight.internals.test import Test
 
 
 class InviteLinksMixin:
-    async def _run_test(self, creator: ElementCallClient, joiner: ElementCallClient):
+    async def _run_test(self, creator: ElementCallClient, joiner: ElementCallClient) -> None:
         room_name = "tl_chat_" + str(datetime.now().timestamp())
 
         await creator.create_or_join(room_name)

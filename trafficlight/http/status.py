@@ -75,7 +75,7 @@ async def test_file(guid: str, name: str):  # type: ignore
 
 @bp.route("/<string:guid>/suitestatus", methods=["GET"])
 async def testsuite_status(guid: str):  # type: ignore
-    refresh = request.args.get("refresh", default=0, type=int)  # type: ignore
+    refresh = request.args.get("refresh", default=0, type=int)
     testsuite = get_testsuite(guid)
     if testsuite is not None:
         return await render_template(
@@ -87,7 +87,7 @@ async def testsuite_status(guid: str):  # type: ignore
 
 @bp.route("/<string:guid>/status", methods=["GET"])
 async def testcase_status(guid: str):  # type: ignore
-    refresh = request.args.get("refresh", default=0, type=int)  # type: ignore
+    refresh = request.args.get("refresh", default=0, type=int)
     logger.info("Finding test %s", guid)
     test = get_test_case(guid)
     if test is not None:

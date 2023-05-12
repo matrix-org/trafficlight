@@ -181,7 +181,7 @@ async def respond(uuid: str):  # type: ignore
         raise Exception("Unknown adapter performing update")
 
     files = {}
-    for name, file in (await request.files).items():  # type: ignore
+    for name, file in (await request.files).items():
         filename = secure_filename(file.filename)
         target = str(current_app.config.get("UPLOAD_FOLDER")) + uuid + filename
         logger.info(f"Uploading file {name} to {target}")
@@ -250,7 +250,7 @@ async def upload(uuid: str):  # type: ignore
         logger.info("Got upload from ${uuid}, unable to route internally")
         raise Exception("Unknown adapter raising error")
 
-    for name, file in (await request.files).items():  # type: ignore
+    for name, file in (await request.files).items():
         filename = secure_filename(file.filename)
         target = str(current_app.config.get("UPLOAD_FOLDER")) + uuid + filename
         logger.info(f"Uploading file {name} to {target}")
