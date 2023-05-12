@@ -1,9 +1,8 @@
 from datetime import datetime
 
-from assertpy import assert_that
+from assertpy import assert_that  # type: ignore
 
 from trafficlight.internals.client import ElementCallClient
-from trafficlight.internals.test import Test
 
 
 class InviteLinksMixin:

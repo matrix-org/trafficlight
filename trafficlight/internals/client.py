@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Dict, Optional, Union, List, Tuple
 
-from PIL import Image
+from PIL import Image  # type: ignore
 from nio import AsyncClient
 
 from trafficlight.homerunner import HomeServer
@@ -172,8 +172,8 @@ class ElementCallClient(Client):
             {"action": "login", "data": {"localpart": self.localpart, "password": self.password}}
         )
 
-    async def login_as(self, other_client: "ElementCallClient"):
-        return await self.login(other_client.localpart, other_client.password)
+    async def login_as(self, other_client: "ElementCallClient") -> None:
+        await self.login(other_client.localpart, other_client.password)
 
     async def register(self) -> None:
         self.type = self._REGISTERED_USER
@@ -216,18 +216,18 @@ class ElementCallClient(Client):
             raise ActionException("User unspecified; login(), register() or guest_user() first", "client.py")
 
         if "existing" in data:
-            return "true" == data["existing"]
+            return "true" == data["existing"]  # type: ignore
         else:
             return False
 
-    async def join_by_url(self, call_url: str):
+    async def join_by_url(self, call_url: str) -> None:
         if self.type == self._GUEST_USER:
             await self._perform_action(
                 {"action": "join_by_url", "data": {"call_url": call_url, "display_name": self.display_name}})
         elif self.type == self._REGISTERED_USER:
             await self._perform_action({"action": "join_by_url", "data": {"call_url": call_url}})
         else:
-            raise ActionException("User unspecified; login(), register() or guest_user() first")
+            raise ActionException("User unspecified; login(), register() or guest_user() first", "client.py")
 
     async def get_lobby_data(self) -> LobbyData:
         response = await self._perform_action({"action": "get_lobby_data", "data": {}})
