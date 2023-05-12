@@ -5,7 +5,7 @@ import string
 import time
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Dict, Optional, Union, List
+from typing import Any, Dict, Optional, Union, List, Tuple
 
 from PIL import Image
 from nio import AsyncClient
@@ -108,7 +108,7 @@ class VideoTile:
         with Image.open(self.snapshot_file) as im:
             width = im.width
             height = im.height
-            pixel = im.getpixel((int(width / 2), int(height / 2)))
+            pixel: Tuple[int,int,int,int] = im.getpixel((int(width / 2), int(height / 2))) #
             # Pixel is R,G,B,A tuple (A = alpha)
             match colour:
                 case VideoImage.RED:
@@ -141,7 +141,7 @@ class CallData:
     invite_url: str
     call_name: str
 
-    def get_video_tile_by_caption(self, caption: str):
+    def get_video_tile_by_caption(self, caption: str) -> VideoTile:
         tiles = list(filter(lambda x: x.caption == caption, self.video_tiles))
         if len(tiles) != 1:
             logger.info(f"Found tiles {tiles} out of {self.video_tiles}")
@@ -199,7 +199,7 @@ class ElementCallClient(Client):
             {"action": "logout", "data": {}}
         )
 
-    async def recreate(self, unload_hooks=False) -> None:
+    async def recreate(self, unload_hooks: bool = False) -> None:
         await self._perform_action({"action": "recreate", "data": {"unload_hooks": unload_hooks}})
 
     async def reload(self) -> None:
@@ -213,7 +213,7 @@ class ElementCallClient(Client):
             data = await self._perform_action(
                 {"action": "create_or_join", "data": {"call_name": call_name}})
         else:
-            raise ActionException("User unspecified; login(), register() or guest_user() first")
+            raise ActionException("User unspecified; login(), register() or guest_user() first", "client.py")
 
         if "existing" in data:
             return "true" == data["existing"]

@@ -20,7 +20,7 @@ class SpotlightTest(Test):
             self, alice: ElementCallClient, bob: ElementCallClient
     ) -> None:
 
-        assert "Working" == "Unable to run this test because we can't handle sound yet"
+
         await asyncio.gather(alice.register(), bob.register())
 
         room_name = "tl_chat_" + str(datetime.now().timestamp())

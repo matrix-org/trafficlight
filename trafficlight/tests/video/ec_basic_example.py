@@ -16,8 +16,8 @@ class ElementCallTest(Test):
             self, alice: ElementCallClient, bob: ElementCallClient
     ) -> None:
         room_name = "tl_chat_" + str(datetime.now().timestamp())
-        (alice_joined, bob_joined) = await asyncio.gather(alice.create_or_join(room_name, "alice"),
-                                                          bob.create_or_join(room_name, "bob"))
+        (alice_joined, bob_joined) = await asyncio.gather(alice.create_or_join(room_name),
+                                                          bob.create_or_join(room_name))
 
         # Check only one of alice or bob joined the room (the other created it)
         # between two single-bit booleans, this is xor
