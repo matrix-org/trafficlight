@@ -203,8 +203,11 @@ class ElementCallClient(Client):
         self.type = self._GUEST_USER
         self.display_name = self.name
 
-    async def set_display_name(self) -> None:
-        self.display_name = self.name
+    async def set_display_name(self, display_name: Optional[str] = None) -> None:
+        if display_name:
+            self.display_name = display_name
+        else:
+            self.display_name = self.name
         await self._perform_action(
             {"action": "set_display_name", "data": {"display_name": self.display_name}}
         )
@@ -333,6 +336,9 @@ class ElementCallClient(Client):
         await self._perform_action(
             {"action": "set_screenshare", "data": {"screenshare": screenshare}}
         )
+
+    async def leave_call(self) -> None:
+        await self._perform_action({"action": "leave_call", "data": {}})
 
 
 class NetworkProxyClient(Client):
