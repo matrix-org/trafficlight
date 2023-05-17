@@ -117,24 +117,29 @@ class VideoTile:
             # We match the source 255 as "higher than 247" because the video codec reduces the detail on the exact hue.
 
             # These capture the expected values for the RED GREEN and BLUE images
-            if pixel[0] > 247 and pixel[1] < 10 and pixel[2] < 10 and pixel[3] == 255:
+            if pixel[0] > 245 and pixel[1] < 10 and pixel[2] < 10 and pixel[3] == 255:
                 return VideoImage.RED
-            if pixel[0] < 10 and pixel[1] > 247 and pixel[2] < 10 and pixel[3] == 255:
+            if pixel[0] < 10 and pixel[1] > 245 and pixel[2] < 10 and pixel[3] == 255:
                 return VideoImage.GREEN
-            if pixel[0] < 10 and pixel[1] == 0 and pixel[2] > 247 and pixel[3] == 255:
+            if pixel[0] < 10 and pixel[1] == 0 and pixel[2] > 245 and pixel[3] == 255:
                 return VideoImage.BLUE
 
             # This captures video streams that have frozen on the initial state
-            if 120 < pixel[0] < 136 and 120 < pixel[1] < 136 and 120 < pixel[2] < 136 and pixel[3] == 255:
+            if (
+                120 < pixel[0] < 136
+                and 120 < pixel[1] < 136
+                and 120 < pixel[2] < 136
+                and pixel[3] == 255
+            ):
                 return VideoImage.INITIAL
 
             # This is aiming to capture "connecting" type colouration
             if pixel[0] == 68 and pixel[1] == 68 and pixel[2] == 68 and pixel[3] == 255:
                 return VideoImage.CONNECTING
 
-
-            raise ActionException(f"Unable to identify colour, got {pixel}", self.snapshot_file)
-
+            raise ActionException(
+                f"Unable to identify colour, got {pixel}", self.snapshot_file
+            )
 
 
 @dataclass
@@ -224,11 +229,6 @@ class ElementCallClient(Client):
             self.display_name = self.name
         await self._perform_action(
             {"action": "set_display_name", "data": {"display_name": self.display_name}}
-        )
-
-    async def leave_call(self) -> None:
-        await self._perform_action(
-            {"action": "leave_call", "data": {}}
         )
 
     async def logout(self) -> None:
@@ -340,7 +340,10 @@ class ElementCallClient(Client):
 
     async def set_video_image(self, image: VideoImage) -> None:
         if image == VideoImage.INITIAL or image == VideoImage.CONNECTING:
-            raise ActionException(f"Unable to set image to {image}, it's only for checking results", "client.py")
+            raise ActionException(
+                f"Unable to set image to {image}, it's only for checking results",
+                "client.py",
+            )
 
         await self._perform_action(
             {"action": "set_video_image", "data": {"image": str(image)}}

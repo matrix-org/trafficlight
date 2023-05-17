@@ -1,11 +1,11 @@
 import asyncio
 from datetime import datetime
 
+from assertpy import assert_that  # type: ignore
+
 from trafficlight.client_types import ElementCall
 from trafficlight.internals.client import ElementCallClient, VideoImage
 from trafficlight.internals.test import Test
-
-from assertpy import assert_that
 
 # Tests
 

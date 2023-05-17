@@ -1,11 +1,12 @@
 import asyncio
 from datetime import datetime
 
+from assertpy import assert_that  # type: ignore
+
 from trafficlight.client_types import ElementCall
 from trafficlight.internals.client import ElementCallClient, VideoImage
 from trafficlight.internals.test import Test
 
-from assertpy import assert_that, soft_assertions
 # Does not match any item in the spreadsheet
 
 
@@ -32,8 +33,6 @@ class TwoClientsOneTerminatedAndRejoin(Test):
         # lobby screen
         await asyncio.gather(alice.lobby_join(), bob.lobby_join())
         await asyncio.sleep(3)
-
-
 
         alice_data = await alice.get_call_data()
         assert_that(alice_data.video_tiles).is_length(2)

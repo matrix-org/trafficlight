@@ -10,7 +10,7 @@ from trafficlight.internals.test import Test
 # Tests
 
 
-class JoinCallReceiveVideoTest(Test):
+class LoadTestCallTest(Test):
     def __init__(self) -> None:
         super().__init__()
         self._client_under_test([ElementCall()], "alice")
@@ -59,6 +59,13 @@ class JoinCallReceiveVideoTest(Test):
                 assert_that(
                     alice_data.get_video_tile_by_caption(f"bob{i}")
                 ).is_not_none()
+                assert_that(
+                    alice_data.get_video_tile_by_caption(f"bob{i}").video_image_colour()
+                ).is_equal_to(bob_colour)
+                assert_that(
+                    bob_data.get_video_tile_by_caption("alice").video_image_colour()
+                ).is_equal_to(alice_colour)
+
                 # assert that alice colour == alice_colour and bob colour = bob_colour...
 
             await bob.leave_call()
