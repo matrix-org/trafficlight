@@ -19,7 +19,8 @@ class LoadTestCallTest(Test):
     async def run(self, alice: ElementCallClient, bob: ElementCallClient) -> None:
         await asyncio.gather(alice.register(), bob.register())
 
-        await asyncio.gather(alice.set_display_name(), bob.set_display_name())
+        await alice.set_display_name()
+        await bob.set_display_name()
 
         room_name = "tl_chat_" + str(datetime.now().timestamp())
 
@@ -46,6 +47,9 @@ class LoadTestCallTest(Test):
             await bob.lobby_join()
             # Let's keep cycling bob's display name
             await bob.set_display_name(f"bob{i}")
+
+            # wait 5s to allow call to settle
+            await asyncio.sleep(5)
 
             (alice_data, bob_data) = await asyncio.gather(
                 alice.get_call_data(), bob.get_call_data()
