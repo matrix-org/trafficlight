@@ -54,4 +54,4 @@ class ElementCallTest(Test):
         assert len(bob_data.video_tiles) == 2
 
         alice_tile = bob_data.get_video_tile_by_caption(alice.display_name)
-        assert alice_tile.video_image_is(VideoImage.BLUE)
+        assert alice_tile.video_image_colour() == VideoImage.BLUE

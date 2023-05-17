@@ -10,7 +10,7 @@ from trafficlight.internals.test import Test
 # Tests
 
 
-class JoinCallReceiveVideoTest(Test):
+class LoadTestCallTest(Test):
     def __init__(self) -> None:
         super().__init__()
         self._client_under_test([ElementCall()], "alice")
@@ -19,7 +19,8 @@ class JoinCallReceiveVideoTest(Test):
     async def run(self, alice: ElementCallClient, bob: ElementCallClient) -> None:
         await asyncio.gather(alice.register(), bob.register())
 
-        await asyncio.gather(alice.set_display_name(), bob.set_display_name())
+        await alice.set_display_name()
+        await bob.set_display_name()
 
         room_name = "tl_chat_" + str(datetime.now().timestamp())
 
@@ -47,6 +48,9 @@ class JoinCallReceiveVideoTest(Test):
             # Let's keep cycling bob's display name
             await bob.set_display_name(f"bob{i}")
 
+            # wait 5s to allow call to settle
+            await asyncio.sleep(5)
+
             (alice_data, bob_data) = await asyncio.gather(
                 alice.get_call_data(), bob.get_call_data()
             )
@@ -59,6 +63,13 @@ class JoinCallReceiveVideoTest(Test):
                 assert_that(
                     alice_data.get_video_tile_by_caption(f"bob{i}")
                 ).is_not_none()
+                assert_that(
+                    alice_data.get_video_tile_by_caption(f"bob{i}").video_image_colour()
+                ).is_equal_to(bob_colour)
+                assert_that(
+                    bob_data.get_video_tile_by_caption("alice").video_image_colour()
+                ).is_equal_to(alice_colour)
+
                 # assert that alice colour == alice_colour and bob colour = bob_colour...
 
             await bob.leave_call()
