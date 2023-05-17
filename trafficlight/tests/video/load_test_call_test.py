@@ -1,13 +1,14 @@
-from trafficlight.client_types import ElementCall
-from trafficlight.internals.client import ElementCallClient, VideoImage, VideoTile
-from trafficlight.internals.test import Test
-
 import asyncio
 from datetime import datetime
-from assertpy import assert_that, soft_assertions
 
+from assertpy import assert_that, soft_assertions  # type: ignore
+
+from trafficlight.client_types import ElementCall
+from trafficlight.internals.client import ElementCallClient, VideoImage
+from trafficlight.internals.test import Test
 
 # Tests
+
 
 class JoinCallReceiveVideoTest(Test):
     def __init__(self) -> None:
@@ -15,9 +16,7 @@ class JoinCallReceiveVideoTest(Test):
         self._client_under_test([ElementCall()], "alice")
         self._client_under_test([ElementCall()], "bob")
 
-    async def run(
-            self, alice: ElementCallClient, bob: ElementCallClient
-    ) -> None:
+    async def run(self, alice: ElementCallClient, bob: ElementCallClient) -> None:
         await asyncio.gather(alice.register(), bob.register())
 
         await asyncio.gather(alice.set_display_name(), bob.set_display_name())
@@ -39,21 +38,27 @@ class JoinCallReceiveVideoTest(Test):
                 alice_colour = VideoImage.GREEN
                 bob_colour = VideoImage.BLUE
 
-            await asyncio.gather(alice.set_video_image(alice_colour), bob.set_video_image(bob_colour))
+            await asyncio.gather(
+                alice.set_video_image(alice_colour), bob.set_video_image(bob_colour)
+            )
 
             await bob.join_by_url(lobby_data.invite_url)
             await bob.lobby_join()
             # Let's keep cycling bob's display name
             await bob.set_display_name(f"bob{i}")
 
-            (alice_data, bob_data) = await asyncio.gather(alice.get_call_data(), bob.get_call_data())
+            (alice_data, bob_data) = await asyncio.gather(
+                alice.get_call_data(), bob.get_call_data()
+            )
 
             with soft_assertions():
 
                 # Ensure we don't gain or lose members doing this.
                 assert_that(alice_data.video_tiles).is_length(2)
                 assert_that(bob_data.video_tiles).is_length(2)
-                assert_that(alice_data.get_video_tile_by_caption(f"bob{i}")).is_not_none()
+                assert_that(
+                    alice_data.get_video_tile_by_caption(f"bob{i}")
+                ).is_not_none()
                 # assert that alice colour == alice_colour and bob colour = bob_colour...
 
             await bob.leave_call()
