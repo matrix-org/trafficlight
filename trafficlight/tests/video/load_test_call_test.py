@@ -31,13 +31,19 @@ class LoadTestCallTest(Test):
 
         await alice.lobby_join()
 
-        for i in range(1, 10):
+        for i in range(0, 10):
             if i % 2 == 0:
                 alice_colour = VideoImage.RED
                 bob_colour = VideoImage.GREEN
+
             else:
                 alice_colour = VideoImage.GREEN
                 bob_colour = VideoImage.BLUE
+
+            if i % 3 == 0:
+                bob_video_muted = True
+            else:
+                bob_video_muted = False
 
             await asyncio.gather(
                 alice.set_video_image(alice_colour), bob.set_video_image(bob_colour)
@@ -45,6 +51,7 @@ class LoadTestCallTest(Test):
 
             await bob.join_by_url(lobby_data.invite_url)
             await bob.lobby_join()
+            await bob.set_mute(bob_video_muted)
             # Let's keep cycling bob's display name
             await bob.set_display_name(f"bob{i}")
 
@@ -58,19 +65,28 @@ class LoadTestCallTest(Test):
             with soft_assertions():
 
                 # Ensure we don't gain or lose members doing this.
-                assert_that(alice_data.video_tiles).is_length(2)
-                assert_that(bob_data.video_tiles).is_length(2)
+                assert_that(alice_data.video_tiles, "alice sees one bob").is_length(2)
+                assert_that(bob_data.video_tiles, "bob sees one alice").is_length(2)
                 assert_that(
-                    alice_data.get_video_tile_by_caption(f"bob{i}")
+                    alice_data.get_video_tile_by_caption(f"bob{i}"), "alice sees bob"
                 ).is_not_none()
+                if bob_video_muted:
+                    assert_that(
+                        alice_data.get_video_tile_by_caption(
+                            f"bob{i}"
+                        ).video_image_colour(),
+                        "alice sees bob's avatar",
+                    ).is_equal_to(VideoImage.AVATAR)
+                else:
+                    assert_that(
+                        alice_data.get_video_tile_by_caption(
+                            f"bob{i}"
+                        ).video_image_colour(),
+                        "alice sees bob's video",
+                    ).is_equal_to(bob_colour)
                 assert_that(
-                    alice_data.get_video_tile_by_caption(f"bob{i}").video_image_colour()
-                ).is_equal_to(bob_colour)
-                assert_that(
-                    bob_data.get_video_tile_by_caption("alice").video_image_colour()
+                    bob_data.get_video_tile_by_caption("alice").video_image_colour(),
+                    "bob sees alice's video",
                 ).is_equal_to(alice_colour)
 
-                # assert that alice colour == alice_colour and bob colour = bob_colour...
-
             await bob.leave_call()
-            # Ensure we don't lose display names doing this.

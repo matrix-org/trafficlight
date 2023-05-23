@@ -47,11 +47,12 @@ class ElementCallTest(Test):
         assert not alice_data.screenshare
 
         await alice.set_video_image(VideoImage.BLUE)
-        await alice.set_mute(True, False)
+        await alice.set_mute(True)
 
         bob_data = await bob.get_call_data()
 
         assert len(bob_data.video_tiles) == 2
 
         alice_tile = bob_data.get_video_tile_by_caption(alice.display_name)
-        assert alice_tile.video_image_colour() == VideoImage.BLUE
+        # muted so alice should show avatar not BLUE
+        assert alice_tile.video_image_colour() == VideoImage.AVATAR

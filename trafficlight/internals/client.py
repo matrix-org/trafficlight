@@ -97,6 +97,7 @@ class VideoImage(StrEnum):
     BLUE = "blue"
     INITIAL = "initial"
     CONNECTING = "connecting"
+    AVATAR = "avatar"
 
 
 @dataclass
@@ -105,11 +106,24 @@ class VideoTile:
     muted: bool
     screenshare: bool
     snapshot_file: str
+    avatar: bool
 
     def video_image_colour(self) -> VideoImage:
+        # If there's an avatar then return that
+        # rather than check the image for information
+
+        if self.avatar:
+            return VideoImage.AVATAR
+
         with Image.open(self.snapshot_file) as im:
             width = im.width
             height = im.height
+
+            # TODO: Actually, we'd be better off if we did search for avatar circle using CV
+            # to identify failure modes like "video playing behind avatar circle"
+            # but ... no tuits for now, so the above boolean check is good enough.
+
+            # Then look for specific colours in the centre
             pixel: Tuple[int, int, int, int] = im.getpixel(
                 (int(width / 2), int(height / 2))
             )  #
@@ -320,6 +334,7 @@ class ElementCallClient(Client):
                     muted=video["muted"],
                     screenshare=False,
                     snapshot_file=snapshot_file,
+                    avatar=video["avatar"],
                 )
             )
 
@@ -349,13 +364,14 @@ class ElementCallClient(Client):
             {"action": "set_video_image", "data": {"image": str(image)}}
         )
 
-    async def set_mute(self, audio_mute: bool, video_mute: bool) -> None:
-        await self._perform_action(
+    async def set_mute(self, video_mute: bool) -> bool:
+        response = await self._perform_action(
             {
                 "action": "set_mute",
-                "data": {"audio_mute": audio_mute, "video_mute": video_mute},
+                "data": {"video_mute": video_mute},
             }
         )
+        return str(response["data"]["was_video_muted"]) == "true"
 
     async def set_screenshare(self, screenshare: bool) -> None:
         await self._perform_action(

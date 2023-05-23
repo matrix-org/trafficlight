@@ -42,33 +42,53 @@ async def poll(uuid: str):
     match count:
         case 0:
             return {
-                "action": "create_or_join",
-                "data": {
-                    "call_name": "trafficlight_asdf",
-                    "display_name": "user_" + str(datetime.now().timestamp()),
-                },
+                "action": "register",
+                "data": {"localpart": "testuser_" + uuid, "password": uuid},
             }
         case 1:
-            return {"action": "lobby_join", "data": {}}
+            return {
+                "action": "set_display_name",
+                "data": {
+                    "display_name": "TestUser",
+                },
+            }
         case 2:
-            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
-            return {"action": "idle", "data": {}}
+            return {
+                "action": "create_or_join",
+                "data": {
+                    "call_name": "tl_test_two",
+                },
+            }
         case 3:
-            return {"action": "set_video_image", "data": {"image": "blue"}}
+            return {"action": "lobby_join", "data": {}}
         case 4:
-            return {"action": "get_call_data", "data": {}}
-        case 5:
             uuid_response_count[uuid] = uuid_response_count[uuid] + 1
             return {"action": "idle", "data": {}}
+        case 5:
+            return {"action": "set_mute", "data": {"video_mute": True}}
         case 6:
-            uuid_response_count[uuid] = 1
-            return {"action": "set_video_image", "data": {"image": "red"}}
+            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
+            return {"action": "idle", "data": {}}
+        case 7:
+            return {"action": "set_mute", "data": {"video_mute": True}}
         case 8:
             uuid_response_count[uuid] = uuid_response_count[uuid] + 1
             return {"action": "idle", "data": {}}
         case 9:
-            return {"action": "exit", "data": {}}
-
+            return {"action": "set_mute", "data": {"video_mute": False}}
+        case 10:
+            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
+            return {"action": "idle", "data": {}}
+        case 11:
+            return {"action": "set_mute", "data": {"video_mute": False}}
+        case 12:
+            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
+            return {"action": "idle", "data": {}}
+        case 13:
+            return {"action": "set_mute", "data": {"video_mute": True}}
+        case 14:
+            uuid_response_count[uuid] = uuid_response_count[uuid] + 1
+            return {"action": "idle", "data": {}}
     return {"action": "idle", "data": {}}
 
 
