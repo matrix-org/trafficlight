@@ -117,11 +117,11 @@ class VideoTile:
             # We match the source 255 as "higher than 247" because the video codec reduces the detail on the exact hue.
 
             # These capture the expected values for the RED GREEN and BLUE images
-            if pixel[0] > 245 and pixel[1] < 10 and pixel[2] < 10 and pixel[3] == 255:
+            if pixel[0] > 213 and pixel[1] < 25 and pixel[2] < 25 and pixel[3] == 255:
                 return VideoImage.RED
-            if pixel[0] < 10 and pixel[1] > 245 and pixel[2] < 10 and pixel[3] == 255:
+            if pixel[0] < 25 and pixel[1] > 213 and pixel[2] < 25 and pixel[3] == 255:
                 return VideoImage.GREEN
-            if pixel[0] < 10 and pixel[1] == 0 and pixel[2] > 245 and pixel[3] == 255:
+            if pixel[0] < 25 and pixel[1] < 25 and pixel[2] > 213 and pixel[3] == 255:
                 return VideoImage.BLUE
 
             # This captures video streams that have frozen on the initial state
