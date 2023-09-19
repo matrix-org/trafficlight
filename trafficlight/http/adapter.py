@@ -15,7 +15,7 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, cast
+from typing import Any, Dict, Set, cast
 
 from quart import Blueprint, current_app, request
 from werkzeug.utils import secure_filename
@@ -63,6 +63,7 @@ async def check_for_new_tests() -> None:
 
                 current_app.add_background_task(run)
                 return
+
     logger.debug(
         "Not enough client_types to run any test(have %s)",
         [str(item) for item in available_adapters],
@@ -115,12 +116,26 @@ async def cleanup_unresponsive_adapters() -> None:
                 )
 
 
+sleeping_tasks: Set[asyncio.Future[None]] = set()
+
+
+async def interrupt_tasks() -> None:
+    for task in sleeping_tasks:
+        task.cancel()
+
+
 async def loop_cleanup_unresponsive_adapters() -> None:
     while not stop_background_tasks:
         logging.info("Running sweep for idle adapters")
         await cleanup_unresponsive_adapters()
-        await asyncio.sleep(30)
 
+        sleep_task: asyncio.Future[None] = asyncio.ensure_future(asyncio.sleep(30))
+        try:
+            sleeping_tasks.add(sleep_task)
+        except asyncio.CancelledError:
+            pass  # we don't mind this task being cancelled.
+        finally:
+            sleeping_tasks.remove(sleep_task)
     logging.info("Finished sweep task")
 
 
@@ -128,7 +143,13 @@ async def loop_check_for_new_tests() -> None:
     while not stop_background_tasks:
         logging.info("Running sweep for new tests")
         await check_for_new_tests()
-        await asyncio.sleep(30)
+        sleep_task: asyncio.Future[None] = asyncio.ensure_future(asyncio.sleep(30))
+        try:
+            sleeping_tasks.add(sleep_task)
+        except asyncio.CancelledError:
+            pass  # we don't mind this task being cancelled.
+        finally:
+            sleeping_tasks.remove(sleep_task)
     logging.info("Finished new test task")
 
 

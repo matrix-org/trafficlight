@@ -120,6 +120,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     @app.after_serving
     async def shutdown() -> None:
         trafficlight.http.adapter.stop_background_tasks = True
+        await trafficlight.http.adapter.interrupt_tasks()
         if kiwi.kiwi_client:
             await kiwi.kiwi_client.end_run()
         await adapter_shutdown()
