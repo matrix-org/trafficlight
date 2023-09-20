@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import logging
 import traceback
@@ -40,6 +41,7 @@ class TestCase:
         self.servers: List[HomeServer] = []
         self.files: Dict[str, str] = {}
         self.adapters: Optional[Dict[str, Adapter]] = None
+        self.completed = asyncio.get_event_loop().create_future()
 
     def __repr__(self) -> str:
         return f"{self.test.name()} ({self.server_type} {self.client_types})"
@@ -111,7 +113,7 @@ class TestCase:
             # Treating an adapter that causes another type of exception as an error
             self.state = "error"
             self.exceptions.append(e.formatted_message)
-        except Exception:
+        except Exception as e:
             # Treating everything else as an error as well... eg compilation failures
             self.state = "error"
             self.exceptions.append("".join(traceback.format_exc()))
@@ -122,3 +124,4 @@ class TestCase:
                 server.finished()
             if kiwi.kiwi_client:
                 await kiwi.kiwi_client.report_status(self)
+            self.completed.set_result(True)

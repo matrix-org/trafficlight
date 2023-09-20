@@ -132,6 +132,7 @@ async def loop_cleanup_unresponsive_adapters() -> None:
         sleep_task: asyncio.Future[None] = asyncio.ensure_future(asyncio.sleep(30))
         try:
             sleeping_tasks.add(sleep_task)
+            await sleep_task
         except asyncio.CancelledError:
             pass  # we don't mind this task being cancelled.
         finally:
@@ -146,6 +147,7 @@ async def loop_check_for_new_tests() -> None:
         sleep_task: asyncio.Future[None] = asyncio.ensure_future(asyncio.sleep(30))
         try:
             sleeping_tasks.add(sleep_task)
+            await sleep_task
         except asyncio.CancelledError:
             pass  # we don't mind this task being cancelled.
         finally:

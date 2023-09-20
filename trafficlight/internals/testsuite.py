@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 from typing import List
 
@@ -10,6 +11,8 @@ class TestSuite:
         self.guid = hashlib.md5(f"TestSuite{test.name()}".encode("utf-8")).hexdigest()
         self.test = test
         self.test_cases = test_cases
+        futures = list(map(lambda c: c.completed, test_cases))
+        self.completed = asyncio.gather(*futures)
 
     def name(self) -> str:
         return self.test.name()

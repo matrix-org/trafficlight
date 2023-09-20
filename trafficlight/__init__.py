@@ -12,25 +12,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import json
 import logging
 import os
 import uuid
+from asyncio import Future
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from quart import Quart
 
-import trafficlight
 import trafficlight.kiwi as kiwi
 from trafficlight.homerunner import HomerunnerClient
 from trafficlight.http.adapter import (
     adapter_shutdown,
     loop_check_for_new_tests,
     loop_cleanup_unresponsive_adapters,
+    stop_background_tasks,
+    interrupt_tasks,
 )
 from trafficlight.internals.testsuite import TestSuite
-from trafficlight.store import add_testsuite
+from trafficlight.store import add_testsuite, get_testsuites
 from trafficlight.tests import load_tests
 
 logger = logging.getLogger(__name__)
@@ -110,19 +113,34 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     )
     app.jinja_env.filters["delaytime"] = format_delaytime
 
+    async def on_done(f: Future) -> None:
+
+        await app.shutdown()
+
     @app.before_serving
     async def startup() -> None:
         app.add_background_task(loop_cleanup_unresponsive_adapters)
         app.add_background_task(loop_check_for_new_tests)
         if kiwi.kiwi_client:
             await kiwi.kiwi_client.start_run()
+        finished = asyncio.gather(*list(map(lambda x: x.completed, get_testsuites())))
+        finished.add_done_callback(on_done)
 
     @app.after_serving
     async def shutdown() -> None:
-        trafficlight.http.adapter.stop_background_tasks = True
-        await trafficlight.http.adapter.interrupt_tasks()
+        adapter.stop_background_tasks = True
+        await adapter.interrupt_tasks()
         if kiwi.kiwi_client:
             await kiwi.kiwi_client.end_run()
         await adapter_shutdown()
+        print("Results:\n\n")
+        for testsuite in get_testsuites():
+            print(
+                f"{testsuite.name()}: {testsuite.successes()}/{len(testsuite.test_cases)} successful"
+            )
+            for testcase in testsuite.test_cases:
+                print(f"  {testcase.client_types}: {testcase.state}")
+                if testcase.state != "success" and testcase.state != "waiting":
+                    print(f"{testcase.exceptions}")
 
     return app
