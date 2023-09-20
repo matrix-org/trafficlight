@@ -29,8 +29,6 @@ from trafficlight.http.adapter import (
     adapter_shutdown,
     loop_check_for_new_tests,
     loop_cleanup_unresponsive_adapters,
-    stop_background_tasks,
-    interrupt_tasks,
 )
 from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import add_testsuite, get_testsuites
@@ -113,8 +111,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     )
     app.jinja_env.filters["delaytime"] = format_delaytime
 
-    async def on_done(f: Future) -> None:
-
+    async def on_done(f: Future[Any]) -> None:
         await app.shutdown()
 
     @app.before_serving

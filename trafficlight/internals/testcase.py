@@ -113,7 +113,7 @@ class TestCase:
             # Treating an adapter that causes another type of exception as an error
             self.state = "error"
             self.exceptions.append(e.formatted_message)
-        except Exception as e:
+        except Exception:
             # Treating everything else as an error as well... eg compilation failures
             self.state = "error"
             self.exceptions.append("".join(traceback.format_exc()))
