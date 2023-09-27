@@ -21,7 +21,7 @@ from asyncio import Future
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-from quart import Quart
+from quart import Quart, current_app
 
 import trafficlight.kiwi as kiwi
 from trafficlight.homerunner import HomerunnerClient
@@ -111,17 +111,23 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     )
     app.jinja_env.filters["delaytime"] = format_delaytime
 
-    async def on_done(f: Future[Any]) -> None:
-        await app.shutdown()
-
     @app.before_serving
     async def startup() -> None:
         app.add_background_task(loop_cleanup_unresponsive_adapters)
         app.add_background_task(loop_check_for_new_tests)
         if kiwi.kiwi_client:
             await kiwi.kiwi_client.start_run()
-        finished = asyncio.gather(*list(map(lambda x: x.completed, get_testsuites())))
-        finished.add_done_callback(on_done)
+
+        async def wait_for_done() -> None:
+            try:
+                if suite.done() for suite in get_testsuites():
+                    if suite.done()
+            logger.info("Everything done!")
+            await app.shutdown()
+
+        app.add_background_task(
+            wait_for_done,
+        )
 
     @app.after_serving
     async def shutdown() -> None:
@@ -130,6 +136,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
         if kiwi.kiwi_client:
             await kiwi.kiwi_client.end_run()
         await adapter_shutdown()
+
         print("Results:\n\n")
         for testsuite in get_testsuites():
             print(

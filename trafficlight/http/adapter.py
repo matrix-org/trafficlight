@@ -120,6 +120,7 @@ sleeping_tasks: Set[asyncio.Future[None]] = set()
 
 
 async def interrupt_tasks() -> None:
+    logger.info("Waking up background tasks")
     for task in sleeping_tasks:
         task.cancel()
 
@@ -176,6 +177,7 @@ async def register(adapter_uuid: str):  # type: ignore
             return {}
     adapter = Adapter(adapter_uuid, registration)
     add_adapter(adapter)
+    await interrupt_tasks()
     return {}
 
 

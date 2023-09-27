@@ -11,8 +11,6 @@ class TestSuite:
         self.guid = hashlib.md5(f"TestSuite{test.name()}".encode("utf-8")).hexdigest()
         self.test = test
         self.test_cases = test_cases
-        futures = list(map(lambda c: c.completed, test_cases))
-        self.completed = asyncio.gather(*futures)
 
     def name(self) -> str:
         return self.test.name()
@@ -43,3 +41,14 @@ class TestSuite:
                 1 for tc in self.test_cases if tc.state in ("waiting", "preparing")
             )
         return 0
+
+    def done(self) -> bool:
+        if self.test_cases is not None:
+            return (
+                sum(
+                    1
+                    for tc in self.test_cases
+                    if tc.state in ("waiting", "preparing", "running")
+                )
+                > 0
+            )

@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import logging
 import traceback
+from asyncio import Future
 from typing import Any, Dict, List, Optional, Union
 
 import trafficlight.kiwi as kiwi
@@ -27,6 +28,7 @@ class TestCase:
         server_names: List[str],
         client_types: Dict[str, ClientType],
     ) -> None:
+        self.completed: Future[None]
         self.exceptions: List[str] = []
         self.guid = hashlib.md5(
             f"TestCase{test.name()}{server_type.name() if server_type else None}{server_names}{client_types}".encode(
@@ -41,7 +43,6 @@ class TestCase:
         self.servers: List[HomeServer] = []
         self.files: Dict[str, str] = {}
         self.adapters: Optional[Dict[str, Adapter]] = None
-        self.completed = asyncio.get_event_loop().create_future()
 
     def __repr__(self) -> str:
         return f"{self.test.name()} ({self.server_type} {self.client_types})"
@@ -125,3 +126,7 @@ class TestCase:
             if kiwi.kiwi_client:
                 await kiwi.kiwi_client.report_status(self)
             self.completed.set_result(True)
+
+    async def wait_for_completion(self) -> None:
+        self.completed = asyncio.get_running_loop().create_future()
+        await self.completed

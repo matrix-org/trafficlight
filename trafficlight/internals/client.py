@@ -242,7 +242,7 @@ class ElementCallClient(Client):
     async def reload(self) -> None:
         await self._perform_action({"action": "reload", "data": {}})
 
-    async def create_or_join(self, call_name: str) -> bool:
+    async def create(self, call_name: str) -> bool:
         if self.type == self._GUEST_USER:
             data = await self._perform_action(
                 {
