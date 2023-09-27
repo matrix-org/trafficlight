@@ -25,7 +25,7 @@ class LoadTestCallTest(Test):
         room_name = "tl_chat_" + str(datetime.now().timestamp())
 
         # Create room
-        await alice.create_or_join(room_name)
+        await alice.create(room_name)
 
         lobby_data = await alice.get_lobby_data()
 

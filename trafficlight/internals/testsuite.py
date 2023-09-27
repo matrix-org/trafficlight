@@ -1,4 +1,3 @@
-import asyncio
 import hashlib
 from typing import List
 
@@ -52,3 +51,5 @@ class TestSuite:
                 )
                 > 0
             )
+        else:
+            return False

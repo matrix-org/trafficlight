@@ -28,7 +28,7 @@ class TestCase:
         server_names: List[str],
         client_types: Dict[str, ClientType],
     ) -> None:
-        self.completed: Future[None]
+        self.completed: Optional[Future[bool]] = None
         self.exceptions: List[str] = []
         self.guid = hashlib.md5(
             f"TestCase{test.name()}{server_type.name() if server_type else None}{server_names}{client_types}".encode(
@@ -125,7 +125,7 @@ class TestCase:
                 server.finished()
             if kiwi.kiwi_client:
                 await kiwi.kiwi_client.report_status(self)
-            self.completed.set_result(True)
+            self.completed.set_result(False)
 
     async def wait_for_completion(self) -> None:
         self.completed = asyncio.get_running_loop().create_future()

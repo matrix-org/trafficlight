@@ -12,16 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import asyncio
 import json
 import logging
 import os
 import uuid
-from asyncio import Future
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-from quart import Quart, current_app
+from quart import Quart
 
 import trafficlight.kiwi as kiwi
 from trafficlight.homerunner import HomerunnerClient
@@ -117,17 +115,6 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
         app.add_background_task(loop_check_for_new_tests)
         if kiwi.kiwi_client:
             await kiwi.kiwi_client.start_run()
-
-        async def wait_for_done() -> None:
-            try:
-                if suite.done() for suite in get_testsuites():
-                    if suite.done()
-            logger.info("Everything done!")
-            await app.shutdown()
-
-        app.add_background_task(
-            wait_for_done,
-        )
 
     @app.after_serving
     async def shutdown() -> None:
