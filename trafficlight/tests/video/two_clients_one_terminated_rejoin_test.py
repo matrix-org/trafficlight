@@ -23,9 +23,10 @@ class TwoClientsOneTerminatedAndRejoin(Test):
 
         room_name = "tl_chat_" + str(datetime.now().timestamp())
 
-        await asyncio.gather(
-            alice.create_or_join(room_name), bob.create_or_join(room_name)
-        )
+        await alice.create(room_name)
+        alice_lobby = await alice.get_lobby_data()
+
+        await bob.join_by_url(alice_lobby.invite_url)
 
         await alice.set_video_image(VideoImage.BLUE)
         await bob.set_video_image(VideoImage.RED)
@@ -53,7 +54,7 @@ class TwoClientsOneTerminatedAndRejoin(Test):
 
         await bob.set_video_image(VideoImage.GREEN)
 
-        await bob.create_or_join(room_name)
+        await bob.join_by_url(alice_data.invite_url)
 
         await bob.lobby_join()
 
