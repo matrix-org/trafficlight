@@ -25,9 +25,9 @@ import trafficlight.kiwi as kiwi
 from trafficlight.homerunner import HomerunnerClient
 from trafficlight.http.adapter import (
     adapter_shutdown,
+    loop_check_all_tests_done,
     loop_check_for_new_tests,
     loop_cleanup_unresponsive_adapters,
-    loop_check_all_tests_done,
 )
 from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import add_testsuite, get_testsuites

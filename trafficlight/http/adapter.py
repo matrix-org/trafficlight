@@ -33,8 +33,8 @@ from trafficlight.store import (
     get_adapter,
     get_adapters,
     get_tests,
-    remove_adapter,
     get_testsuites,
+    remove_adapter,
 )
 
 IDLE_ADAPTER_UNRESPONSIVE_DELAY = timedelta(minutes=1)
