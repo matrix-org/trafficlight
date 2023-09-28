@@ -27,6 +27,7 @@ from trafficlight.http.adapter import (
     adapter_shutdown,
     loop_check_for_new_tests,
     loop_cleanup_unresponsive_adapters,
+    loop_check_all_tests_done,
 )
 from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import add_testsuite, get_testsuites
@@ -113,6 +114,7 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
     async def startup() -> None:
         app.add_background_task(loop_cleanup_unresponsive_adapters)
         app.add_background_task(loop_check_for_new_tests)
+        app.add_background_task(loop_check_all_tests_done)
         if kiwi.kiwi_client:
             await kiwi.kiwi_client.start_run()
 
@@ -124,14 +126,26 @@ def create_app(test_config: Optional[Dict[str, Any]] = None) -> Quart:
             await kiwi.kiwi_client.end_run()
         await adapter_shutdown()
 
-        print("Results:\n\n")
+        print("Results:\n")
+        exit_code = 0
+        total_tests = 0
+        successful_tests = 0
         for testsuite in get_testsuites():
             print(
-                f"{testsuite.name()}: {testsuite.successes()}/{len(testsuite.test_cases)} successful"
+                f"\n{testsuite.name()}: {testsuite.successes()}/{len(testsuite.test_cases)} successful"
             )
             for testcase in testsuite.test_cases:
                 print(f"  {testcase.client_types}: {testcase.state}")
+                total_tests += 1
+                if testcase.state != "success":
+                    exit_code = 1
+                else:
+                    successful_tests = successful_tests + 1
                 if testcase.state != "success" and testcase.state != "waiting":
-                    print(f"{testcase.exceptions}")
+                    for exception in testcase.exceptions:
+                        print(exception)
+
+        print(f"\nOverall: {successful_tests}/{total_tests} succeeded")
+        os._exit(exit_code)
 
     return app

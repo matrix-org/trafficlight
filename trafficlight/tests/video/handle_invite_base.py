@@ -24,6 +24,9 @@ class InviteLinksMixin:
 
         await joiner.join_by_url(creator_lobby_data.invite_url)
 
+        # For now; wait a little so lobby data settles, because page dynamically updates the page_url
+        await asyncio.sleep(10)
+
         joiner_lobby_data = await joiner.get_lobby_data()
 
         with soft_assertions():
