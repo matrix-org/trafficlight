@@ -15,7 +15,7 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, cast
+from typing import Any, Dict, Set, cast
 
 from quart import Blueprint, current_app, request
 from werkzeug.utils import secure_filename
@@ -33,6 +33,7 @@ from trafficlight.store import (
     get_adapter,
     get_adapters,
     get_tests,
+    get_testsuites,
     remove_adapter,
 )
 
@@ -63,6 +64,7 @@ async def check_for_new_tests() -> None:
 
                 current_app.add_background_task(run)
                 return
+
     logger.debug(
         "Not enough client_types to run any test(have %s)",
         [str(item) for item in available_adapters],
@@ -115,21 +117,71 @@ async def cleanup_unresponsive_adapters() -> None:
                 )
 
 
+sleeping_tasks: Set[asyncio.Future[None]] = set()
+
+
+async def interrupt_tasks() -> None:
+    logger.info("Waking up background tasks")
+    for task in sleeping_tasks:
+        task.cancel()
+
+
+def should_finish_tests() -> bool:
+    for testsuite in get_testsuites():
+        for testcase in testsuite.test_cases:
+            if testcase.state not in ("failed", "error", "success"):
+                logger.info(f"Not exiting because of {testcase}")
+                return False
+    return True
+
+
+async def loop_check_all_tests_done() -> None:
+    while not stop_background_tasks:
+        logging.debug("Running check for test completion")
+        if should_finish_tests():
+            # do not await because shutdown() awaits all background tasks (inc this one) to shut down first.
+            asyncio.create_task(current_app.shutdown())
+
+        sleep_task: asyncio.Future[None] = asyncio.ensure_future(asyncio.sleep(30))
+        try:
+            sleeping_tasks.add(sleep_task)
+            await sleep_task
+        except asyncio.CancelledError:
+            pass  # we don't mind this task being cancelled.
+        finally:
+            sleeping_tasks.remove(sleep_task)
+    logging.info("Termination task shutting down")
+
+
 async def loop_cleanup_unresponsive_adapters() -> None:
     while not stop_background_tasks:
-        logging.info("Running sweep for idle adapters")
+        logging.debug("Running sweep for idle adapters")
         await cleanup_unresponsive_adapters()
-        await asyncio.sleep(30)
 
-    logging.info("Finished sweep task")
+        sleep_task: asyncio.Future[None] = asyncio.ensure_future(asyncio.sleep(30))
+        try:
+            sleeping_tasks.add(sleep_task)
+            await sleep_task
+        except asyncio.CancelledError:
+            pass  # we don't mind this task being cancelled.
+        finally:
+            sleeping_tasks.remove(sleep_task)
+    logging.info("Sweep task shutting down")
 
 
 async def loop_check_for_new_tests() -> None:
     while not stop_background_tasks:
-        logging.info("Running sweep for new tests")
+        logging.debug("Running sweep for new tests")
         await check_for_new_tests()
-        await asyncio.sleep(30)
-    logging.info("Finished new test task")
+        sleep_task: asyncio.Future[None] = asyncio.ensure_future(asyncio.sleep(30))
+        try:
+            sleeping_tasks.add(sleep_task)
+            await sleep_task
+        except asyncio.CancelledError:
+            pass  # we don't mind this task being cancelled.
+        finally:
+            sleeping_tasks.remove(sleep_task)
+    logging.info("New test task shutting down")
 
 
 async def adapter_shutdown() -> None:
@@ -153,6 +205,7 @@ async def register(adapter_uuid: str):  # type: ignore
             return {}
     adapter = Adapter(adapter_uuid, registration)
     add_adapter(adapter)
+    await interrupt_tasks()
     return {}
 
 

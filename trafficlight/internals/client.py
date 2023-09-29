@@ -242,7 +242,7 @@ class ElementCallClient(Client):
     async def reload(self) -> None:
         await self._perform_action({"action": "reload", "data": {}})
 
-    async def create_or_join(self, call_name: str) -> bool:
+    async def create(self, call_name: str) -> bool:
         if self.type == self._GUEST_USER:
             data = await self._perform_action(
                 {
@@ -290,6 +290,10 @@ class ElementCallClient(Client):
         snapshot_file = self.test_case.files[self.name + "_" + data["snapshot"]]
         invite_url = response["data"]["invite_url"]
         page_url = response["data"]["page_url"]
+        # Strip trailing & on page URLs until https://github.com/vector-im/element-call/issues/1639 is resolved
+        if page_url[-1] == "&":
+            page_url = page_url[1:-1]
+
         call_name = response["data"]["call_name"]
         lobby_data = LobbyData(
             video_muted=False,

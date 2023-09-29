@@ -15,14 +15,17 @@ class InviteLinksMixin:
         await creator.set_video_image(VideoImage.RED)
         await joiner.set_video_image(VideoImage.BLUE)
 
-        await creator.create_or_join(room_name)
+        await creator.create(room_name)
 
         creator_lobby_data = await creator.get_lobby_data()
         assert_that(creator_lobby_data.call_name).is_equal_to(room_name)
 
         # Now join bob to the call before alice joins the call via page_url
 
-        await joiner.join_by_url(creator_lobby_data.page_url)
+        await joiner.join_by_url(creator_lobby_data.invite_url)
+
+        # For now; wait a little so lobby data settles, because page dynamically updates the page_url
+        await asyncio.sleep(10)
 
         joiner_lobby_data = await joiner.get_lobby_data()
 

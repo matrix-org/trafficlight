@@ -19,9 +19,10 @@ class SpotlightTest(Test):
 
         room_name = "tl_chat_" + str(datetime.now().timestamp())
 
-        await asyncio.gather(
-            alice.create_or_join(room_name), bob.create_or_join(room_name)
-        )
+        await alice.create(room_name)
+        alice_lobby = await alice.get_lobby_data()
+
+        await bob.join_by_url(alice_lobby.invite_url)
 
         # lobby screen
         await asyncio.gather(alice.lobby_join(), bob.lobby_join())

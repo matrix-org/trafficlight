@@ -40,3 +40,16 @@ class TestSuite:
                 1 for tc in self.test_cases if tc.state in ("waiting", "preparing")
             )
         return 0
+
+    def done(self) -> bool:
+        if self.test_cases is not None:
+            return (
+                sum(
+                    1
+                    for tc in self.test_cases
+                    if tc.state in ("waiting", "preparing", "running")
+                )
+                > 0
+            )
+        else:
+            return False
