@@ -15,7 +15,7 @@
 import logging
 from typing import List, Union
 
-from quart import Blueprint, abort, render_template, request, send_file, Response
+from quart import Blueprint, Response, abort, render_template, request, send_file
 
 from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import (
