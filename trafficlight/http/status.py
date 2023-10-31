@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import List
+from typing import List, Union
 
-from quart import Blueprint, abort, render_template, request, send_file
+from quart import Blueprint, Response, abort, render_template, request, send_file
 
 from trafficlight.internals.testsuite import TestSuite
 from trafficlight.store import (
@@ -63,7 +63,7 @@ async def as_junit():  # type: ignore
 
 
 @bp.route("/<string:guid>/files/<string:name>", methods=["GET"])
-async def test_file(guid: str, name: str):  # type: ignore
+async def test_file(guid: str, name: str) -> Response:
     test = get_test_case(guid)
     logger.info("Getting ${guid} ${name}")
     if name in test.files:
@@ -74,7 +74,7 @@ async def test_file(guid: str, name: str):  # type: ignore
 
 
 @bp.route("/<string:guid>/suitestatus", methods=["GET"])
-async def testsuite_status(guid: str):  # type: ignore
+async def testsuite_status(guid: str) -> str:
     refresh = request.args.get("refresh", default=0, type=int)
     testsuite = get_testsuite(guid)
     if testsuite is not None:
@@ -86,7 +86,7 @@ async def testsuite_status(guid: str):  # type: ignore
 
 
 @bp.route("/<string:guid>/status", methods=["GET"])
-async def testcase_status(guid: str):  # type: ignore
+async def testcase_status(guid: str) -> Union[str, Response]:
     refresh = request.args.get("refresh", default=0, type=int)
     logger.info("Finding test %s", guid)
     test = get_test_case(guid)

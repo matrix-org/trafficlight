@@ -56,7 +56,6 @@ class LoadTestCallTest(Test):
             )
 
             with soft_assertions():
-
                 # Ensure we don't gain or lose members doing this.
                 assert_that(alice_data.video_tiles).is_length(2)
                 assert_that(bob_data.video_tiles).is_length(2)
