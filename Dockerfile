@@ -1,4 +1,4 @@
-FROM python:3-bullseye
+FROM python:3.11.6-bullseye
 WORKDIR /app
 COPY . /app
 RUN apt update && apt install -y libolm-dev && rm -rf /var/lib/apt/lists/*
